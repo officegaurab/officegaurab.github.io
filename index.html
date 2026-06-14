@@ -29,15 +29,20 @@ box-sizing:border-box;
 font-family:system-ui,-apple-system,sans-serif;
 }
 
+html, body{
+height:100%;
+}
+
 body{
 background:var(--bg);
 color:var(--text);
 min-height:100vh;
-overflow:auto;
+height:100vh;
+overflow:hidden;
 }
 
 .container{
-min-height:100vh;
+height:100%;
 display:flex;
 flex-direction:column;
 }
@@ -246,7 +251,8 @@ outline:3px solid var(--accent);
 background:white;
 padding:12px;
 border-top:1px solid #ddd;
-max-height:200px;
+flex:1;
+min-height:0;
 overflow-y:auto;
 }
 
@@ -654,8 +660,8 @@ width:400px;
 <div class="header">
 <div class="header-left">
 <div>
-<div class="header-title" id="headerTitle">Attendance Tracker</div>
-<div class="header-subtitle" id="headerSubtitle">Unknown User (Please login to save the data)</div>
+<div class="header-title" id="headerTitle">Unknown User</div>
+<div class="header-subtitle" id="headerSubtitle">Please login to save the data</div>
 </div>
 </div>
 <div class="header-buttons">
@@ -698,6 +704,16 @@ width:400px;
 
 <!-- DRAWER OVERLAY -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- MESSAGE MODAL -->
+<div class="modal" id="messageModal">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div id="messageModalTitle" style="font-size:16px;font-weight:700;">Message</div>
+    <button onclick="closeMessageModal()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
+  </div>
+  <div id="messageModalBody" style="font-size:14px;color:#333;line-height:1.5;"></div>
+  <button class="action-button btn-primary" style="margin-top:16px;" onclick="closeMessageModal()">OK</button>
+</div>
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
@@ -913,7 +929,8 @@ let currentDate = new Date();
 let selectedKey = null;
 let confirmationResult = null;
 // Deployed Google Apps Script Web App URL (set from your deployment)
-let googleScriptURL = 'https://script.google.com/macros/s/AKfycbz460QY_kULbRnOx6Eeusdpu56L4dJW04h1I5X8CDa2i8eHOpLcRUSdjxMidwxdmLExpA/exec';
+// Set to user's Apps Script URL (provided)
+let googleScriptURL = 'https://script.google.com/macros/s/AKfycbyHdXTO6WUcjt_I0Nr0h1VEy6OkOVGdjefnLXWVdJ7DCkbPmz0_EV5Z6D94MauVwG8QPQ/exec';
 let attendanceData = {};
 let userProfile = null;
 let saveCount = 0;
@@ -941,6 +958,7 @@ function initializeAuth() {
         if (lp) {
           userProfile = lp;
           attendanceData = getLocalStorageAttendance(lastId);
+          updateHeader();
           render();
         }
       }
@@ -1079,6 +1097,7 @@ async function loadUserProfile(userId) {
     
     if (result.success && result.data) {
       userProfile = result.data;
+      updateHeader();
       loadAttendanceData();
       checkSaveLimit();
     } else {
@@ -1126,6 +1145,7 @@ async function checkAndShowRegistration() {
     } else {
       // Existing user
       userProfile = result.data;
+      updateHeader();
       loadAttendanceData();
       checkSaveLimit();
       showApp();
@@ -1152,7 +1172,7 @@ async function completeRegistration() {
   };
   
   if (!userData.mobile) {
-    alert('Mobile is required');
+    showMessageModal('Required field', 'Mobile is required.');
     return;
   }
 
@@ -1165,7 +1185,7 @@ async function completeRegistration() {
     checkSaveLimit();
     showApp();
     closeRegistrationSheet();
-    alert('Profile saved locally. Configure Google Script URL later to sync remotely.');
+    showMessageModal('Profile saved', 'Profile saved locally. Configure Google Script URL later to sync remotely.');
     return;
   }
   
@@ -1189,10 +1209,12 @@ async function completeRegistration() {
       checkSaveLimit();
       showApp();
       closeRegistrationSheet();
-      alert('Profile saved successfully!');
+      showMessageModal('Profile saved', 'Profile saved successfully!');
+    } else {
+      showMessageModal('Save failed', 'Unable to save profile remotely. Your profile is stored locally.');
     }
   } catch (error) {
-    alert('Error saving profile: ' + error.message);
+    showMessageModal('Save error', 'Error saving profile: ' + error.message);
   }
 }
 
@@ -1262,8 +1284,8 @@ async function checkSaveLimit() {
     return;
   }
 
+  const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
   try {
-    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
     const response = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -1289,80 +1311,38 @@ async function checkSaveLimit() {
     }
   } catch (error) {
     console.error('Failed to check save limit:', error);
+    updateRemoteSyncStatus(uid, true);
   }
 }
 
 async function saveAttendance(date, status) {
   try {
-    // First, check if we can sync to Google Sheet (rate limit)
-    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
-    const limitResponse = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'checkSaveLimit',
-        userId: uid
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const limitResult = await limitResponse.json();
-    
-    if (limitResult.success) {
-      const canSync = limitResult.data.allowed;
-      
-      // LOCAL SAVE (always works, no limit)
-      attendanceData[date] = status;
-      render();
+    console.log('saveAttendance start', date, status);
 
-      // Track local-only calendar saves and show login after 5
-      try {
-        const key = 'localCalendarSaveCount';
-        let c = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-        c += 1;
-        localStorage.setItem(key, String(c));
-        // Persist last user id placeholder if available
-        const lastId = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || null;
-        if (lastId) localStorage.setItem('lastUserId', lastId);
-        if (c >= 5 && !currentUser) {
-          showLoginSheet();
-        }
-      } catch (e) {
-        console.warn('Failed to update local save counter', e);
-      }
-      
-      // REMOTE SYNC (limited to 2-3/day)
-      if (canSync) {
-        // Allowed to sync to Google Sheet
-        const response = await fetch(googleScriptURL, {
-          method: 'POST',
-          body: buildScriptPayload({
-            action: 'saveAttendance',
-            userId: (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || null,
-            date: date,
-            status: status
-          }),
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          console.log('✅ Saved to Google Sheet');
-        }
-      } else {
-        // Limit reached - save locally but show warning
-        console.warn('⚠️ Limit reached for Google Sheet sync');
-        alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally.\nGoogle Sheet sync will resume tomorrow.');
-      }
-      
-      // Always update the limit display
-      checkSaveLimit();
-    }
-  } catch (error) {
-    console.error('Error:', error.message);
-    // Still save locally even if sync fails
+    // Determine uid for local persistence
+    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+
+    // LOCAL SAVE first (always)
     attendanceData[date] = status;
     render();
+    try {
+      setLocalStorageAttendance(uid, attendanceData);
+      localStorage.setItem('lastUserId', uid);
+      const key = 'localCalendarSaveCount';
+      let c = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+      c += 1;
+      localStorage.setItem(key, String(c));
+      if (c >= 5 && !currentUser) showLoginSheet();
+      console.log('attendance saved locally', uid, attendanceData, 'local save count', c);
+    } catch (e) {
+      console.warn('Failed to persist local attendance', e);
+    }
+
+    const action = { type: 'saveAttendance', payload: { userId: uid, date: date, status: status } };
+    enqueueRemoteAction(action);
+    await flushRemoteQueue();
+  } catch (error) {
+    console.error('saveAttendance unexpected error:', error);
   }
 }
 
@@ -1395,41 +1375,24 @@ async function saveProfile(syncRemote = true) {
   }
 
   userProfile = userData;
+  updateHeader();
 
   if (!syncRemote) {
     return;
   }
 
   if (!isGoogleScriptConfigured()) {
-    alert('Profile updated locally. Configure Google Script URL later to sync remotely.');
+    showMessageModal('Profile saved', 'Profile updated locally. Configure Google Script URL later to sync remotely.');
     closeProfileSheet();
     return;
   }
   
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'saveUser',
-        userId: userIdForSave,
-        userData: userData
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const result = await response.json();
-    
-    if (result && result.success) {
-      userProfile = userData;
-      alert('Profile updated!');
-      closeProfileSheet();
-    } else {
-      console.warn('Profile save remote response not successful', result);
-    }
-  } catch (error) {
-    console.error('Profile save failed', error);
-    alert('Error saving profile: ' + error.message);
-  }
+  const action = { type: 'saveUser', payload: { userId: userIdForSave, userData: userData } };
+  enqueueRemoteAction(action);
+  await flushRemoteQueue();
+
+  showMessageModal('Profile saved', 'Profile updated locally. Remote sync will be attempted when possible.');
+  closeProfileSheet();
 }
 
 // ===== CALENDAR FUNCTIONS =====
@@ -1441,7 +1404,7 @@ function setStatus(status) {
   } else {
     attendanceData[selectedKey] = status;
   }
-  
+  console.log('setStatus', selectedKey, status);
   saveAttendance(selectedKey, status || null);
   closeAttendanceSheet();
 }
@@ -1558,15 +1521,13 @@ function updateStats() {
   const remaining = Math.max(requiredOffice - officeDays, 0);
   
   document.getElementById('stats').innerHTML = `
+    <div class="stats-summary-line"><strong>Office: ${officePercent}% | Need ${remaining} more</strong></div> <br />
     <div class="stat-card">Working Days<b>${workingDays}</b></div>
     <div class="stat-card">Required Office<b>${requiredOffice}</b></div>
     <div class="stat-card">Office<b>${officeDays}</b></div>
     <div class="stat-card">WFH<b>${wfhDays}</b></div>
     <div class="stat-card">Leave<b>${leaveDays}</b></div>
     <div class="stat-card">No Show<b>${noShowDays}</b></div>
-    <div style="grid-column:1/-1;font-size:12px;text-align:center;color:var(--text-light);">
-    Office: ${officePercent}% | Need ${remaining} more
-    </div>
   `;
 }
 
@@ -1591,6 +1552,7 @@ function populateHourSelects(prefix) {
 function openAttendanceSheet(key, label) {
   selectedKey = key;
   document.getElementById('attendanceDateTitle').innerText = label;
+  console.log('openAttendanceSheet', key, label);
   showAttendanceSheet();
 }
 
@@ -1685,7 +1647,195 @@ function showProfileSheet() {
 function showApp() {
   document.querySelector('.calendar-area').style.display = 'block';
   document.querySelector('.summary').style.display = 'block';
+  updateHeader();
   render();
+}
+
+function updateHeader() {
+  const titleEl = document.getElementById('headerTitle');
+  const subtitleEl = document.getElementById('headerSubtitle');
+  const userFields = [];
+
+  if (userProfile && userProfile.name) {
+    userFields.push(userProfile.name);
+  }
+  if (userProfile && userProfile.email) {
+    userFields.push(userProfile.email);
+  }
+  if (userProfile && userProfile.mobile) {
+    userFields.push(userProfile.mobile);
+  }
+
+  if (userFields.length) {
+    titleEl.innerText = userFields.join(' / ');
+    subtitleEl.innerText = currentUser ? 'Logged in' : 'Local profile';
+  } else {
+    titleEl.innerText = 'Unknown User';
+    subtitleEl.innerText = 'Please login to save the data';
+  }
+}
+
+function closeMessageModal() {
+  document.getElementById('messageModal').classList.remove('show');
+  document.getElementById('backdrop').classList.remove('show');
+}
+
+function showMessageModal(title, message) {
+  document.getElementById('messageModalTitle').innerText = title;
+  document.getElementById('messageModalBody').innerText = message;
+  document.getElementById('messageModal').classList.add('show');
+  document.getElementById('backdrop').classList.add('show');
+}
+
+function getRemoteSyncCountKey(uid) {
+  const today = new Date().toISOString().slice(0, 10);
+  return `remoteSaveCount_${uid}_${today}`;
+}
+
+function getRemoteSyncCount(uid) {
+  try {
+    return parseInt(localStorage.getItem(getRemoteSyncCountKey(uid)) || '0', 10) || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+function incrementRemoteSyncCount(uid) {
+  const key = getRemoteSyncCountKey(uid);
+  const count = getRemoteSyncCount(uid) + 1;
+  localStorage.setItem(key, String(count));
+  return count;
+}
+
+function canAttemptRemoteSync(uid) {
+  return getRemoteSyncCount(uid) < 3;
+}
+
+function updateRemoteSyncStatus(uid, remoteUnavailable = false) {
+  const count = getRemoteSyncCount(uid);
+  const limit = 3;
+  const msg = document.getElementById('attendanceLimitMsg');
+  if (!msg) return;
+  msg.style.display = 'block';
+  msg.className = count < limit ? 'save-limit-display' : 'save-limit-display limit-reached';
+  if (remoteUnavailable) {
+    msg.innerHTML = `⚠️ Cloud sync unavailable. Local saves still work. Sync attempts today: ${count}/${limit}`;
+  } else if (count < limit) {
+    const pending = getRemoteQueue().length;
+    msg.innerHTML = `📊 Cloud sync attempts today: ${count}/${limit}. Pending remote queue: ${pending}. Local saves always work.`;
+  } else {
+    const pending = getRemoteQueue().length;
+    msg.innerHTML = `⚠️ Daily cloud sync limit reached (${count}/${limit}). Pending queue: ${pending}. Local saves continue.`;
+  }
+}
+
+function getRemoteQueue() {
+  try {
+    const raw = localStorage.getItem('remoteSyncQueue');
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function setRemoteQueue(queue) {
+  localStorage.setItem('remoteSyncQueue', JSON.stringify(queue));
+}
+
+function enqueueRemoteAction(action) {
+  const queue = getRemoteQueue();
+  queue.push({ action, createdAt: new Date().toISOString() });
+  setRemoteQueue(queue);
+  console.log('Queued remote action', action, 'queue length', queue.length);
+}
+
+function dequeueRemoteAction(index) {
+  const queue = getRemoteQueue();
+  if (index < 0 || index >= queue.length) return;
+  queue.splice(index, 1);
+  setRemoteQueue(queue);
+}
+
+async function flushRemoteQueue() {
+  const queue = getRemoteQueue();
+  if (!queue.length) return;
+
+  const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  if (!canAttemptRemoteSync(uid)) {
+    updateRemoteSyncStatus(uid);
+    return;
+  }
+
+  updateRemoteSyncStatus(uid);
+
+  for (let i = 0; i < queue.length; i++) {
+    const item = queue[i];
+    const { action } = item;
+    if (!action || !action.type || !action.payload) {
+      dequeueRemoteAction(i);
+      i -= 1;
+      continue;
+    }
+    if (!canAttemptRemoteSync(uid)) {
+      break;
+    }
+    try {
+      const result = await remotePost(action.payload, true);
+      if (result && result.success) {
+        incrementRemoteSyncCount(uid);
+        console.log('Remote queue item synced', action);
+        dequeueRemoteAction(i);
+        i -= 1;
+      } else if (result && result.noCors) {
+        console.warn('Remote queue item sent via no-cors mode, keeping in queue until valid response is available', action);
+        break;
+      } else {
+        console.warn('Remote queue item not synced, keeping in queue', result);
+        break;
+      }
+    } catch (error) {
+      console.warn('Remote queue sync failed', action, error);
+      break;
+    }
+  }
+  updateRemoteSyncStatus(uid);
+}
+
+async function remotePost(payload, allowNoCors = false) {
+  try {
+    const response = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload(payload),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+
+    if (response.type === 'opaque') {
+      console.warn('Received opaque response from remote endpoint. CORS likely preventing JSON response.');
+      return { success: false, noCors: true };
+    }
+
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    if (allowNoCors) {
+      try {
+        console.warn('Retrying remote sync with no-cors mode. This will not return a JSON response.');
+        await fetch(googleScriptURL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: buildScriptPayload(payload)
+        });
+        return { success: false, noCors: true };
+      } catch (fallbackError) {
+        throw fallbackError;
+      }
+    }
+    throw error;
+  }
 }
 
 function hideApp() {
@@ -1741,11 +1891,14 @@ document.getElementById('backdrop').onclick = () => {
 };
 
 // ===== INIT =====
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   const stored = localStorage.getItem('googleScriptURL');
   if (stored) googleScriptURL = stored;
   
   initializeAuth();
+  const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  await flushRemoteQueue();
+  updateRemoteSyncStatus(uid);
 });
 
 </script>
