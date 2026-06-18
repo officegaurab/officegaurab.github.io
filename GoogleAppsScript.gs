@@ -1,5 +1,5 @@
 // Google Apps Script for Attendance Tracker v3
-// Multi-tab database, Firebase auth, Dirty document tracking
+// Multi-tab database, direct mobile login, Dirty document tracking
 // Deploy as web app: Deploy > New Deployment > Type: Web app
 
 const SPREADSHEET_ID = '1xRWs999mHz51IGToz8gA-WjMuxAt9TB8fJXDqKv38-U';
