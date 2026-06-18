@@ -90,6 +90,12 @@ color:rgba(255,255,255,0.85);
 margin-top:4px;
 }
 
+#currentDateDisplay{
+font-size:12px;
+color:rgba(255,255,255,0.75);
+margin-top:2px;
+}
+
 .header-buttons{
 display:flex;
 align-items:center;
@@ -661,7 +667,8 @@ width:400px;
 <div class="header-left">
 <div>
 <div class="header-title" id="headerTitle">Unknown User</div>
-<div class="header-subtitle" id="headerSubtitle">Please login to save the data</div>
+<div class="header-subtitle" id="headerSubtitle">Attendance Tracker</div>
+<div class="header-subtitle" id="currentDateDisplay"></div>
 </div>
 </div>
 <div class="header-buttons">
@@ -728,9 +735,9 @@ width:400px;
 <span class="drawer-item-icon">👤</span>
 <span>My Profile</span>
 </div>
-<div class="drawer-item" onclick="showLogoutConfirm();closeDrawer();">
+<div class="drawer-item" onclick="handleAuthMenu();closeDrawer();">
 <span class="drawer-item-icon">🚪</span>
-<span>Logout</span>
+<span id="authMenuText">Login</span>
 </div>
 <div class="drawer-item" onclick="alert('Contact: support@app.com');closeDrawer();">
 <span class="drawer-item-icon">❓</span>
@@ -947,10 +954,12 @@ function initializeAuth() {
         localStorage.setItem('localCalendarSaveCount', '0');
       } catch (e) {}
       showApp();
+      initializeSyncScheduler();
     } else {
       // Do not force login modal on load. Show app in local-only mode.
       currentUser = null;
       showApp();
+      
       // Load last-used local profile if available
       const lastId = localStorage.getItem('lastUserId');
       if (lastId) {
@@ -962,6 +971,12 @@ function initializeAuth() {
           render();
         }
       }
+      
+      // Initialize sync scheduler
+      initializeSyncScheduler();
+      
+      // Check if monthly login is required
+      checkMonthlyLoginRequired();
     }
   });
 }
@@ -1332,7 +1347,16 @@ async function saveAttendance(date, status) {
       let c = parseInt(localStorage.getItem(key) || '0', 10) || 0;
       c += 1;
       localStorage.setItem(key, String(c));
-      if (c >= 5 && !currentUser) showLoginSheet();
+      
+      // After 5 saves, approve current month for auto-use
+      if (c === 5 && !currentUser) {
+        approveCurrentMonth();
+        showMessageModal('5 Saves Unlocked!', 'You can now use this app for the rest of the month without logging in!');
+      }
+      
+      // Mark as dirty for later sync
+      markDirty(uid, date, status || null);
+      
       console.log('attendance saved locally', uid, attendanceData, 'local save count', c);
     } catch (e) {
       console.warn('Failed to persist local attendance', e);
@@ -1653,26 +1677,22 @@ function showApp() {
 
 function updateHeader() {
   const titleEl = document.getElementById('headerTitle');
-  const subtitleEl = document.getElementById('headerSubtitle');
-  const userFields = [];
-
+  const dateEl = document.getElementById('currentDateDisplay');
+  
+  // Update current date
+  const today = new Date();
+  const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+  dateEl.innerText = today.toLocaleDateString('en-US', options);
+  
+  // Update user name
   if (userProfile && userProfile.name) {
-    userFields.push(userProfile.name);
-  }
-  if (userProfile && userProfile.email) {
-    userFields.push(userProfile.email);
-  }
-  if (userProfile && userProfile.mobile) {
-    userFields.push(userProfile.mobile);
-  }
-
-  if (userFields.length) {
-    titleEl.innerText = userFields.join(' / ');
-    subtitleEl.innerText = currentUser ? 'Logged in' : 'Local profile';
+    titleEl.innerText = userProfile.name;
   } else {
-    titleEl.innerText = 'Unknown User';
-    subtitleEl.innerText = 'Please login to save the data';
+    titleEl.innerText = 'Guest';
   }
+  
+  // Update auth menu text
+  updateAuthMenuText();
 }
 
 function closeMessageModal() {
@@ -1844,6 +1864,202 @@ function hideApp() {
   attendanceData = {};
 }
 
+// ===== AUTH MENU FUNCTIONS =====
+function updateAuthMenuText() {
+  const menuText = document.getElementById('authMenuText');
+  if (currentUser) {
+    menuText.innerText = 'Logout';
+  } else {
+    menuText.innerText = 'Login';
+  }
+}
+
+function handleAuthMenu() {
+  if (currentUser) {
+    showLogoutConfirm();
+  } else {
+    showLoginSheet();
+  }
+}
+
+// ===== DIRTY DOCUMENT FUNCTIONS =====
+function markDirty(userId, date, status) {
+  try {
+    const key = `dirty_${userId}_${date}`;
+    localStorage.setItem(key, JSON.stringify({
+      date: date,
+      status: status,
+      synced: false,
+      markedDirtyAt: new Date().toISOString()
+    }));
+  } catch (e) {
+    console.warn('Failed to mark dirty:', e);
+  }
+}
+
+function getDirtyDocuments(userId) {
+  try {
+    const dirtyDocs = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`dirty_${userId}_`)) {
+        const doc = JSON.parse(localStorage.getItem(key));
+        if (doc && !doc.synced) {
+          dirtyDocs.push(doc);
+        }
+      }
+    }
+    return dirtyDocs;
+  } catch (e) {
+    console.warn('Failed to get dirty documents:', e);
+    return [];
+  }
+}
+
+function clearDirty(userId, date) {
+  try {
+    const key = `dirty_${userId}_${date}`;
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.warn('Failed to clear dirty:', e);
+  }
+}
+
+// ===== SYNC SCHEDULING =====
+function initializeSyncScheduler() {
+  const syncKey = 'lastSyncAttempt';
+  const lastSync = localStorage.getItem(syncKey);
+  const now = new Date();
+  const shouldSync = !lastSync || (now.getTime() - new Date(lastSync).getTime()) > 8 * 60 * 60 * 1000; // 8 hours
+  
+  if (shouldSync) {
+    localStorage.setItem(syncKey, now.toISOString());
+  }
+  
+  // Schedule syncs 3 times per day: 9 AM, 1 PM, 5 PM
+  const syncTimes = [9, 13, 17];
+  syncTimes.forEach(hour => {
+    scheduleSyncAtTime(hour);
+  });
+  
+  // Also set up interval-based sync every 4 hours
+  setInterval(async () => {
+    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+    if (canAttemptRemoteSync(uid)) {
+      await syncDirtyDocuments();
+    }
+  }, 4 * 60 * 60 * 1000);
+}
+
+function scheduleSyncAtTime(hour) {
+  const now = new Date();
+  const nextSync = new Date();
+  nextSync.setHours(hour, 0, 0, 0);
+  
+  if (now.getHours() >= hour) {
+    nextSync.setDate(nextSync.getDate() + 1);
+  }
+  
+  const timeUntilSync = nextSync.getTime() - now.getTime();
+  
+  setTimeout(() => {
+    syncDirtyDocuments();
+    // Schedule again tomorrow
+    scheduleSyncAtTime(hour);
+  }, timeUntilSync);
+}
+
+async function syncDirtyDocuments() {
+  const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  const dirtyDocs = getDirtyDocuments(uid);
+  
+  if (!dirtyDocs.length || !isGoogleScriptConfigured() || !canAttemptRemoteSync(uid)) {
+    return;
+  }
+  
+  console.log(`Syncing ${dirtyDocs.length} dirty documents...`);
+  
+  for (const doc of dirtyDocs) {
+    if (!canAttemptRemoteSync(uid)) break;
+    
+    try {
+      const response = await fetch(googleScriptURL, {
+        method: 'POST',
+        body: buildScriptPayload({
+          action: 'saveAttendance',
+          userId: uid,
+          date: doc.date,
+          status: doc.status
+        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+      });
+      
+      const result = await response.json();
+      
+      if (result && result.success) {
+        incrementRemoteSyncCount(uid);
+        // Mark as synced on backend
+        await fetch(googleScriptURL, {
+          method: 'POST',
+          body: buildScriptPayload({
+            action: 'markSynced',
+            userId: uid,
+            date: doc.date
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+        }).catch(e => console.warn('Failed to mark synced on backend:', e));
+        
+        clearDirty(uid, doc.date);
+        console.log(`✓ Synced dirty doc: ${doc.date}`);
+      }
+    } catch (error) {
+      console.warn(`Failed to sync ${doc.date}:`, error);
+    }
+  }
+}
+
+// ===== MONTH-END LOGIN CHECK =====
+function checkMonthlyLoginRequired() {
+  const lastLoginCheckMonth = localStorage.getItem('lastLoginCheckMonth');
+  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+  
+  if (lastLoginCheckMonth !== currentMonth && !currentUser) {
+    const hasLocalSaves = localStorage.getItem('lastUserId') !== null;
+    if (hasLocalSaves) {
+      localStorage.setItem('lastLoginCheckMonth', currentMonth);
+      // Show login prompt at month end
+      setTimeout(() => {
+        showMessageModal('New Month', 'Please login to continue using the app in the new month.');
+        setTimeout(showLoginSheet, 1500);
+      }, 500);
+    } else {
+      localStorage.setItem('lastLoginCheckMonth', currentMonth);
+    }
+  }
+}
+
+// ===== LOGIN SKIP AFTER 5 SAVES =====
+function updateLocalSaveCount() {
+  const key = 'localCalendarSaveCount';
+  const count = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+  return count;
+}
+
+function shouldSkipLoginForCurrentMonth() {
+  const count = updateLocalSaveCount();
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthApprovedKey = `monthApproved_${currentMonth}`;
+  const approved = localStorage.getItem(monthApprovedKey) === 'true';
+  
+  return count >= 5 && approved;
+}
+
+function approveCurrentMonth() {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthApprovedKey = `monthApproved_${currentMonth}`;
+  localStorage.setItem(monthApprovedKey, 'true');
+}
+
 function isMonthAfterCurrentMonth(date) {
   const today = new Date();
   return date.getFullYear() > today.getFullYear() ||
@@ -1899,6 +2115,9 @@ window.addEventListener('load', async () => {
   const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
   await flushRemoteQueue();
   updateRemoteSyncStatus(uid);
+  
+  // Ensure header is updated with current date
+  updateHeader();
 });
 
 </script>

@@ -1,5 +1,5 @@
-// Google Apps Script for Attendance Tracker v2
-// Multi-tab database, Firebase auth
+// Google Apps Script for Attendance Tracker v3
+// Multi-tab database, Firebase auth, Dirty document tracking
 // Deploy as web app: Deploy > New Deployment > Type: Web app
 
 const SPREADSHEET_ID = '1xRWs999mHz51IGToz8gA-WjMuxAt9TB8fJXDqKv38-U';
@@ -8,7 +8,8 @@ const SPREADSHEET_ID = '1xRWs999mHz51IGToz8gA-WjMuxAt9TB8fJXDqKv38-U';
 const SHEETS = {
   attendance: 'Attendance',
   users: 'Users',
-  saveLogs: 'SaveLogs'
+  saveLogs: 'SaveLogs',
+  dirtyDocs: 'DirtyDocs'
 };
 
 function doPost(e) {
@@ -29,6 +30,10 @@ function doPost(e) {
         return checkSaveLimit(payload.userId);
       case 'getSaveCount':
         return getSaveCount(payload.userId);
+      case 'getDirtyDocs':
+        return getDirtyDocs(payload.userId);
+      case 'markSynced':
+        return markSynced(payload.userId, payload.date);
       default:
         return formatResponse(false, 'Unknown action');
     }
@@ -76,6 +81,7 @@ function saveAttendance(userId, date, status) {
   try {
     ensureSheets();
     const attendanceSheet = getSheet(SHEETS.attendance);
+    const dirtySheet = getSheet(SHEETS.dirtyDocs);
     
     // Find and update existing entry or create new
     const values = attendanceSheet.getDataRange().getValues();
@@ -92,6 +98,23 @@ function saveAttendance(userId, date, status) {
     if (!found) {
       attendanceSheet.appendRow([date, userId, status]);
       logSave(userId);
+    }
+    
+    // Log to dirty docs for tracking
+    const dirtyValues = dirtySheet.getDataRange().getValues();
+    let dirtyFound = false;
+    
+    for (let i = 1; i < dirtyValues.length; i++) {
+      if (dirtyValues[i][0] === userId && dirtyValues[i][1] === date) {
+        dirtySheet.getRange(i + 1, 3).setValue(status);
+        dirtySheet.getRange(i + 1, 5).setValue(false);
+        dirtyFound = true;
+        break;
+      }
+    }
+    
+    if (!dirtyFound) {
+      dirtySheet.appendRow([userId, date, status, new Date().toISOString(), false, '']);
     }
     
     Logger.log('Attendance saved: ' + userId + ' - ' + date + ' - ' + status);
@@ -281,6 +304,12 @@ function ensureSheets() {
     const sheet = ss.insertSheet(SHEETS.saveLogs);
     sheet.appendRow(['UserID', 'Date', 'Count']);
   }
+  
+  // DirtyDocs sheet
+  if (!ss.getSheetByName(SHEETS.dirtyDocs)) {
+    const sheet = ss.insertSheet(SHEETS.dirtyDocs);
+    sheet.appendRow(['UserID', 'Date', 'Status', 'MarkedAt', 'Synced', 'SyncedAt']);
+  }
 }
 
 function getSheet(sheetName) {
@@ -299,6 +328,54 @@ function formatResponse(success, data) {
     timestamp: new Date().toISOString()
   };
   return createJsonResponse(response);
+}
+
+// ===== DIRTY DOCUMENT FUNCTIONS =====
+
+function getDirtyDocs(userId) {
+  try {
+    ensureSheets();
+    const dirtySheet = getSheet(SHEETS.dirtyDocs);
+    const values = dirtySheet.getDataRange().getValues();
+    
+    const dirtyDocs = [];
+    
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      if (row[0] === userId && row[4] === false) {
+        dirtyDocs.push({
+          date: row[1],
+          status: row[2],
+          markedAt: row[3],
+          synced: row[4]
+        });
+      }
+    }
+    
+    return formatResponse(true, dirtyDocs);
+  } catch (error) {
+    return formatResponse(false, error.toString());
+  }
+}
+
+function markSynced(userId, date) {
+  try {
+    ensureSheets();
+    const dirtySheet = getSheet(SHEETS.dirtyDocs);
+    const values = dirtySheet.getDataRange().getValues();
+    
+    for (let i = 1; i < values.length; i++) {
+      if (values[i][0] === userId && values[i][1] === date) {
+        dirtySheet.getRange(i + 1, 5).setValue(true);
+        dirtySheet.getRange(i + 1, 6).setValue(new Date().toISOString());
+        return formatResponse(true, 'Marked as synced');
+      }
+    }
+    
+    return formatResponse(false, 'Document not found');
+  } catch (error) {
+    return formatResponse(false, error.toString());
+  }
 }
 
 function doGet(e) {
