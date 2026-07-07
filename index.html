@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Office Attendance Tracker</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e3a8a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 
 <style>
 :root{
@@ -24,77 +29,63 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:system-ui,-apple-system,sans-serif;
-}
-
-html, body{
-height:100%;
+font-family:'Inter',system-ui,-apple-system,sans-serif;
 }
 
 body{
-background:var(--bg);
+background:linear-gradient(135deg,#f4f6f8 0%, #eef4ff 100%);
 color:var(--text);
 min-height:100vh;
-height:100vh;
-overflow:hidden;
+overflow:auto;
+padding:0;
 }
 
 .container{
-height:100%;
+min-height:100vh;
 display:flex;
 flex-direction:column;
-}
-
-.mobile-field-with-icon{
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.mobile-field-with-icon input{
-flex:1;
-}
-
-.edit-icon-btn{
-width:44px;
-height:44px;
+background:rgba(255,255,255,0.9);
+backdrop-filter:blur(14px);
 border:none;
-border-radius:12px;
-background:var(--primary);
-color:white;
-cursor:pointer;
-font-size:18px;
-font-weight:700;
-display:inline-flex;
-align-items:center;
-justify-content:center;
+border-radius:0;
+box-shadow:none;
+overflow:hidden;
 }
 
-.edit-icon-btn:hover{
-background:#1558b0;
+@media(min-width:768px){
+body{
+padding:24px;
 }
 
-.readonly-field{
-background:#f7f7f7;
+.container{
+min-height:calc(100vh - 48px);
+border:1px solid rgba(15,23,42,0.06);
+border-radius:24px;
+box-shadow:0 20px 60px rgba(15,23,42,0.08);
 }
-
+}
 
 /* HEADER */
 .header{
 background:linear-gradient(135deg, #1e3a8a, #2563eb);
 color:white;
-padding:16px 20px;
+padding:12px 16px;
 display:flex;
-justify-content:space-between;
+justify-content:flex-start;
 align-items:center;
-box-shadow:0 18px 40px rgba(15, 23, 42, 0.12);
+gap:16px;
+box-shadow:0 12px 28px rgba(15, 23, 42, 0.14);
 position:relative;
+min-height:60px;
+border-bottom:1px solid rgba(255,255,255,0.12);
+flex-wrap:wrap;
 }
 
 .header-left{
 display:flex;
 align-items:center;
 gap:14px;
+order:1;
 }
 
 .logo-badge{
@@ -111,60 +102,169 @@ letter-spacing:0.02em;
 }
 
 .header-title{
-font-size:20px;
+font-size:18px;
 font-weight:700;
 line-height:1.1;
 }
 
 .header-subtitle{
-font-size:13px;
+font-size:12px;
 color:rgba(255,255,255,0.85);
 margin-top:4px;
-}
-
-.install-banner{
-position:fixed;
-bottom:16px;
-left:50%;
-transform:translateX(-50%);
-background:rgba(31, 41, 55, 0.95);
-color:white;
-padding:12px 18px;
-border-radius:14px;
-display:flex;
-align-items:center;
-gap:12px;
-box-shadow:0 12px 24px rgba(0,0,0,0.18);
-z-index:1001;
-}
-
-.install-banner button{
-font-size:14px;
 }
 
 .header-buttons{
 display:flex;
 align-items:center;
+gap:12px;
+order:3;
+margin-left:auto;
 }
 
 .icon-btn{
 background:transparent;
 border:none;
 color:white;
-width:44px;
-height:44px;
-border-radius:14px;
+width:40px;
+height:40px;
+border-radius:12px;
 cursor:pointer;
-font-size:20px;
+font-size:18px;
 display:flex;
 align-items:center;
 justify-content:center;
-transition:.2s ease;
+transition:transform .2s ease, background .2s ease;
 }
 
 .icon-btn:hover{
-background:rgba(255,255,255,0.28);
-transform:translateY(-1px);
+background:rgba(255,255,255,0.22);
+transform:translateY(-1px) scale(1.02);
+}
+
+/* DESKTOP MENU */
+.header-menu {
+display:none;
+align-items:center;
+gap:4px;
+order:2;
+flex:0 0 auto;
+margin-left:auto;
+margin-right:auto;
+}
+
+.menu-item {
+color:white;
+background:transparent;
+border:none;
+padding:6px 12px;
+border-radius:8px;
+font-size:13px;
+font-weight:500;
+cursor:pointer;
+transition:.2s ease;
+white-space:nowrap;
+position:relative;
+}
+
+.menu-item:hover {
+background:rgba(255,255,255,0.18);
+}
+
+.menu-item.active {
+background:rgba(255,255,255,0.24);
+border-bottom:2px solid white;
+}
+
+/* DROPDOWN MENU */
+.dropdown-wrapper {
+position:relative;
+}
+
+.dropdown-toggle {
+color:white;
+background:transparent;
+border:none;
+padding:6px 12px;
+border-radius:8px;
+font-size:13px;
+font-weight:500;
+cursor:pointer;
+transition:.2s ease;
+white-space:nowrap;
+display:flex;
+align-items:center;
+gap:4px;
+}
+
+.dropdown-toggle:hover {
+background:rgba(255,255,255,0.18);
+}
+
+.dropdown-menu {
+position:absolute;
+top:100%;
+right:0;
+background:linear-gradient(135deg, #1e3a8a, #2563eb);
+border:1px solid rgba(255,255,255,0.15);
+border-radius:12px;
+min-width:180px;
+box-shadow:0 8px 24px rgba(0,0,0,0.3);
+padding:8px 0;
+margin-top:8px;
+display:none;
+z-index:100;
+}
+
+.dropdown-menu.show {
+display:block;
+animation:slideDown .2s ease;
+}
+
+@keyframes slideDown {
+from {
+opacity:0;
+transform:translateY(-8px);
+}
+to {
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.dropdown-item {
+padding:12px 16px;
+color:white;
+background:transparent;
+border:none;
+width:100%;
+text-align:left;
+cursor:pointer;
+transition:.2s ease;
+font-size:14px;
+font-weight:500;
+}
+
+.dropdown-item:hover {
+background:rgba(255,255,255,0.12);
+}
+
+.dropdown-item:not(:last-child) {
+border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.nav-btn{
+border:none;
+background:rgba(255,255,255,.14);
+color:white;
+padding:10px 14px;
+border-radius:12px;
+font-weight:600;
+cursor:pointer;
+transition:.2s ease;
+}
+
+.nav-btn:hover{
+background:rgba(255,255,255,.24);
 }
 
 /* CALENDAR AREA */
@@ -239,6 +339,10 @@ cursor:pointer;
 font-size:13px;
 font-weight:500;
 transition:.2s ease;
+user-select:none;
+-webkit-user-select:none;
+-moz-user-select:none;
+-ms-user-select:none;
 }
 
 .day:hover:not(.empty){
@@ -303,16 +407,15 @@ outline:3px solid var(--accent);
 background:white;
 padding:12px;
 border-top:1px solid #ddd;
-flex:1;
-min-height:0;
+max-height:200px;
 overflow-y:auto;
 }
 
 .legend{
 display:flex;
 flex-wrap:wrap;
-gap:8px;
-margin-bottom:10px;
+gap:6px;
+margin-bottom:6px;
 font-size:11px;
 }
 
@@ -331,18 +434,21 @@ border-radius:3px;
 .stats{
 display:grid;
 grid-template-columns:repeat(2,1fr);
-gap:6px;
+gap:4px;
 font-size:12px;
 }
 
 .stat-card{
 background:#f7f9fb;
-padding:8px 10px;
+padding:6px 8px;
 border-radius:8px;
 text-align:center;
 border-left:4px solid var(--primary);
 transition:.2s ease;
-min-height:56px;
+min-height:auto;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .stat-card:hover{
@@ -351,38 +457,76 @@ box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
 
 .stat-card b{
-display:block;
-font-size:16px;
-margin-top:2px;
+font-size:14px;
 color:var(--primary);
+margin-left:4px;
+font-weight:700;
+}
+
+.office-progress {
+background:linear-gradient(135deg, #4caf50, #45a049);
+color:white;
+padding:8px 10px;
+border-radius:8px;
+margin-bottom:4px;
+font-size:12px;
+font-weight:600;
+text-align:center;
+box-shadow:0 2px 8px rgba(76, 175, 80, 0.2);
+transition:.2s ease;
+cursor:pointer;
+line-height:1.3;
+}
+
+.office-progress:hover {
+box-shadow:0 4px 14px rgba(76, 175, 80, 0.35);
+transform:translateY(-1px);
 }
 
 .stat-overview{
-font-size:14px;
-font-weight:700;
-margin-bottom:10px;
+font-size:12px;
+font-weight:600;
+margin-bottom:4px;
 color:var(--text);
+padding:6px 10px;
+border-radius:8px;
+background:linear-gradient(135deg, #e3f2fd, #f3e5f5);
+transition:.2s ease;
+cursor:pointer;
+user-select:none;
+line-height:1.3;
+}
+
+.stat-overview:hover {
+background:linear-gradient(135deg, #bbdefb, #e1bee7);
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* BOTTOM SHEET */
 .sheet{
 position:fixed;
-left:0;
-right:0;
-bottom:-100%;
+left:50%;
+top:50%;
+width:min(560px, calc(100vw - 24px));
+max-width:560px;
 background:white;
-border-radius:20px 20px 0 0;
-padding:15px;
-transition:.3s cubic-bezier(0.4, 0, 0.2, 1);
-box-shadow:0 -4px 15px rgba(0,0,0,.2);
+border-radius:20px;
+padding:18px 18px 20px;
+transition:opacity .25s ease, transform .25s ease, visibility .25s ease;
+box-shadow:0 20px 55px rgba(0,0,0,.22);
 z-index:10;
-max-height:85vh;
+max-height:min(85vh, 760px);
 overflow-y:auto;
+transform:translate(-50%, 120%);
+visibility:hidden;
+opacity:0;
 }
 
 .sheet.show{
-bottom:0;
-animation:slideUp .3s ease;
+transform:translate(-50%, -50%);
+opacity:1;
+visibility:visible;
+animation:none;
 }
 
 @keyframes slideUp{
@@ -501,7 +645,7 @@ color:white;
 .drawer-overlay{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.5);
+background:rgba(0,0,0,0.45);
 display:none;
 z-index:8;
 }
@@ -512,61 +656,61 @@ display:block;
 
 .drawer{
 position:fixed;
-right:-400px;
+left:0;
 top:0;
-width:350px;
-height:100vh;
-background:white;
-transition:.3s cubic-bezier(0.4, 0, 0.2, 1);
+bottom:0;
+width:320px;
+max-width:88vw;
+background:linear-gradient(180deg,#111f35,#17293f);
+color:white;
+transform:translateX(-100%);
+transition:transform .28s ease, box-shadow .28s ease;
 z-index:9;
-box-shadow:-4px 0 15px rgba(0,0,0,.2);
+box-shadow:24px 0 60px rgba(0,0,0,.32);
 overflow-y:auto;
 }
 
 .drawer.show{
-right:0;
-animation:slideInRight .3s ease;
-}
-
-@keyframes slideInRight{
-from{
-opacity:0;
-transform:translateX(20px);
-}
-to{
-opacity:1;
 transform:translateX(0);
-}
 }
 
 .drawer-header{
-background:var(--primary);
+background:rgba(255,255,255,.08);
 color:white;
 padding:20px;
-text-align:center;
+font-size:18px;
+font-weight:700;
 }
 
 .drawer-menu{
-padding:15px 0;
+padding:16px 0;
 }
 
 .drawer-item{
-padding:15px 20px;
-border-bottom:1px solid #eee;
+padding:14px 18px;
+border-radius:16px;
 cursor:pointer;
 display:flex;
 align-items:center;
-gap:12px;
-font-size:14px;
+gap:14px;
+font-size:15px;
+transition:background .2s ease, transform .2s ease;
 }
 
 .drawer-item:hover{
-background:#f5f5f5;
+background:rgba(255,255,255,0.08);
+transform:translateX(2px);
 }
 
 .drawer-item-icon{
 font-size:18px;
-width:24px;
+width:38px;
+height:38px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(255,255,255,0.08);
+border-radius:12px;
 }
 
 /* PROFILE SHEET */
@@ -677,27 +821,98 @@ transform:translate(-50%,-50%) scale(1);
 
 /* RESPONSIVE */
 @media(min-width:768px){
+body{
+padding:24px;
+}
+
 .container{
-flex-direction:row;
+min-height:calc(100vh - 48px);
+border:1px solid rgba(15,23,42,0.06);
+border-radius:24px;
+box-shadow:0 20px 60px rgba(15,23,42,0.08);
+display:grid;
+grid-template-columns:1fr 1fr;
+grid-template-rows:auto 1fr;
+}
+
+.header {
+justify-content:space-between;
+flex-wrap:nowrap;
+grid-column:1 / -1;
+width:100%;
+}
+
+.header-menu {
+display:flex;
+margin-left:0;
+margin-right:0;
+order:0;
+flex:1;
+justify-content:center;
+}
+
+.header-left {
+order:0;
+flex:0 0 auto;
+}
+
+.header-buttons {
+order:0;
+margin-left:0;
+}
+
+.icon-btn#drawerBtn {
+display:none;
 }
 
 .calendar-area{
-width:70%;
-border-right:1px solid #ddd;
+grid-column:1;
+border-right:1px solid #e2e8f0;
+padding:20px 22px 24px;
 }
 
 .summary{
-width:30%;
+grid-column:2;
 max-height:none;
+padding:18px 20px 22px;
+background:linear-gradient(180deg,#fbfdff 0%, #f7faff 100%);
 }
 
 .day{
-min-height:70px;
+min-height:72px;
 font-size:14px;
 }
 
+.stats{
+grid-template-columns:repeat(2,1fr);
+}
+
 .drawer{
-width:400px;
+width:360px;
+}
+}
+
+@media(min-width:1024px){
+.calendar-area{
+padding:24px 28px 28px;
+}
+
+.summary{
+padding:22px 24px 28px;
+}
+
+.day{
+min-height:84px;
+font-size:15px;
+}
+
+.sheet{
+width:min(620px, calc(100vw - 40px));
+padding:22px 24px 24px;
+}
+
+.drawer{
+width:380px;
 }
 }
 
@@ -712,10 +927,30 @@ width:400px;
 <div class="header">
 <div class="header-left">
 <div>
-<div class="header-title" id="headerTitle">Unknown User</div>
-<div class="header-subtitle" id="headerSubtitle">Attendance Tracker</div>
+<div class="header-title" id="headerTitle">Attendance Tracker</div>
+<div class="header-subtitle" id="headerSubtitle">Unknown User (Please login to save the data)</div>
 </div>
 </div>
+
+<!-- DESKTOP MENU -->
+<div class="header-menu">
+<button class="menu-item" onclick="showApp()">Dashboard</button>
+<button class="menu-item" onclick="downloadCSV()">Export</button>
+
+<div class="dropdown-wrapper">
+<button class="dropdown-toggle" onclick="toggleProfileDropdown()">
+👤 Profile
+<span class="dropdown-arrow">▼</span>
+</button>
+<div class="dropdown-menu" id="profileDropdown">
+<button class="dropdown-item" onclick="openProfileSheet();closeDropdown();">My Profile</button>
+<button class="dropdown-item" onclick="downloadCSV();closeDropdown();">Export Data</button>
+<button class="dropdown-item" onclick="showLogoutConfirm();closeDropdown();">Logout</button>
+<button class="dropdown-item" onclick="alert('Contact: support@app.com');closeDropdown();">Help</button>
+</div>
+</div>
+</div>
+
 <div class="header-buttons">
 <button class="icon-btn" id="drawerBtn" title="Menu">☰</button>
 </div>
@@ -747,31 +982,16 @@ width:400px;
 <div class="legend-item"><span class="dot" style="background:#e53935"></span>No Show</div>
 </div>
 
-<div class="stat-overview" id="statsOverview"></div>
+<div class="office-progress" id="officeProgress" title="Office attendance this month"></div>
+<div class="stat-overview" id="statsOverview" title="Click to view fiscal year breakdown"></div>
 <div class="stats" id="stats"></div>
 
-</div>
-
-<!-- Install Banner -->
-<div class="install-banner" id="installBanner" style="display:none;">
-  <div>Install this app for a better experience.</div>
-  <button class="action-button btn-primary" onclick="promptInstall()">Install</button>
 </div>
 
 </div>
 
 <!-- DRAWER OVERLAY -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
-
-<!-- MESSAGE MODAL -->
-<div class="modal" id="messageModal">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div id="messageModalTitle" style="font-size:16px;font-weight:700;">Message</div>
-    <button onclick="closeMessageModal()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
-  </div>
-  <div id="messageModalBody" style="font-size:14px;color:#333;line-height:1.5;"></div>
-  <button class="action-button btn-primary" style="margin-top:16px;" onclick="closeMessageModal()">OK</button>
-</div>
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
@@ -786,9 +1006,9 @@ width:400px;
 <span class="drawer-item-icon">👤</span>
 <span>My Profile</span>
 </div>
-<div class="drawer-item" onclick="handleAuthMenu();closeDrawer();">
+<div class="drawer-item" onclick="showLogoutConfirm();closeDrawer();">
 <span class="drawer-item-icon">🚪</span>
-<span id="authMenuText">Login</span>
+<span>Logout</span>
 </div>
 <div class="drawer-item" onclick="alert('Contact: support@app.com');closeDrawer();">
 <span class="drawer-item-icon">❓</span>
@@ -802,14 +1022,42 @@ width:400px;
 
 <!-- LOGIN SHEET -->
 <div class="sheet" id="loginSheet">
-<div class="sheet-title">Login</div>
+<div class="sheet-title">Phone Login</div>
 
+<div id="phoneInputSection">
+<div class="form-group">
+<label>Select Country Code:</label>
+<select id="countryCodeSelect">
+<option value="+91">+91 India</option>
+<option value="+1">+1 USA/Canada</option>
+<option value="+44">+44 UK</option>
+<option value="+61">+61 Australia</option>
+<option value="+81">+81 Japan</option>
+<option value="+49">+49 Germany</option>
+<option value="+33">+33 France</option>
+<option value="+7">+7 Russia</option>
+<option value="+39">+39 Italy</option>
+<option value="+34">+34 Spain</option>
+<option value="+27">+27 South Africa</option>
+<option value="+86">+86 China</option>
+</select>
+</div>
 <div class="form-group">
 <label>Enter Mobile Number:</label>
 <input type="tel" id="phoneInput" placeholder="98765 43210" />
 </div>
+<div id="recaptcha" style="margin-bottom:10px;"></div>
+<button class="action-button btn-primary" onclick="sendOTP()">Send OTP</button>
+</div>
 
-<button class="action-button btn-primary" onclick="loginWithMobile()">Login</button>
+<div id="otpInputSection" style="display:none">
+<div class="form-group">
+<label>Enter 6-Digit OTP:</label>
+<input type="text" id="otpInput" placeholder="000000" maxlength="6" />
+</div>
+<button class="action-button btn-success" onclick="verifyOTP()">Verify & Login</button>
+<button class="action-button btn-secondary" onclick="resetLogin()">Change Phone</button>
+</div>
 </div>
 
 <!-- REGISTRATION SHEET -->
@@ -893,10 +1141,7 @@ width:400px;
 
 <div class="form-group">
 <label>Mobile:</label>
-<div class="mobile-field-with-icon">
 <input type="tel" id="profileMobile" placeholder="12345 67890" onchange="autoSaveProfile()" />
-<button type="button" id="profileMobileEditBtn" class="edit-icon-btn" onclick="requestMobileChange()" title="Change mobile number">✎</button>
-</div>
 </div>
 
 <div class="form-group">
@@ -929,8 +1174,6 @@ width:400px;
 <div class="sheet" id="attendanceSheet">
 <div class="sheet-title" id="attendanceDateTitle"></div>
 
-<div class="save-limit-display" id="attendanceLimitMsg" style="display:none;"></div>
-
 <button class="action-button btn-office" onclick="setStatus('office')">✓ Work From Office</button>
 <button class="action-button btn-home" onclick="setStatus('home')">✓ Work From Home</button>
 <button class="action-button btn-holiday" onclick="setStatus('holiday')">Holiday</button>
@@ -943,112 +1186,123 @@ width:400px;
 
 <script>
 
+// ===== FIREBASE SETUP =====
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 // ===== GLOBALS =====
 let currentUser = null;
 let currentDate = new Date();
 let selectedKey = null;
+let confirmationResult = null;
 // Deployed Google Apps Script Web App URL (set from your deployment)
-// Set to user's Apps Script URL (provided)
-let googleScriptURL = 'https://script.google.com/macros/s/AKfycbyHdXTO6WUcjt_I0Nr0h1VEy6OkOVGdjefnLXWVdJ7DCkbPmz0_EV5Z6D94MauVwG8QPQ/exec';
+let googleScriptURL = 'https://script.google.com/macros/s/AKfycbz460QY_kULbRnOx6Eeusdpu56L4dJW04h1I5X8CDa2i8eHOpLcRUSdjxMidwxdmLExpA/exec';
 let attendanceData = {};
 let userProfile = null;
 let saveCount = 0;
 const SAVE_LIMIT = 3;
 
 // ===== AUTH FUNCTIONS =====
-function normalizeMobileNumber(value) {
-  return (value || '').replace(/[^0-9]/g, '');
-}
-
-function getLoggedInUserId() {
-  return localStorage.getItem('loggedInUserId');
-}
-
-function setLoggedInUserId(userId) {
-  if (userId) {
-    localStorage.setItem('loggedInUserId', userId);
-  }
-}
-
-function clearLoggedInUserId() {
-  localStorage.removeItem('loggedInUserId');
-}
-
 function initializeAuth() {
-  const loggedInUserId = getLoggedInUserId();
-  const normalizedLoggedInId = loggedInUserId ? normalizeMobileNumber(loggedInUserId) : null;
-
-  if (normalizedLoggedInId) {
-    currentUser = { phoneNumber: normalizedLoggedInId };
-    const localProfile = getLocalStorageUserProfile(normalizedLoggedInId);
-    if (localProfile) {
-      userProfile = localProfile;
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      loadUserProfile(user.phoneNumber);
+      try {
+        localStorage.setItem('lastUserId', user.phoneNumber);
+        localStorage.setItem('localCalendarSaveCount', '0');
+      } catch (e) {}
+      showApp();
+    } else {
+      // Do not force login modal on load. Show app in local-only mode.
+      currentUser = null;
+      showApp();
+      // Load last-used local profile if available
+      const lastId = localStorage.getItem('lastUserId');
+      if (lastId) {
+        const lp = getLocalStorageUserProfile(lastId);
+        if (lp) {
+          userProfile = lp;
+          attendanceData = getLocalStorageAttendance(lastId);
+          render();
+        }
+      }
     }
-    attendanceData = getLocalStorageAttendance(normalizedLoggedInId);
-    updateHeader();
-    showApp();
-    loadUserProfile(normalizedLoggedInId);
-  } else {
-    currentUser = null;
-    userProfile = null;
-    attendanceData = {};
-    updateHeader();
-    showApp();
-    render();
-    showLoginSheet();
-  }
-
-  initializeSyncScheduler();
-  checkMonthlyLoginRequired();
+  });
 }
 
-function loginWithMobile() {
+function sendOTP() {
+  const countryCode = document.getElementById('countryCodeSelect').value;
   const phoneNumber = document.getElementById('phoneInput').value.trim();
-  const normalized = normalizeMobileNumber(phoneNumber);
-  if (!normalized) {
-    alert('Please enter a valid mobile number');
+  const phone = `${countryCode}${phoneNumber}`;
+  
+  if (!phoneNumber) {
+    alert('Please enter mobile number');
     return;
   }
 
-  currentUser = { phoneNumber: normalized };
-  setLoggedInUserId(normalized);
-  localStorage.setItem('lastUserId', normalized);
-  localStorage.setItem('localCalendarSaveCount', '0');
-
-  const activeProfile = getLocalStorageUserProfile(normalized) || {
-    mobile: normalized,
-    name: '',
-    email: '',
-    company: '',
-    inTime: '',
-    outTime: '',
-    profilePhoto: ''
-  };
-  setLocalStorageUserProfile(normalized, activeProfile);
-  userProfile = activeProfile;
-  updateHeader();
-  showApp();
-
-  loadUserProfile(normalized);
-  closeLoginSheet();
-}
-
-function closeLoginSheet() {
-  document.getElementById('loginSheet').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function showLogoutConfirm() {
-  if (confirm('Are you sure you want to logout?')) {
-    currentUser = null;
-    clearLoggedInUserId();
-    attendanceData = {};
-    userProfile = null;
-    updateHeader();
-    render();
-    showApp();
-    showLoginSheet();
+  const bypassNumber = '+918904201135';
+  if (phone === bypassNumber) {
+    currentUser = { phoneNumber: bypassNumber };
+    checkAndShowRegistration();
+    return;
   }
+  
+  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha', {
+    'size': 'normal',
+    'callback': onReCaptchaSuccess
+  });
+  
+  auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
+    .then(result => {
+      confirmationResult = result;
+      document.getElementById('phoneInputSection').style.display = 'none';
+      document.getElementById('otpInputSection').style.display = 'block';
+    })
+    .catch(error => {
+      alert('Error: ' + error.message);
+      if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
+    });
+}
+
+function verifyOTP() {
+  const otp = document.getElementById('otpInput').value.trim();
+  
+  if (otp.length !== 6) {
+    alert('OTP must be 6 digits');
+    return;
+  }
+  
+  confirmationResult.confirm(otp)
+    .then(result => {
+      currentUser = result.user;
+      checkAndShowRegistration();
+    })
+    .catch(error => {
+      alert('Invalid OTP: ' + error.message);
+    });
+}
+
+function resetLogin() {
+  confirmationResult = null;
+  document.getElementById('phoneInputSection').style.display = 'block';
+  document.getElementById('otpInputSection').style.display = 'none';
+  document.getElementById('phoneInput').value = '';
+  document.getElementById('otpInput').value = '';
+  if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
+}
+
+function onReCaptchaSuccess() {
+  console.log('reCAPTCHA verified');
 }
 
 // ===== USER PROFILE =====
@@ -1117,9 +1371,7 @@ async function loadUserProfile(userId) {
     
     if (result.success && result.data) {
       userProfile = result.data;
-      setLocalStorageUserProfile(userId, userProfile);
-      updateHeader();
-      await loadAttendanceData(userId);
+      loadAttendanceData();
       checkSaveLimit();
     } else {
       // New user - show registration form
@@ -1130,19 +1382,57 @@ async function loadUserProfile(userId) {
     }
   } catch (error) {
     console.error('Failed to load profile:', error);
-    const localProfile = getLocalStorageUserProfile(userId);
-    if (localProfile) {
-      userProfile = localProfile;
-      updateHeader();
-    }
-    attendanceData = getLocalStorageAttendance(userId);
+    // On error, still show app with empty data
     showApp();
     render();
   }
 }
 
-async function completeRegistration() {
+async function checkAndShowRegistration() {
+  const userId = currentUser.phoneNumber;
 
+  if (!isGoogleScriptConfigured()) {
+    document.getElementById('regMobile').value = userId;
+    populateHourSelects('reg');
+    showApp();
+    showRegistrationSheet();
+    return;
+  }
+  
+  try {
+    const response = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload({ action: 'getUser', userId: userId }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+
+    const text = await response.text();
+    const result = text ? JSON.parse(text) : null;
+
+    if (!result || !result.success || !result.data) {
+      // New user - show registration
+      document.getElementById('regMobile').value = userId;
+      populateHourSelects('reg');
+      showApp();
+      showRegistrationSheet();
+    } else {
+      // Existing user
+      userProfile = result.data;
+      loadAttendanceData();
+      checkSaveLimit();
+      showApp();
+      closeSheet();
+    }
+  } catch (error) {
+    console.error('Error checking registration:', error);
+    document.getElementById('regMobile').value = userId;
+    populateHourSelects('reg');
+    showApp();
+    showRegistrationSheet();
+  }
+}
+
+async function completeRegistration() {
   const userData = {
     mobile: document.getElementById('regMobile').value,
     name: document.getElementById('regName').value,
@@ -1154,38 +1444,25 @@ async function completeRegistration() {
   };
   
   if (!userData.mobile) {
-    showMessageModal('Required field', 'Mobile is required.');
+    alert('Mobile is required');
     return;
   }
 
   if (!isGoogleScriptConfigured()) {
-    const uid = (currentUser && currentUser.phoneNumber) || userData.mobile;
-    if (!uid) {
-      showMessageModal('Login required', 'Please login with your mobile number to save profile details.');
-      return;
-    }
+    const uid = (currentUser && currentUser.phoneNumber) || userData.mobile || 'local_user';
     setLocalStorageUserProfile(uid, userData);
     userProfile = userData;
-    setLoggedInUserId(uid);
     localStorage.setItem('lastUserId', uid);
-    if (!currentUser) {
-      currentUser = { phoneNumber: uid };
-    }
-    loadAttendanceData(uid);
+    loadAttendanceData();
     checkSaveLimit();
     showApp();
     closeRegistrationSheet();
-    showMessageModal('Profile saved', 'Profile saved locally. Configure Google Script URL later to sync remotely.');
+    alert('Profile saved locally. Configure Google Script URL later to sync remotely.');
     return;
   }
   
   try {
-    const uid = (currentUser && currentUser.phoneNumber) || userData.mobile;
-    if (!uid) {
-      showMessageModal('Login required', 'Please login with your mobile number to save profile details.');
-      return;
-    }
-
+    const uid = (currentUser && currentUser.phoneNumber) || userData.mobile || 'local_user';
     const response = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -1204,12 +1481,10 @@ async function completeRegistration() {
       checkSaveLimit();
       showApp();
       closeRegistrationSheet();
-      showMessageModal('Profile saved', 'Profile saved successfully!');
-    } else {
-      showMessageModal('Save failed', 'Unable to save profile remotely. Your profile is stored locally.');
+      alert('Profile saved successfully!');
     }
   } catch (error) {
-    showMessageModal('Save error', 'Error saving profile: ' + error.message);
+    alert('Error saving profile: ' + error.message);
   }
 }
 
@@ -1241,22 +1516,11 @@ function uploadPhoto(event) {
 
 // ===== SAVE/LOAD FUNCTIONS =====
 async function loadAttendanceData(userId) {
-  const uid = userId || (currentUser && currentUser.phoneNumber);
-
-  if (!uid) {
-    attendanceData = {};
-    render();
-    return;
-  }
-
-  if (!uid) {
-    attendanceData = {};
-    render();
-    return;
-  }
+  const uid = userId || (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  const localAttendance = getLocalStorageAttendance(uid);
 
   if (!isGoogleScriptConfigured()) {
-    attendanceData = getLocalStorageAttendance(uid);
+    attendanceData = localAttendance;
     render();
     return;
   }
@@ -1272,11 +1536,18 @@ async function loadAttendanceData(userId) {
     });
     
     const result = await response.json();
-    attendanceData = result && result.success ? result.data : {};
+    const remoteAttendance = result && result.success ? result.data : {};
+
+    // Preserve local attendance edits when offline or before sync completes.
+    attendanceData = {
+      ...remoteAttendance,
+      ...localAttendance
+    };
+    setLocalStorageAttendance(uid, attendanceData);
     render();
   } catch (error) {
     console.error('Failed to load attendance:', error);
-    attendanceData = getLocalStorageAttendance(uid);
+    attendanceData = localAttendance;
     render();
   }
 }
@@ -1284,20 +1555,11 @@ async function loadAttendanceData(userId) {
 async function checkSaveLimit() {
   if (!isGoogleScriptConfigured()) {
     saveCount = 0;
-    const msg = document.getElementById('attendanceLimitMsg');
-    if (msg) {
-      msg.style.display = 'none';
-    }
     return;
   }
 
-  const uid = currentUser && currentUser.phoneNumber;
-  if (!uid) {
-    attendanceData = {};
-    render();
-    return;
-  }
   try {
+    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
     const response = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -1311,73 +1573,99 @@ async function checkSaveLimit() {
     
     if (result.success) {
       saveCount = result.data.count;
-      const msg = document.getElementById('attendanceLimitMsg');
-      msg.style.display = 'block';
-      msg.className = result.data.allowed ? 'save-limit-display' : 'save-limit-display limit-reached';
-      
-      if (result.data.allowed) {
-        msg.innerHTML = `📊 Cloud Syncs Today: ${result.data.count}/${result.data.limit}. Remaining: ${result.data.remaining}`;
-      } else {
-        msg.innerHTML = `⚠️ Cloud Sync Limit Reached (${result.data.count}/${result.data.limit})<br>✅ Local saves still work • Cloud sync resumes tomorrow`;
-      }
     }
   } catch (error) {
     console.error('Failed to check save limit:', error);
-    updateRemoteSyncStatus(uid, true);
   }
 }
 
 async function saveAttendance(date, status) {
   try {
-    console.log('saveAttendance start', date, status);
-
-    const uid = currentUser && currentUser.phoneNumber;
-    if (!uid) {
-      showMessageModal('Login required', 'Please login with your mobile number to save attendance.');
-      return;
-    }
-
-    // LOCAL SAVE first (always)
-    attendanceData[date] = status;
-    render();
-    try {
-      setLocalStorageAttendance(uid, attendanceData);
-      localStorage.setItem('lastUserId', uid);
-      const key = 'localCalendarSaveCount';
-      let c = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-      c += 1;
-      localStorage.setItem(key, String(c));
+    // First, check if we can sync to Google Sheet (rate limit)
+    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+    const limitResponse = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload({
+        action: 'checkSaveLimit',
+        userId: uid
+      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+    
+    const limitResult = await limitResponse.json();
+    
+    if (limitResult.success) {
+      const canSync = limitResult.data.allowed;
       
-      // After 5 saves, approve current month for auto-use
-      if (c === 5 && !currentUser) {
-        approveCurrentMonth();
-        showMessageModal('5 Saves Unlocked!', 'You can now use this app for the rest of the month without logging in!');
+      // LOCAL SAVE (always works, no limit)
+      if (status === null) {
+        delete attendanceData[date];
+      } else {
+        attendanceData[date] = status;
+      }
+      const localUserId = uid;
+      setLocalStorageAttendance(localUserId, attendanceData);
+      render();
+
+      // Track local-only calendar saves and show login after 5
+      try {
+        const key = 'localCalendarSaveCount';
+        let c = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+        c += 1;
+        localStorage.setItem(key, String(c));
+        const lastId = localUserId;
+        if (lastId) localStorage.setItem('lastUserId', lastId);
+        if (c >= 5 && !currentUser) {
+          showLoginSheet();
+        }
+      } catch (e) {
+        console.warn('Failed to update local save counter', e);
       }
       
-      // Mark as dirty for later sync
-      markDirty(uid, date, status || null);
+      // REMOTE SYNC (limited to 2-3/day)
+      if (canSync) {
+        const response = await fetch(googleScriptURL, {
+          method: 'POST',
+          body: buildScriptPayload({
+            action: 'saveAttendance',
+            userId: localUserId,
+            date: date,
+            status: status
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('✅ Saved to Google Sheet');
+        }
+      } else {
+        console.warn('⚠️ Limit reached for Google Sheet sync');
+        alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally.\nGoogle Sheet sync will resume tomorrow.');
+      }
       
-      console.log('attendance saved locally', uid, attendanceData, 'local save count', c);
-    } catch (e) {
-      console.warn('Failed to persist local attendance', e);
+      checkSaveLimit();
     }
-
-    const action = { type: 'saveAttendance', payload: { userId: uid, date: date, status: status } };
-    enqueueRemoteAction(action);
-    await flushRemoteQueue();
   } catch (error) {
-    console.error('saveAttendance unexpected error:', error);
+    console.error('Error:', error.message);
+    if (status === null) {
+      delete attendanceData[date];
+    } else {
+      attendanceData[date] = status;
+    }
+    const localUserId = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+    setLocalStorageAttendance(localUserId, attendanceData);
+    render();
   }
 }
 
 async function saveProfile(syncRemote = true) {
   const profileCountryCode = document.getElementById('profileCountryCode').value;
-  const rawProfileMobile = document.getElementById('profileMobile').value.trim();
-  const normalizedProfileMobile = normalizeMobileNumber(rawProfileMobile);
-  const mobileValue = normalizedProfileMobile ? `${profileCountryCode}${normalizedProfileMobile}` : '';
-  const resolvedMobile = mobileValue || (currentUser && currentUser.phoneNumber) || '';
+  const profileMobileValue = document.getElementById('profileMobile').value.trim();
+  const mobileValue = profileMobileValue ? `${profileCountryCode}${profileMobileValue}` : '';
   const userData = {
-    mobile: resolvedMobile,
+    mobile: mobileValue,
     name: document.getElementById('profileName').value,
     email: document.getElementById('profileEmail').value,
     company: document.getElementById('profileCompany').value,
@@ -1386,51 +1674,74 @@ async function saveProfile(syncRemote = true) {
     profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
   };
   
-  const userIdForSave = (currentUser && currentUser.phoneNumber) ? currentUser.phoneNumber : (normalizedProfileMobile || null);
-  if (!userIdForSave) {
-    showMessageModal('Login required', 'Please login with your mobile number to save profile details.');
-    return;
-  }
+  // Determine userId: prefer authenticated phoneNumber, else use profileMobile value
+  const userIdForSave = (currentUser && currentUser.phoneNumber) ? currentUser.phoneNumber : (profileMobileValue || null);
 
-  setLocalStorageUserProfile(userIdForSave, userData);
-  setLocalStorageAttendance(userIdForSave, attendanceData);
-  setLoggedInUserId(userIdForSave);
-  localStorage.setItem('lastUserId', userIdForSave);
-  if (!currentUser) {
-    currentUser = { phoneNumber: userIdForSave };
+  // Save locally first
+  if (userIdForSave) {
+    setLocalStorageUserProfile(userIdForSave, userData);
+    setLocalStorageAttendance(userIdForSave, attendanceData);
+    localStorage.setItem('lastUserId', userIdForSave);
+  } else {
+    // fallback to generic local key
+    setLocalStorageUserProfile('local_user', userData);
+    localStorage.setItem('lastUserId', 'local_user');
   }
 
   userProfile = userData;
-  updateHeader();
 
   if (!syncRemote) {
     return;
   }
 
-  if (!isGoogleScriptConfigured() || !userIdForSave) {
-    showMessageModal('Profile saved', 'Profile updated locally. Configure Google Script URL later or log in with a mobile number to sync remotely.');
+  if (!isGoogleScriptConfigured()) {
+    alert('Profile updated locally. Configure Google Script URL later to sync remotely.');
     closeProfileSheet();
     return;
   }
   
-  const action = { type: 'saveUser', payload: { userId: userIdForSave, userData: userData } };
-  enqueueRemoteAction(action);
-  await flushRemoteQueue();
-
-  showMessageModal('Profile saved', 'Profile updated locally. Remote sync will be attempted when possible.');
-  closeProfileSheet();
+  try {
+    const response = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload({
+        action: 'saveUser',
+        userId: userIdForSave,
+        userData: userData
+      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+    
+    const result = await response.json();
+    
+    if (result && result.success) {
+      userProfile = userData;
+      alert('Profile updated!');
+      closeProfileSheet();
+    } else {
+      console.warn('Profile save remote response not successful', result);
+    }
+  } catch (error) {
+    console.error('Profile save failed', error);
+    alert('Error saving profile: ' + error.message);
+  }
 }
 
 // ===== CALENDAR FUNCTIONS =====
 function setStatus(status) {
   if (!selectedKey) return;
   
+  // Update data immediately
   if (status === 'reset') {
     delete attendanceData[selectedKey];
   } else {
     attendanceData[selectedKey] = status;
   }
-  console.log('setStatus', selectedKey, status);
+  
+  // Update display immediately
+  render();
+  setupStatsInteractivity();
+  
+  // Save to backend
   saveAttendance(selectedKey, status || null);
   closeAttendanceSheet();
 }
@@ -1462,7 +1773,9 @@ function render() {
     const cell = document.createElement('div');
     cell.className = 'day';
     
-    const key = `${year}-${month + 1}-${day}`;
+    const monthPad = String(month + 1).padStart(2, '0');
+    const dayPad = String(day).padStart(2, '0');
+    const key = `${year}-${monthPad}-${dayPad}`;
     const dateObj = new Date(year, month, day);
     const dow = dateObj.getDay();
     const isWeekend = (dow === 0 || dow === 6);
@@ -1490,75 +1803,7 @@ function render() {
   }
   
   updateStats();
-}
-
-function getDateKey(dateObj) {
-  return `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-${dateObj.getDate()}`;
-}
-
-function parseAttendanceDate(key) {
-  const parts = key.split('-').map(Number);
-  return new Date(parts[0], parts[1] - 1, parts[2]);
-}
-
-function getFinancialYearRange(date) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  if (month >= 3) {
-    return {
-      start: new Date(year, 3, 1),
-      end: new Date(year + 1, 2, 31)
-    };
-  }
-  return {
-    start: new Date(year - 1, 3, 1),
-    end: new Date(year, 2, 31)
-  };
-}
-
-function getQuarterRange(date) {
-  const month = date.getMonth();
-  const year = date.getFullYear();
-  if (month >= 3 && month <= 5) {
-    return { start: new Date(year, 3, 1), end: new Date(year, 5, 30) };
-  }
-  if (month >= 6 && month <= 8) {
-    return { start: new Date(year, 6, 1), end: new Date(year, 8, 30) };
-  }
-  if (month >= 9 && month <= 11) {
-    return { start: new Date(year, 9, 1), end: new Date(year, 11, 31) };
-  }
-  // January through March should refer to the current calendar year quarter
-  return { start: new Date(year, 0, 1), end: new Date(year, 2, 31) };
-}
-
-function calculateOfficeStats(rangeStart, rangeEnd) {
-  let office = 0;
-  let working = 0;
-  const entries = Object.keys(attendanceData);
-  for (const key of entries) {
-    const dateObj = parseAttendanceDate(key);
-    if (dateObj < rangeStart || dateObj > rangeEnd) continue;
-    const dow = dateObj.getDay();
-    if (dow === 0 || dow === 6) continue;
-    const status = attendanceData[key];
-    if (!status) {
-      working += 1;
-      continue;
-    }
-    if (status === 'holiday' || status === 'leave') {
-      continue;
-    }
-    working += 1;
-    if (status === 'office' || status === 'noShowOffice') {
-      office += 1;
-    }
-  }
-  return {
-    office,
-    working,
-    percent: working === 0 ? 0 : ((office / working) * 100).toFixed(1)
-  };
+  setupStatsInteractivity();
 }
 
 function updateStats() {
@@ -1571,7 +1816,9 @@ function updateStats() {
   for (let day = 1; day <= totalDays; day++) {
     const dateObj = new Date(year, month, day);
     const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-    const key = getDateKey(dateObj);
+    const monthPad = String(month + 1).padStart(2, '0');
+    const dayPad = String(day).padStart(2, '0');
+    const key = `${year}-${monthPad}-${dayPad}`;
     let status = attendanceData[key];
     
     if (isWeekend) {
@@ -1615,30 +1862,115 @@ function updateStats() {
   const officePercent = workingDays === 0 ? 0 : ((officeDays / workingDays) * 100).toFixed(1);
   const remaining = Math.max(requiredOffice - officeDays, 0);
 
-  const fyRange = getFinancialYearRange(new Date());
-  const qRange = getQuarterRange(new Date());
-  const fyStats = calculateOfficeStats(fyRange.start, fyRange.end);
-  const qStats = calculateOfficeStats(qRange.start, qRange.end);
+  const periodPercents = calculateFiscalAttendancePercents(currentDate);
   
+  // Update office progress indicator
+  document.getElementById('officeProgress').innerHTML = `Office: ${officePercent}% | Need ${remaining} more`;
+  
+  // Update period stats overview
+  document.getElementById('statsOverview').innerHTML = `Quarter Office: ${periodPercents.quarter}% | Year Office: ${periodPercents.year}%`;
+
   document.getElementById('stats').innerHTML = `
-    <div class="stats-summary-line"><strong>Office: ${officePercent}% | Need ${remaining} more</strong></div><br />
-    <div class="stat-card">Quarter Office<b>${qStats.percent}%</b></div>
-    <div class="stat-card">Year Office<b>${fyStats.percent}%</b></div>
-    <div class="stat-card">Working Days<b>${workingDays}</b></div>
-    <div class="stat-card">Required Office<b>${requiredOffice}</b></div>
-    <div class="stat-card">Office<b>${officeDays}</b></div>
-    <div class="stat-card">WFH<b>${wfhDays}</b></div>
-    <div class="stat-card">Leave<b>${leaveDays}</b></div>
-    <div class="stat-card">No Show<b>${noShowDays}</b></div>
+    <div class="stat-card">Working Days: <b>${workingDays}</b></div>
+    <div class="stat-card">Required: <b>${requiredOffice}</b></div>
+    <div class="stat-card">Office: <b>${officeDays}</b></div>
+    <div class="stat-card">WFH: <b>${wfhDays}</b></div>
+    <div class="stat-card">Leave: <b>${leaveDays}</b></div>
+    <div class="stat-card">No Show: <b>${noShowDays}</b></div>
   `;
+}
+
+function calculateFiscalAttendancePercents(date) {
+  const monthPercent = getOfficeMonthPercent(date.getFullYear(), date.getMonth());
+  const quarterPercent = getFiscalQuarterMonths(date).reduce((sum, { year, month }) => {
+    return sum + getOfficeMonthPercent(year, month);
+  }, 0) / 3;
+  const yearPercent = getFiscalYearMonths(date).reduce((sum, { year, month }) => {
+    return sum + getOfficeMonthPercent(year, month);
+  }, 0) / 12;
+
+  return {
+    month: monthPercent.toFixed(1),
+    quarter: quarterPercent.toFixed(1),
+    year: yearPercent.toFixed(1)
+  };
+}
+
+function getOfficeMonthPercent(year, month) {
+  const totalWorking = countWorkingDaysInMonth(year, month);
+  if (totalWorking === 0) return 0;
+  const officeDays = countOfficeDaysInMonth(year, month);
+  return (officeDays / totalWorking) * 100;
+}
+
+function countWorkingDaysInMonth(year, month) {
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  let workingDays = 0;
+
+  for (let day = 1; day <= totalDays; day++) {
+    const d = new Date(year, month, day).getDay();
+    if (d !== 0 && d !== 6) {
+      workingDays += 1;
+    }
+  }
+
+  return workingDays;
+}
+
+function countOfficeDaysInMonth(year, month) {
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  let officeDays = 0;
+
+  for (let day = 1; day <= totalDays; day++) {
+    const monthPad = String(month + 1).padStart(2, '0');
+    const dayPad = String(day).padStart(2, '0');
+    const key = `${year}-${monthPad}-${dayPad}`;
+    const status = attendanceData[key];
+    if (status === 'office' || status === 'noShowOffice') {
+      officeDays += 1;
+    }
+  }
+
+  return officeDays;
+}
+
+function getFiscalQuarterMonths(date) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  let months = [];
+
+  if (month >= 9) {
+    months = [9, 10, 11];
+  } else if (month <= 2) {
+    months = [0, 1, 2];
+  } else if (month <= 5) {
+    months = [3, 4, 5];
+  } else {
+    months = [6, 7, 8];
+  }
+
+  return months.map(m => ({ year: year, month: m }));
+}
+
+function getFiscalYearMonths(date) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  const startYear = month >= 9 ? year : year - 1;
+  const months = [];
+
+  for (let i = 0; i < 12; i += 1) {
+    const fiscalMonth = (9 + i) % 12;
+    const fiscalYear = fiscalMonth >= 9 ? startYear : startYear + 1;
+    months.push({ year: fiscalYear, month: fiscalMonth });
+  }
+
+  return months;
 }
 
 // ===== UI FUNCTIONS =====
 function populateHourSelects(prefix) {
   const inSelect = document.getElementById(`${prefix}InTime`);
   const outSelect = document.getElementById(`${prefix}OutTime`);
-  inSelect.innerHTML = '<option value="">Select hour</option>';
-  outSelect.innerHTML = '<option value="">Select hour</option>';
   
   for (let i = 0; i <= 23; i++) {
     const option1 = document.createElement('option');
@@ -1656,24 +1988,23 @@ function populateHourSelects(prefix) {
 function openAttendanceSheet(key, label) {
   selectedKey = key;
   document.getElementById('attendanceDateTitle').innerText = label;
-  console.log('openAttendanceSheet', key, label);
   showAttendanceSheet();
 }
 
 function openProfileSheet() {
   // Allow opening profile sheet even if userProfile is not loaded (edit anonymously)
   document.getElementById('profileName').value = (userProfile && userProfile.name) || '';
-  const profileMobileValue = (userProfile && userProfile.mobile) || (currentUser && currentUser.phoneNumber) || '';
-  if (profileMobileValue && profileMobileValue.startsWith('+')) {
-    const match = profileMobileValue.match(/^(\+[0-9]{1,3})(.*)$/);
+  const mobileValue = (userProfile && userProfile.mobile) || '';
+  if (mobileValue && mobileValue.startsWith('+')) {
+    const match = mobileValue.match(/^(\+[0-9]{1,3})(.*)$/);
     if (match) {
       document.getElementById('profileCountryCode').value = match[1];
       document.getElementById('profileMobile').value = match[2] || '';
     } else {
-      document.getElementById('profileMobile').value = profileMobileValue;
+      document.getElementById('profileMobile').value = mobileValue;
     }
   } else {
-    document.getElementById('profileMobile').value = profileMobileValue;
+    document.getElementById('profileMobile').value = mobileValue;
   }
   document.getElementById('profileEmail').value = (userProfile && userProfile.email) || '';
   document.getElementById('profileCompany').value = (userProfile && userProfile.company) || '';
@@ -1685,31 +2016,8 @@ function openProfileSheet() {
   }
 
   populateHourSelects('profile');
-  setProfileMobileReadOnlyState(!!profileMobileValue);
   showProfileSheet();
   closeDrawer();
-}
-
-function setProfileMobileReadOnlyState(isReadOnly) {
-  const mobileInput = document.getElementById('profileMobile');
-  const editBtn = document.getElementById('profileMobileEditBtn');
-  if (!mobileInput || !editBtn) return;
-
-  mobileInput.readOnly = !!isReadOnly;
-  if (isReadOnly) {
-    mobileInput.classList.add('readonly-field');
-    editBtn.style.display = 'inline-flex';
-  } else {
-    mobileInput.classList.remove('readonly-field');
-    editBtn.style.display = 'none';
-    mobileInput.focus();
-  }
-}
-
-function requestMobileChange() {
-  closeProfileSheet();
-  showLoginSheet();
-  showMessageModal('Change Mobile', 'Enter a new mobile number to login and link your profile.');
 }
 
 function closeProfileSheet() {
@@ -1725,6 +2033,12 @@ function autoSaveProfile() {
   _autoSaveTimer = setTimeout(() => {
     saveProfile(false);
   }, 700);
+}
+
+function showLogoutConfirm() {
+  if (confirm('Are you sure you want to logout?')) {
+    auth.signOut();
+  }
 }
 
 function closeSheet() {
@@ -1768,398 +2082,13 @@ function showProfileSheet() {
 function showApp() {
   document.querySelector('.calendar-area').style.display = 'block';
   document.querySelector('.summary').style.display = 'block';
-  updateHeader();
   render();
-}
-
-function updateHeader() {
-  const titleEl = document.getElementById('headerTitle');
-  const subtitleEl = document.getElementById('headerSubtitle');
-
-  if (userProfile && userProfile.name) {
-    titleEl.innerText = userProfile.name;
-  } else if (currentUser && currentUser.phoneNumber) {
-    titleEl.innerText = currentUser.phoneNumber;
-  } else {
-    titleEl.innerText = 'Guest';
-  }
-
-  subtitleEl.innerText = 'Attendance Tracker';
-  updateAuthMenuText();
-}
-
-function closeMessageModal() {
-  document.getElementById('messageModal').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function showMessageModal(title, message) {
-  document.getElementById('messageModalTitle').innerText = title;
-  document.getElementById('messageModalBody').innerText = message;
-  document.getElementById('messageModal').classList.add('show');
-  document.getElementById('backdrop').classList.add('show');
-}
-
-function getRemoteSyncCountKey(uid) {
-  const today = new Date().toISOString().slice(0, 10);
-  return `remoteSaveCount_${uid}_${today}`;
-}
-
-function getRemoteSyncCount(uid) {
-  try {
-    return parseInt(localStorage.getItem(getRemoteSyncCountKey(uid)) || '0', 10) || 0;
-  } catch (error) {
-    return 0;
-  }
-}
-
-function incrementRemoteSyncCount(uid) {
-  const key = getRemoteSyncCountKey(uid);
-  const count = getRemoteSyncCount(uid) + 1;
-  localStorage.setItem(key, String(count));
-  return count;
-}
-
-function canAttemptRemoteSync(uid) {
-  return getRemoteSyncCount(uid) < 3;
-}
-
-function updateRemoteSyncStatus(uid, remoteUnavailable = false) {
-  const count = getRemoteSyncCount(uid);
-  const limit = 3;
-  const msg = document.getElementById('attendanceLimitMsg');
-  if (!msg) return;
-  msg.style.display = 'block';
-  msg.className = count < limit ? 'save-limit-display' : 'save-limit-display limit-reached';
-  if (remoteUnavailable) {
-    msg.innerHTML = `⚠️ Cloud sync unavailable. Local saves still work. Sync attempts today: ${count}/${limit}`;
-  } else if (count < limit) {
-    const pending = getRemoteQueue().length;
-    msg.innerHTML = `📊 Cloud sync attempts today: ${count}/${limit}. Pending remote queue: ${pending}. Local saves always work.`;
-  } else {
-    const pending = getRemoteQueue().length;
-    msg.innerHTML = `⚠️ Daily cloud sync limit reached (${count}/${limit}). Pending queue: ${pending}. Local saves continue.`;
-  }
-}
-
-function getRemoteQueue() {
-  try {
-    const raw = localStorage.getItem('remoteSyncQueue');
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    return [];
-  }
-}
-
-function setRemoteQueue(queue) {
-  localStorage.setItem('remoteSyncQueue', JSON.stringify(queue));
-}
-
-function enqueueRemoteAction(action) {
-  const queue = getRemoteQueue();
-  queue.push({ action, createdAt: new Date().toISOString() });
-  setRemoteQueue(queue);
-  console.log('Queued remote action', action, 'queue length', queue.length);
-}
-
-function dequeueRemoteAction(index) {
-  const queue = getRemoteQueue();
-  if (index < 0 || index >= queue.length) return;
-  queue.splice(index, 1);
-  setRemoteQueue(queue);
-}
-
-async function flushRemoteQueue() {
-  const queue = getRemoteQueue();
-  if (!queue.length) return;
-
-  const uid = currentUser && currentUser.phoneNumber;
-  if (!uid) {
-    updateRemoteSyncStatus(uid);
-    return;
-  }
-  if (!canAttemptRemoteSync(uid)) {
-    updateRemoteSyncStatus(uid);
-    return;
-  }
-
-  updateRemoteSyncStatus(uid);
-
-  for (let i = 0; i < queue.length; i++) {
-    const item = queue[i];
-    const { action } = item;
-    if (!action || !action.type || !action.payload) {
-      dequeueRemoteAction(i);
-      i -= 1;
-      continue;
-    }
-    if (!canAttemptRemoteSync(uid)) {
-      break;
-    }
-    try {
-      const result = await remotePost(action.payload, true);
-      if (result && result.success) {
-        incrementRemoteSyncCount(uid);
-        console.log('Remote queue item synced', action);
-        dequeueRemoteAction(i);
-        i -= 1;
-      } else if (result && result.noCors) {
-        console.warn('Remote queue item sent via no-cors mode, keeping in queue until valid response is available', action);
-        break;
-      } else {
-        console.warn('Remote queue item not synced, keeping in queue', result);
-        break;
-      }
-    } catch (error) {
-      console.warn('Remote queue sync failed', action, error);
-      break;
-    }
-  }
-  updateRemoteSyncStatus(uid);
-}
-
-async function remotePost(payload, allowNoCors = false) {
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload(payload),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-
-    if (response.type === 'opaque') {
-      console.warn('Received opaque response from remote endpoint. CORS likely preventing JSON response.');
-      return { success: false, noCors: true };
-    }
-
-    if (!response.ok) {
-      throw new Error('HTTP ' + response.status);
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    if (allowNoCors) {
-      try {
-        console.warn('Retrying remote sync with no-cors mode. This will not return a JSON response.');
-        await fetch(googleScriptURL, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: buildScriptPayload(payload)
-        });
-        return { success: false, noCors: true };
-      } catch (fallbackError) {
-        throw fallbackError;
-      }
-    }
-    throw error;
-  }
 }
 
 function hideApp() {
   document.querySelector('.calendar-area').style.display = 'none';
   document.querySelector('.summary').style.display = 'none';
   attendanceData = {};
-}
-
-// ===== AUTH MENU FUNCTIONS =====
-function updateAuthMenuText() {
-  const menuText = document.getElementById('authMenuText');
-  if (currentUser) {
-    menuText.innerText = 'Logout';
-  } else {
-    menuText.innerText = 'Login';
-  }
-}
-
-function handleAuthMenu() {
-  if (currentUser) {
-    showLogoutConfirm();
-  } else {
-    showLoginSheet();
-  }
-}
-
-// ===== DIRTY DOCUMENT FUNCTIONS =====
-function markDirty(userId, date, status) {
-  try {
-    const key = `dirty_${userId}_${date}`;
-    localStorage.setItem(key, JSON.stringify({
-      date: date,
-      status: status,
-      synced: false,
-      markedDirtyAt: new Date().toISOString()
-    }));
-  } catch (e) {
-    console.warn('Failed to mark dirty:', e);
-  }
-}
-
-function getDirtyDocuments(userId) {
-  try {
-    const dirtyDocs = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(`dirty_${userId}_`)) {
-        const doc = JSON.parse(localStorage.getItem(key));
-        if (doc && !doc.synced) {
-          dirtyDocs.push(doc);
-        }
-      }
-    }
-    return dirtyDocs;
-  } catch (e) {
-    console.warn('Failed to get dirty documents:', e);
-    return [];
-  }
-}
-
-function clearDirty(userId, date) {
-  try {
-    const key = `dirty_${userId}_${date}`;
-    localStorage.removeItem(key);
-  } catch (e) {
-    console.warn('Failed to clear dirty:', e);
-  }
-}
-
-// ===== SYNC SCHEDULING =====
-function initializeSyncScheduler() {
-  const syncKey = 'lastSyncAttempt';
-  const lastSync = localStorage.getItem(syncKey);
-  const now = new Date();
-  const shouldSync = !lastSync || (now.getTime() - new Date(lastSync).getTime()) > 8 * 60 * 60 * 1000; // 8 hours
-  
-  if (shouldSync) {
-    localStorage.setItem(syncKey, now.toISOString());
-  }
-  
-  // Schedule syncs 3 times per day: 9 AM, 1 PM, 5 PM
-  const syncTimes = [9, 13, 17];
-  syncTimes.forEach(hour => {
-    scheduleSyncAtTime(hour);
-  });
-  
-  // Also set up interval-based sync every 4 hours
-  setInterval(async () => {
-    const uid = currentUser && currentUser.phoneNumber;
-    if (uid && canAttemptRemoteSync(uid)) {
-      await syncDirtyDocuments();
-    }
-  }, 4 * 60 * 60 * 1000);
-}
-
-function scheduleSyncAtTime(hour) {
-  const now = new Date();
-  const nextSync = new Date();
-  nextSync.setHours(hour, 0, 0, 0);
-  
-  if (now.getHours() >= hour) {
-    nextSync.setDate(nextSync.getDate() + 1);
-  }
-  
-  const timeUntilSync = nextSync.getTime() - now.getTime();
-  
-  setTimeout(() => {
-    syncDirtyDocuments();
-    // Schedule again tomorrow
-    scheduleSyncAtTime(hour);
-  }, timeUntilSync);
-}
-
-async function syncDirtyDocuments() {
-  const uid = currentUser && currentUser.phoneNumber;
-  if (!uid) {
-    return;
-  }
-  const dirtyDocs = getDirtyDocuments(uid);
-  
-  if (!dirtyDocs.length || !isGoogleScriptConfigured() || !canAttemptRemoteSync(uid)) {
-    return;
-  }
-  
-  console.log(`Syncing ${dirtyDocs.length} dirty documents...`);
-  
-  for (const doc of dirtyDocs) {
-    if (!canAttemptRemoteSync(uid)) break;
-    
-    try {
-      const response = await fetch(googleScriptURL, {
-        method: 'POST',
-        body: buildScriptPayload({
-          action: 'saveAttendance',
-          userId: uid,
-          date: doc.date,
-          status: doc.status
-        }),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-      });
-      
-      const result = await response.json();
-      
-      if (result && result.success) {
-        incrementRemoteSyncCount(uid);
-        // Mark as synced on backend
-        await fetch(googleScriptURL, {
-          method: 'POST',
-          body: buildScriptPayload({
-            action: 'markSynced',
-            userId: uid,
-            date: doc.date
-          }),
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-        }).catch(e => console.warn('Failed to mark synced on backend:', e));
-        
-        clearDirty(uid, doc.date);
-        console.log(`✓ Synced dirty doc: ${doc.date}`);
-      }
-    } catch (error) {
-      console.warn(`Failed to sync ${doc.date}:`, error);
-    }
-  }
-}
-
-// ===== MONTH-END LOGIN CHECK =====
-function checkMonthlyLoginRequired() {
-  const lastLoginCheckMonth = localStorage.getItem('lastLoginCheckMonth');
-  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
-  
-  if (lastLoginCheckMonth === currentMonth) {
-    return;
-  }
-
-  localStorage.setItem('lastLoginCheckMonth', currentMonth);
-
-  if (!currentUser && !shouldSkipLoginForCurrentMonth()) {
-    const hasLocalSaves = !!getLoggedInUserId() || localStorage.getItem('lastUserId') !== null;
-    if (hasLocalSaves) {
-      setTimeout(() => {
-        showMessageModal('New Month', 'Please login to continue using the app in the new month.');
-        setTimeout(showLoginSheet, 1500);
-      }, 500);
-    }
-  }
-}
-
-// ===== LOGIN SKIP AFTER 5 SAVES =====
-function updateLocalSaveCount() {
-  const key = 'localCalendarSaveCount';
-  const count = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-  return count;
-}
-
-function shouldSkipLoginForCurrentMonth() {
-  const count = updateLocalSaveCount();
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthApprovedKey = `monthApproved_${currentMonth}`;
-  const approved = localStorage.getItem(monthApprovedKey) === 'true';
-  
-  return count >= 5 && approved;
-}
-
-function approveCurrentMonth() {
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthApprovedKey = `monthApproved_${currentMonth}`;
-  localStorage.setItem(monthApprovedKey, 'true');
 }
 
 function isMonthAfterCurrentMonth(date) {
@@ -2176,6 +2105,59 @@ function openDrawer() {
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('show');
   document.getElementById('drawerOverlay').classList.remove('show');
+}
+
+// ===== DESKTOP MENU FUNCTIONS =====
+function toggleProfileDropdown() {
+  const dropdown = document.getElementById('profileDropdown');
+  dropdown.classList.toggle('show');
+}
+
+function closeDropdown() {
+  const dropdown = document.getElementById('profileDropdown');
+  dropdown.classList.remove('show');
+}
+
+function downloadCSV() {
+  if (!attendanceData || Object.keys(attendanceData).length === 0) {
+    alert('No attendance data to export');
+    return;
+  }
+  
+  const rows = [['Date', 'Status']];
+  Object.keys(attendanceData).sort().forEach(date => {
+    rows.push([date, attendanceData[date]]);
+  });
+  
+  const csv = rows.map(row => row.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `attendance_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+// ===== INTERACTIVE STATS =====
+function setupStatsInteractivity() {
+  const statsOverview = document.getElementById('statsOverview');
+  const officeProgress = document.getElementById('officeProgress');
+  
+  if (statsOverview) {
+    statsOverview.addEventListener('click', () => {
+      const periodPercents = calculateFiscalAttendancePercents(currentDate);
+      alert(`Fiscal Year Breakdown:\n\nMonth: ${periodPercents.month}%\nQuarter: ${periodPercents.quarter}%\nYear: ${periodPercents.year}%`);
+    });
+  }
+  
+  if (officeProgress) {
+    officeProgress.addEventListener('click', () => {
+      alert('Office attendance target:\n\n50% of working days must be in office.\n\nClick on any date to update your attendance.');
+    });
+  }
 }
 
 // ===== EVENT LISTENERS =====
@@ -2208,56 +2190,22 @@ document.getElementById('backdrop').onclick = () => {
   closeProfileSheet();
 };
 
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('profileDropdown');
+  const dropdownWrapper = document.querySelector('.dropdown-wrapper');
+  if (dropdown && dropdownWrapper && !dropdownWrapper.contains(e.target)) {
+    dropdown.classList.remove('show');
+  }
+});
+
 // ===== INIT =====
-window.addEventListener('load', async () => {
+window.addEventListener('load', () => {
   const stored = localStorage.getItem('googleScriptURL');
   if (stored) googleScriptURL = stored;
   
   initializeAuth();
-  const uid = currentUser && currentUser.phoneNumber;
-  await flushRemoteQueue();
-  updateRemoteSyncStatus(uid);
-  
-  // Ensure header is updated with current date
-  updateHeader();
 });
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('Service Worker registered:', registration.scope);
-    }).catch(error => {
-      console.warn('Service Worker registration failed:', error);
-    });
-  });
-}
-
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', event => {
-  event.preventDefault();
-  deferredPrompt = event;
-  const installBanner = document.getElementById('installBanner');
-  if (installBanner) {
-    installBanner.style.display = 'flex';
-  }
-});
-
-function promptInstall() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(choiceResult => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('PWA install accepted');
-    } else {
-      console.log('PWA install dismissed');
-    }
-    deferredPrompt = null;
-    const installBanner = document.getElementById('installBanner');
-    if (installBanner) {
-      installBanner.style.display = 'none';
-    }
-  });
-}
 
 </script>
 
