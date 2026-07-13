@@ -1,0 +1,10 @@
+{
+  "appId": "com.officegaurab.attendance",
+  "appName": "Office Attendance Tracker",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "",
+    "cleartext": true
+  }
+}

@@ -1,9 +1,14 @@
-<!DOCTYPE html>
+w<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Attendance">
 <title>Office Attendance Tracker</title>
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -71,7 +76,7 @@ background:linear-gradient(135deg, #1e3a8a, #2563eb);
 color:white;
 padding:12px 16px;
 display:flex;
-justify-content:flex-start;
+justify-content:space-between;
 align-items:center;
 gap:16px;
 box-shadow:0 12px 28px rgba(15, 23, 42, 0.14);
@@ -85,7 +90,8 @@ flex-wrap:wrap;
 display:flex;
 align-items:center;
 gap:14px;
-order:1;
+flex:1 1 auto;
+min-width:0;
 }
 
 .logo-badge{
@@ -117,7 +123,6 @@ margin-top:4px;
 display:flex;
 align-items:center;
 gap:12px;
-order:3;
 margin-left:auto;
 }
 
@@ -146,10 +151,9 @@ transform:translateY(-1px) scale(1.02);
 display:none;
 align-items:center;
 gap:4px;
-order:2;
-flex:0 0 auto;
 margin-left:auto;
-margin-right:auto;
+flex-wrap:wrap;
+justify-content:flex-end;
 }
 
 .menu-item {
@@ -173,83 +177,6 @@ background:rgba(255,255,255,0.18);
 .menu-item.active {
 background:rgba(255,255,255,0.24);
 border-bottom:2px solid white;
-}
-
-/* DROPDOWN MENU */
-.dropdown-wrapper {
-position:relative;
-}
-
-.dropdown-toggle {
-color:white;
-background:transparent;
-border:none;
-padding:6px 12px;
-border-radius:8px;
-font-size:13px;
-font-weight:500;
-cursor:pointer;
-transition:.2s ease;
-white-space:nowrap;
-display:flex;
-align-items:center;
-gap:4px;
-}
-
-.dropdown-toggle:hover {
-background:rgba(255,255,255,0.18);
-}
-
-.dropdown-menu {
-position:absolute;
-top:100%;
-right:0;
-background:linear-gradient(135deg, #1e3a8a, #2563eb);
-border:1px solid rgba(255,255,255,0.15);
-border-radius:12px;
-min-width:180px;
-box-shadow:0 8px 24px rgba(0,0,0,0.3);
-padding:8px 0;
-margin-top:8px;
-display:none;
-z-index:100;
-}
-
-.dropdown-menu.show {
-display:block;
-animation:slideDown .2s ease;
-}
-
-@keyframes slideDown {
-from {
-opacity:0;
-transform:translateY(-8px);
-}
-to {
-opacity:1;
-transform:translateY(0);
-}
-}
-
-.dropdown-item {
-padding:12px 16px;
-color:white;
-background:transparent;
-border:none;
-width:100%;
-text-align:left;
-cursor:pointer;
-transition:.2s ease;
-font-size:14px;
-font-weight:500;
-}
-
-.dropdown-item:hover {
-background:rgba(255,255,255,0.12);
-}
-
-.dropdown-item:not(:last-child) {
-border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
 .nav-btn{
@@ -501,6 +428,149 @@ background:linear-gradient(135deg, #bbdefb, #e1bee7);
 box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* PROFILE PAGE */
+.profile-page{
+display:none;
+padding:16px;
+background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(241,247,255,0.97));
+min-height:calc(100vh - 80px);
+}
+
+.profile-page-card{
+background:white;
+border-radius:20px;
+padding:18px;
+box-shadow:0 12px 30px rgba(15,23,42,0.08);
+max-width:760px;
+margin:0 auto;
+}
+
+.profile-page-title{
+font-size:20px;
+font-weight:700;
+color:var(--text);
+}
+
+.profile-page-subtitle{
+font-size:13px;
+color:var(--text-light);
+margin-top:4px;
+}
+
+.profile-page-actions{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:14px;
+}
+
+.profile-view-grid{
+display:grid;
+gap:12px;
+}
+
+.profile-view-card{
+background:linear-gradient(135deg, #eff6ff, #f8fbff);
+border:1px solid #dbeafe;
+border-radius:14px;
+padding:14px;
+}
+
+.profile-avatar{
+width:84px;
+height:84px;
+border-radius:50%;
+object-fit:cover;
+border:3px solid var(--primary);
+margin-bottom:10px;
+}
+
+.profile-label{
+font-size:12px;
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:0.04em;
+color:var(--text-light);
+margin-bottom:4px;
+}
+
+.profile-value{
+font-size:15px;
+font-weight:600;
+color:var(--text);
+margin-bottom:10px;
+word-break:break-word;
+}
+
+.profile-edit-grid{
+display:grid;
+gap:12px;
+}
+
+.profile-photo-button{
+background:var(--primary);
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:999px;
+cursor:pointer;
+font-size:12px;
+font-weight:600;
+margin-top:8px;
+}
+
+.profile-reminder-card{
+background:linear-gradient(135deg, #eff6ff, #f8fbff);
+border:1px solid #dbeafe;
+border-radius:14px;
+padding:16px;
+margin-top:18px;
+}
+
+.reminder-list{
+margin-top:14px;
+}
+
+.reminder-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:12px 14px;
+background:white;
+border:1px solid rgba(15,23,42,0.06);
+border-radius:12px;
+margin-bottom:10px;
+}
+
+.reminder-item strong{
+display:block;
+font-size:14px;
+margin-bottom:4px;
+}
+
+.reminder-item span{
+font-size:12px;
+color:var(--text-light);
+}
+
+.reminder-remove{
+background:transparent;
+border:none;
+color:var(--danger);
+cursor:pointer;
+font-size:14px;
+}
+
+.reminder-empty{
+font-size:13px;
+color:var(--text-light);
+padding:10px 0;
+}
+
+#profilePagePhotoInput{
+display:none;
+}
+
 /* BOTTOM SHEET */
 .sheet{
 position:fixed;
@@ -655,17 +725,18 @@ display:block;
 
 .drawer{
 position:fixed;
-left:0;
 top:0;
+right:0;
 bottom:0;
+left:auto;
 width:320px;
 max-width:88vw;
 background:linear-gradient(180deg,#111f35,#17293f);
 color:white;
-transform:translateX(-100%);
+transform:translateX(100%);
 transition:transform .28s ease, box-shadow .28s ease;
 z-index:9;
-box-shadow:24px 0 60px rgba(0,0,0,.32);
+box-shadow:-24px 0 60px rgba(0,0,0,.32);
 overflow-y:auto;
 }
 
@@ -698,7 +769,7 @@ transition:background .2s ease, transform .2s ease;
 
 .drawer-item:hover{
 background:rgba(255,255,255,0.08);
-transform:translateX(2px);
+transform:translateX(-2px);
 }
 
 .drawer-item-icon{
@@ -741,6 +812,10 @@ display:inline-block;
 }
 
 #profilePhotoInput{
+display:none;
+}
+
+#regProfilePhotoInput{
 display:none;
 }
 
@@ -843,20 +918,17 @@ width:100%;
 
 .header-menu {
 display:flex;
-margin-left:0;
+margin-left:auto;
 margin-right:0;
-order:0;
-flex:1;
-justify-content:center;
+flex:1 1 auto;
+justify-content:flex-end;
 }
 
 .header-left {
-order:0;
 flex:0 0 auto;
 }
 
 .header-buttons {
-order:0;
 margin-left:0;
 }
 
@@ -933,26 +1005,129 @@ width:380px;
 
 <!-- DESKTOP MENU -->
 <div class="header-menu">
-<button class="menu-item" onclick="showApp()">Dashboard</button>
-<button class="menu-item" onclick="downloadCSV()">Export</button>
-
-<div class="dropdown-wrapper">
-<button class="dropdown-toggle" onclick="toggleProfileDropdown()">
-👤 Profile
-<span class="dropdown-arrow">▼</span>
-</button>
-<div class="dropdown-menu" id="profileDropdown">
-<button class="dropdown-item" onclick="openProfileSheet();closeDropdown();">My Profile</button>
-<button class="dropdown-item" onclick="downloadCSV();closeDropdown();">Export Data</button>
-<button class="dropdown-item" onclick="showLogoutConfirm();closeDropdown();">Logout</button>
-<button class="dropdown-item" onclick="alert('Contact: support@app.com');closeDropdown();">Help</button>
-</div>
-</div>
+<button class="menu-item" onclick="showDashboardView()">Dashboard</button>
+<button class="menu-item" onclick="showProfilePage()">My Profile</button>
+<button class="menu-item" onclick="downloadCSV()">Export Data</button>
+<button class="menu-item" onclick="showLogoutConfirm()">Logout</button>
+<button class="menu-item" onclick="showSupportInfo()">Help</button>
 </div>
 
 <div class="header-buttons">
 <button class="icon-btn" id="drawerBtn" title="Menu">☰</button>
 </div>
+</div>
+
+<!-- PROFILE PAGE -->
+<div class="profile-page" id="profilePage" style="display:none;">
+  <div class="profile-page-card">
+    <div class="profile-page-actions">
+      <div>
+        <div class="profile-page-title">My Profile</div>
+        <div class="profile-page-subtitle">Manage your details and save changes instantly.</div>
+      </div>
+      <button class="action-button btn-success" id="profilePageEditBtn" onclick="toggleProfilePageEditMode()" style="width:auto; margin:0; padding:10px 14px;">Edit</button>
+    </div>
+
+    <div id="profilePageViewSection" class="profile-view-grid">
+      <div class="profile-view-card">
+        <img id="profilePagePhoto" class="profile-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
+        <div class="profile-label">Full Name</div>
+        <div class="profile-value" id="profilePageViewName">Add your name</div>
+        <div class="profile-label">Mobile</div>
+        <div class="profile-value" id="profilePageViewMobile">Not provided</div>
+        <div class="profile-label">Email</div>
+        <div class="profile-value" id="profilePageViewEmail">Not provided</div>
+        <div class="profile-label">Company</div>
+        <div class="profile-value" id="profilePageViewCompany">Not provided</div>
+        <div class="profile-label">Office Hours</div>
+        <div class="profile-value" id="profilePageViewHours">Not set</div>
+      </div>
+    </div>
+
+    <div id="profilePageEditSection" class="profile-edit-grid" style="display:none;">
+      <div class="profile-photo-container" style="margin-bottom:8px;">
+        <img id="profilePagePhotoEdit" class="profile-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
+        <button class="profile-photo-button" onclick="triggerProfilePhotoUpload()">Upload Photo</button>
+        <input type="file" id="profilePagePhotoInput" accept="image/*" onchange="uploadProfilePagePhoto(event)" />
+      </div>
+      <div class="form-group">
+        <label>Name:</label>
+        <input type="text" id="profilePageName" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label>Country Code:</label>
+        <select id="profilePageCountryCode">
+          <option value="+91">+91 India</option>
+          <option value="+1">+1 USA/Canada</option>
+          <option value="+44">+44 UK</option>
+          <option value="+61">+61 Australia</option>
+          <option value="+81">+81 Japan</option>
+          <option value="+49">+49 Germany</option>
+          <option value="+33">+33 France</option>
+          <option value="+7">+7 Russia</option>
+          <option value="+39">+39 Italy</option>
+          <option value="+34">+34 Spain</option>
+          <option value="+27">+27 South Africa</option>
+          <option value="+86">+86 China</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Mobile:</label>
+        <input type="tel" id="profilePageMobile" placeholder="12345 67890" />
+      </div>
+      <div class="form-group">
+        <label>Email:</label>
+        <input type="email" id="profilePageEmail" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Company:</label>
+        <input type="text" id="profilePageCompany" placeholder="Company name" />
+      </div>
+      <label style="font-weight:600;color:var(--text-light);margin-bottom:10px;display:block;">Office Hours:</label>
+      <div class="form-row">
+        <div class="form-group">
+          <label>In Time:</label>
+          <select id="profilePageInTime"></select>
+        </div>
+        <div class="form-group">
+          <label>Out Time:</label>
+          <select id="profilePageOutTime"></select>
+        </div>
+      </div>
+      <button class="action-button btn-success" onclick="saveProfilePage()">Save Changes</button>
+    </div>
+
+    <div class="profile-reminder-card">
+      <div class="profile-page-subtitle" style="margin-bottom:12px;">Set reminders for meetings and receive local notifications before the event.</div>
+      <div class="form-group">
+        <label>Reminder Title:</label>
+        <input type="text" id="reminderTitle" placeholder="e.g. Team meeting" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date:</label>
+          <input type="date" id="reminderDate" />
+        </div>
+        <div class="form-group">
+          <label>Time:</label>
+          <input type="time" id="reminderTime" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notify before:</label>
+        <select id="reminderOffset">
+          <option value="0">At time</option>
+          <option value="5">5 minutes before</option>
+          <option value="10">10 minutes before</option>
+          <option value="15" selected>15 minutes before</option>
+          <option value="30">30 minutes before</option>
+          <option value="60">1 hour before</option>
+        </select>
+      </div>
+      <button class="action-button btn-primary" onclick="saveReminder()">Save Reminder</button>
+      <div class="reminder-list" id="reminderList"></div>
+    </div>
+  </div>
 </div>
 
 <!-- CALENDAR AREA -->
@@ -1001,15 +1176,23 @@ width:380px;
 </div>
 </div>
 <div class="drawer-menu">
-<div class="drawer-item" onclick="openProfileSheet();closeDrawer();">
+<div class="drawer-item" onclick="showDashboardView();closeDrawer();">
+<span class="drawer-item-icon">🏠</span>
+<span>Dashboard</span>
+</div>
+<div class="drawer-item" onclick="showProfilePage();closeDrawer();">
 <span class="drawer-item-icon">👤</span>
 <span>My Profile</span>
+</div>
+<div class="drawer-item" onclick="downloadCSV();closeDrawer();">
+<span class="drawer-item-icon">⬇️</span>
+<span>Export Data</span>
 </div>
 <div class="drawer-item" onclick="showLogoutConfirm();closeDrawer();">
 <span class="drawer-item-icon">🚪</span>
 <span>Logout</span>
 </div>
-<div class="drawer-item" onclick="alert('Contact: support@app.com');closeDrawer();">
+<div class="drawer-item" onclick="showSupportInfo();closeDrawer();">
 <span class="drawer-item-icon">❓</span>
 <span>Help</span>
 </div>
@@ -1021,7 +1204,8 @@ width:380px;
 
 <!-- LOGIN SHEET -->
 <div class="sheet" id="loginSheet">
-<div class="sheet-title">Phone Login</div>
+<div class="sheet-title">Mobile Login</div>
+<div style="text-align:center;margin-bottom:12px;color:var(--text-light);font-size:13px;">Use your mobile number to continue securely.</div>
 
 <div id="phoneInputSection">
 <div class="form-group">
@@ -1045,17 +1229,8 @@ width:380px;
 <label>Enter Mobile Number:</label>
 <input type="tel" id="phoneInput" placeholder="98765 43210" />
 </div>
-<div id="recaptcha" style="margin-bottom:10px;"></div>
-<button class="action-button btn-primary" onclick="sendOTP()">Send OTP</button>
-</div>
-
-<div id="otpInputSection" style="display:none">
-<div class="form-group">
-<label>Enter 6-Digit OTP:</label>
-<input type="text" id="otpInput" placeholder="000000" maxlength="6" />
-</div>
-<button class="action-button btn-success" onclick="verifyOTP()">Verify & Login</button>
-<button class="action-button btn-secondary" onclick="resetLogin()">Change Phone</button>
+<button class="action-button btn-primary" onclick="loginWithPhoneNumber()">Continue</button>
+<div id="loginStatus" style="font-size:12px;color:var(--text-light);margin-top:8px;text-align:center;display:none;"></div>
 </div>
 </div>
 
@@ -1064,6 +1239,12 @@ width:380px;
 <div class="sheet-title">Complete Your Profile</div>
 
 <div class="save-limit-display" id="saveLimitMsg"></div>
+
+<div class="profile-photo-container">
+  <img id="regDisplayPhoto" class="profile-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
+  <button class="photo-upload-btn" onclick="triggerRegProfilePhotoUpload()">Upload Photo</button>
+  <input type="file" id="regProfilePhotoInput" accept="image/*" onchange="uploadRegProfilePhoto(event)" />
+</div>
 
 <div class="form-group">
 <label>Mobile (Required):</label>
@@ -1195,113 +1376,118 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+let auth = null;
+try {
+  if (window.firebase && firebase.apps.length === 0) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  auth = firebase.auth();
+} catch (error) {
+  console.warn('Firebase auth is unavailable. Falling back to local mobile login.', error);
+  auth = {
+    signOut: async function () {
+      currentUser = null;
+      localStorage.removeItem('lastUserId');
+      closeSheet();
+      showLoginSheet();
+    }
+  };
+}
 
 // ===== GLOBALS =====
 let currentUser = null;
 let currentDate = new Date();
 let selectedKey = null;
 let confirmationResult = null;
-// Deployed Google Apps Script Web App URL (set from your deployment)
-let googleScriptURL = 'https://script.google.com/macros/s/AKfycbz460QY_kULbRnOx6Eeusdpu56L4dJW04h1I5X8CDa2i8eHOpLcRUSdjxMidwxdmLExpA/exec';
+// Deployed Google Apps Script Web App URL
+let googleScriptURL = 'https://script.google.com/macros/s/AKfycbyHdXTO6WUcjt_I0Nr0h1VEy6OkOVGdjefnLXWVdJ7DCkbPmz0_EV5Z6D94MauVwG8QPQ/exec';
 let attendanceData = {};
 let userProfile = null;
 let saveCount = 0;
+let reminders = [];
+let reminderWatchInterval = null;
 const SAVE_LIMIT = 3;
 
 // ===== AUTH FUNCTIONS =====
-function initializeAuth() {
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user;
-      loadUserProfile(user.phoneNumber);
-      try {
-        localStorage.setItem('lastUserId', user.phoneNumber);
-        localStorage.setItem('localCalendarSaveCount', '0');
-      } catch (e) {}
-      showApp();
-    } else {
-      // Do not force login modal on load. Show app in local-only mode.
-      currentUser = null;
-      showApp();
-      // Load last-used local profile if available
-      const lastId = localStorage.getItem('lastUserId');
-      if (lastId) {
-        const lp = getLocalStorageUserProfile(lastId);
-        if (lp) {
-          userProfile = lp;
-          attendanceData = getLocalStorageAttendance(lastId);
-          render();
-        }
-      }
-    }
-  });
+function normalizeMobileNumber(phoneNumber, countryCode) {
+  const cleaned = (phoneNumber || '').replace(/\D/g, '');
+  if (!cleaned) return '';
+  return `${countryCode}${cleaned}`;
 }
 
-function sendOTP() {
+function initializeAuth() {
+  const lastId = localStorage.getItem('lastUserId');
+  if (lastId) {
+    currentUser = { phoneNumber: lastId };
+    const storedProfile = getLocalStorageUserProfile(lastId);
+    if (storedProfile) {
+      userProfile = storedProfile;
+      updateHeaderProfile();
+    }
+    loadUserProfile(lastId);
+    showApp();
+    return;
+  }
+
+  currentUser = null;
+  showApp();
+  showLoginSheet();
+}
+
+function updateHeaderProfile() {
+  const titleEl = document.getElementById('headerTitle');
+  const subtitleEl = document.getElementById('headerSubtitle');
+  if (!titleEl || !subtitleEl) return;
+
+  if (userProfile && userProfile.name) {
+    titleEl.textContent = `Welcome, ${userProfile.name}`;
+    subtitleEl.textContent = `Logged in as ${currentUser?.phoneNumber || 'unknown'}`;
+    return;
+  }
+
+  if (currentUser && currentUser.phoneNumber) {
+    titleEl.textContent = 'Attendance Tracker';
+    subtitleEl.textContent = `Logged in as ${currentUser.phoneNumber}`;
+    return;
+  }
+
+  titleEl.textContent = 'Attendance Tracker';
+  subtitleEl.textContent = 'Unknown User (Please login to save the data)';
+}
+
+function setLoginStatus(message, isError = false) {
+  const statusEl = document.getElementById('loginStatus');
+  if (!statusEl) return;
+  statusEl.textContent = message;
+  statusEl.style.display = 'block';
+  statusEl.style.color = isError ? '#c62828' : '#4caf50';
+}
+
+async function loginWithPhoneNumber() {
   const countryCode = document.getElementById('countryCodeSelect').value;
   const phoneNumber = document.getElementById('phoneInput').value.trim();
-  const phone = `${countryCode}${phoneNumber}`;
-  
+  const phone = normalizeMobileNumber(phoneNumber, countryCode);
+
   if (!phoneNumber) {
-    alert('Please enter mobile number');
+    setLoginStatus('Please enter your mobile number.', true);
     return;
   }
 
-  const bypassNumber = '+918904201135';
-  if (phone === bypassNumber) {
-    currentUser = { phoneNumber: bypassNumber };
-    checkAndShowRegistration();
-    return;
+  const loginButton = document.querySelector('#loginSheet .action-button');
+  if (loginButton) loginButton.disabled = true;
+  setLoginStatus('Signing in…');
+
+  currentUser = { phoneNumber: phone };
+  localStorage.setItem('lastUserId', phone);
+
+  try {
+    await checkAndShowRegistration(phone);
+  } catch (error) {
+    console.error('Login failed', error);
+    setLoginStatus('Unable to continue right now. Please try again.', true);
+  } finally {
+    if (loginButton) loginButton.disabled = false;
   }
-  
-  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha', {
-    'size': 'normal',
-    'callback': onReCaptchaSuccess
-  });
-  
-  auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
-    .then(result => {
-      confirmationResult = result;
-      document.getElementById('phoneInputSection').style.display = 'none';
-      document.getElementById('otpInputSection').style.display = 'block';
-    })
-    .catch(error => {
-      alert('Error: ' + error.message);
-      if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
-    });
-}
-
-function verifyOTP() {
-  const otp = document.getElementById('otpInput').value.trim();
-  
-  if (otp.length !== 6) {
-    alert('OTP must be 6 digits');
-    return;
-  }
-  
-  confirmationResult.confirm(otp)
-    .then(result => {
-      currentUser = result.user;
-      checkAndShowRegistration();
-    })
-    .catch(error => {
-      alert('Invalid OTP: ' + error.message);
-    });
-}
-
-function resetLogin() {
-  confirmationResult = null;
-  document.getElementById('phoneInputSection').style.display = 'block';
-  document.getElementById('otpInputSection').style.display = 'none';
-  document.getElementById('phoneInput').value = '';
-  document.getElementById('otpInput').value = '';
-  if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
-}
-
-function onReCaptchaSuccess() {
-  console.log('reCAPTCHA verified');
 }
 
 // ===== USER PROFILE =====
@@ -1350,8 +1536,50 @@ function setLocalStorageAttendance(userId, data) {
   localStorage.setItem(`attendance_${userId}`, JSON.stringify(data));
 }
 
+function persistProfileLocally(userId, userData) {
+  const uid = userId || (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  setLocalStorageUserProfile(uid, userData);
+  setLocalStorageAttendance(uid, attendanceData || {});
+  localStorage.setItem('lastUserId', uid);
+  userProfile = userData;
+  return uid;
+}
+
+async function syncProfileToRemote(userId, userData) {
+  if (!isGoogleScriptConfigured()) {
+    return { success: false, localOnly: true };
+  }
+
+  try {
+    const response = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload({
+        action: 'saveUser',
+        userId: userId,
+        userData: userData
+      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+    const result = await response.json();
+    return { success: !!(result && result.success), result };
+  } catch (error) {
+    console.error('Remote profile sync failed', error);
+    return { success: false, localOnly: true, error };
+  }
+}
+
 async function loadUserProfile(userId) {
   if (!isGoogleScriptConfigured()) {
+    const storedProfile = getLocalStorageUserProfile(userId);
+    if (storedProfile) {
+      userProfile = storedProfile;
+      updateHeaderProfile();
+      loadAttendanceData(userId);
+      checkSaveLimit();
+      showApp();
+      return;
+    }
+
     document.getElementById('regMobile').value = userId;
     populateHourSelects('reg');
     showApp();
@@ -1370,9 +1598,19 @@ async function loadUserProfile(userId) {
     
     if (result.success && result.data) {
       userProfile = result.data;
-      loadAttendanceData();
+      updateHeaderProfile();
+      loadAttendanceData(userId);
       checkSaveLimit();
     } else {
+      const storedProfile = getLocalStorageUserProfile(userId);
+      if (storedProfile) {
+        userProfile = storedProfile;
+        updateHeaderProfile();
+        loadAttendanceData(userId);
+        checkSaveLimit();
+        showApp();
+        return;
+      }
       // New user - show registration form
       document.getElementById('regMobile').value = userId;
       populateHourSelects('reg');
@@ -1381,17 +1619,31 @@ async function loadUserProfile(userId) {
     }
   } catch (error) {
     console.error('Failed to load profile:', error);
+    const storedProfile = getLocalStorageUserProfile(userId);
+    if (storedProfile) {
+      userProfile = storedProfile;
+      updateHeaderProfile();
+      loadAttendanceData(userId);
+      checkSaveLimit();
+      showApp();
+      return;
+    }
     // On error, still show app with empty data
     showApp();
     render();
   }
 }
 
-async function checkAndShowRegistration() {
-  const userId = currentUser.phoneNumber;
+async function checkAndShowRegistration(userId = null) {
+  const activeUserId = userId || (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId');
+
+  if (!activeUserId) {
+    showLoginSheet();
+    return;
+  }
 
   if (!isGoogleScriptConfigured()) {
-    document.getElementById('regMobile').value = userId;
+    document.getElementById('regMobile').value = activeUserId;
     populateHourSelects('reg');
     showApp();
     showRegistrationSheet();
@@ -1401,7 +1653,7 @@ async function checkAndShowRegistration() {
   try {
     const response = await fetch(googleScriptURL, {
       method: 'POST',
-      body: buildScriptPayload({ action: 'getUser', userId: userId }),
+      body: buildScriptPayload({ action: 'getUser', userId: activeUserId }),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
     });
 
@@ -1409,25 +1661,39 @@ async function checkAndShowRegistration() {
     const result = text ? JSON.parse(text) : null;
 
     if (!result || !result.success || !result.data) {
-      // New user - show registration
-      document.getElementById('regMobile').value = userId;
+      const storedProfile = getLocalStorageUserProfile(activeUserId);
+      if (storedProfile) {
+        userProfile = storedProfile;
+        updateHeaderProfile();
+        loadAttendanceData(activeUserId);
+        checkSaveLimit();
+        showApp();
+        closeSheet();
+        setLoginStatus('Signed in locally. Complete your profile to sync.');
+        return;
+      }
+
+      document.getElementById('regMobile').value = activeUserId;
       populateHourSelects('reg');
       showApp();
       showRegistrationSheet();
+      setLoginStatus('Welcome! Complete your profile to continue.');
     } else {
-      // Existing user
       userProfile = result.data;
-      loadAttendanceData();
+      updateHeaderProfile();
+      loadAttendanceData(activeUserId);
       checkSaveLimit();
       showApp();
       closeSheet();
+      setLoginStatus('Signed in successfully.');
     }
   } catch (error) {
     console.error('Error checking registration:', error);
-    document.getElementById('regMobile').value = userId;
+    document.getElementById('regMobile').value = activeUserId;
     populateHourSelects('reg');
     showApp();
     showRegistrationSheet();
+    setLoginStatus('Signed in locally. Complete your profile to sync.', true);
   }
 }
 
@@ -1439,7 +1705,7 @@ async function completeRegistration() {
     company: document.getElementById('regCompany').value,
     inTime: document.getElementById('regInTime').value,
     outTime: document.getElementById('regOutTime').value,
-    profilePhoto: ''
+    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
   };
   
   if (!userData.mobile) {
@@ -1447,43 +1713,18 @@ async function completeRegistration() {
     return;
   }
 
-  if (!isGoogleScriptConfigured()) {
-    const uid = (currentUser && currentUser.phoneNumber) || userData.mobile || 'local_user';
-    setLocalStorageUserProfile(uid, userData);
-    userProfile = userData;
-    localStorage.setItem('lastUserId', uid);
-    loadAttendanceData();
-    checkSaveLimit();
-    showApp();
-    closeRegistrationSheet();
-    alert('Profile saved locally. Configure Google Script URL later to sync remotely.');
-    return;
-  }
-  
-  try {
-    const uid = (currentUser && currentUser.phoneNumber) || userData.mobile || 'local_user';
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'saveUser',
-        userId: uid,
-        userData: userData
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      userProfile = userData;
-      loadAttendanceData();
-      checkSaveLimit();
-      showApp();
-      closeRegistrationSheet();
-      alert('Profile saved successfully!');
-    }
-  } catch (error) {
-    alert('Error saving profile: ' + error.message);
+  const uid = persistProfileLocally((currentUser && currentUser.phoneNumber) || userData.mobile || 'local_user', userData);
+  updateHeaderProfile();
+  loadAttendanceData(uid);
+  checkSaveLimit();
+  showApp();
+  closeRegistrationSheet();
+
+  const remoteResult = await syncProfileToRemote(uid, userData);
+  if (remoteResult.success) {
+    alert('Profile saved locally and synced to Excel.');
+  } else {
+    alert('Profile saved locally. Remote sync will retry the next time you save.');
   }
 }
 
@@ -1494,7 +1735,15 @@ function skipRegistration() {
 
 // ===== PROFILE PHOTO =====
 function triggerPhotoUpload() {
-  document.getElementById('profilePhotoInput').click();
+  document.getElementById('profilePhotoInput')?.click();
+}
+
+function triggerRegProfilePhotoUpload() {
+  document.getElementById('regProfilePhotoInput')?.click();
+}
+
+function triggerProfilePhotoUpload() {
+  document.getElementById('profilePagePhotoInput')?.click();
 }
 
 function uploadPhoto(event) {
@@ -1504,7 +1753,42 @@ function uploadPhoto(event) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const base64 = e.target.result;
-    document.getElementById('displayPhoto').src = base64;
+    const preview = document.getElementById('displayPhoto') || document.getElementById('profilePagePhotoEdit');
+    if (preview) preview.src = base64;
+    if (!userProfile) {
+      userProfile = {};
+    }
+    userProfile.profilePhoto = base64;
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadRegProfilePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    const preview = document.getElementById('regDisplayPhoto');
+    if (preview) preview.src = base64;
+    if (!userProfile) {
+      userProfile = {};
+    }
+    userProfile.profilePhoto = base64;
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadProfilePagePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    const preview = document.getElementById('profilePagePhoto') || document.getElementById('profilePagePhotoEdit');
+    if (preview) preview.src = base64;
     if (!userProfile) {
       userProfile = {};
     }
@@ -1673,56 +1957,22 @@ async function saveProfile(syncRemote = true) {
     profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
   };
   
-  // Determine userId: prefer authenticated phoneNumber, else use profileMobile value
   const userIdForSave = (currentUser && currentUser.phoneNumber) ? currentUser.phoneNumber : (profileMobileValue || null);
-
-  // Save locally first
-  if (userIdForSave) {
-    setLocalStorageUserProfile(userIdForSave, userData);
-    setLocalStorageAttendance(userIdForSave, attendanceData);
-    localStorage.setItem('lastUserId', userIdForSave);
-  } else {
-    // fallback to generic local key
-    setLocalStorageUserProfile('local_user', userData);
-    localStorage.setItem('lastUserId', 'local_user');
-  }
-
+  const uid = persistProfileLocally(userIdForSave, userData);
   userProfile = userData;
+  updateHeaderProfile();
 
   if (!syncRemote) {
     return;
   }
 
-  if (!isGoogleScriptConfigured()) {
-    alert('Profile updated locally. Configure Google Script URL later to sync remotely.');
-    closeProfileSheet();
-    return;
+  const remoteResult = await syncProfileToRemote(uid, userData);
+  if (remoteResult.success) {
+    alert('Profile updated locally and synced to Excel.');
+  } else {
+    alert('Profile saved locally. Remote sync will retry when possible.');
   }
-  
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'saveUser',
-        userId: userIdForSave,
-        userData: userData
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const result = await response.json();
-    
-    if (result && result.success) {
-      userProfile = userData;
-      alert('Profile updated!');
-      closeProfileSheet();
-    } else {
-      console.warn('Profile save remote response not successful', result);
-    }
-  } catch (error) {
-    console.error('Profile save failed', error);
-    alert('Error saving profile: ' + error.message);
-  }
+  closeProfileSheet();
 }
 
 // ===== CALENDAR FUNCTIONS =====
@@ -1970,6 +2220,16 @@ function getFiscalYearMonths(date) {
 function populateHourSelects(prefix) {
   const inSelect = document.getElementById(`${prefix}InTime`);
   const outSelect = document.getElementById(`${prefix}OutTime`);
+  if (!inSelect || !outSelect) return;
+
+  inSelect.innerHTML = '';
+  outSelect.innerHTML = '';
+
+  const placeholderOption = document.createElement('option');
+  placeholderOption.value = '';
+  placeholderOption.text = 'Select hour';
+  inSelect.appendChild(placeholderOption.cloneNode(true));
+  outSelect.appendChild(placeholderOption.cloneNode(true));
   
   for (let i = 0; i <= 23; i++) {
     const option1 = document.createElement('option');
@@ -1991,37 +2251,309 @@ function openAttendanceSheet(key, label) {
 }
 
 function openProfileSheet() {
-  // Allow opening profile sheet even if userProfile is not loaded (edit anonymously)
-  document.getElementById('profileName').value = (userProfile && userProfile.name) || '';
-  const mobileValue = (userProfile && userProfile.mobile) || '';
-  if (mobileValue && mobileValue.startsWith('+')) {
-    const match = mobileValue.match(/^(\+[0-9]{1,3})(.*)$/);
-    if (match) {
-      document.getElementById('profileCountryCode').value = match[1];
-      document.getElementById('profileMobile').value = match[2] || '';
-    } else {
-      document.getElementById('profileMobile').value = mobileValue;
-    }
-  } else {
-    document.getElementById('profileMobile').value = mobileValue;
-  }
-  document.getElementById('profileEmail').value = (userProfile && userProfile.email) || '';
-  document.getElementById('profileCompany').value = (userProfile && userProfile.company) || '';
-  document.getElementById('profileInTime').value = (userProfile && userProfile.inTime) || '';
-  document.getElementById('profileOutTime').value = (userProfile && userProfile.outTime) || '';
-
-  if (userProfile && userProfile.profilePhoto) {
-    document.getElementById('displayPhoto').src = userProfile.profilePhoto;
-  }
-
-  populateHourSelects('profile');
-  showProfileSheet();
-  closeDrawer();
+  showProfilePage();
 }
 
 function closeProfileSheet() {
   document.getElementById('profileSheet').classList.remove('show');
   document.getElementById('backdrop').classList.remove('show');
+}
+
+function setProfilePageViewMode(mode) {
+  const viewSection = document.getElementById('profilePageViewSection');
+  const editSection = document.getElementById('profilePageEditSection');
+  const editButton = document.getElementById('profilePageEditBtn');
+  if (!viewSection || !editSection || !editButton) return;
+
+  if (mode === 'edit') {
+    viewSection.style.display = 'none';
+    editSection.style.display = 'grid';
+    editButton.textContent = 'Cancel';
+    populateProfilePageForm();
+    populateHourSelects('profilePage');
+  } else {
+    viewSection.style.display = 'block';
+    editSection.style.display = 'none';
+    editButton.textContent = 'Edit';
+    populateProfilePageView();
+  }
+}
+
+function toggleProfilePageEditMode() {
+  const editSection = document.getElementById('profilePageEditSection');
+  if (!editSection) return;
+  const isEditing = editSection.style.display === 'grid';
+  setProfilePageViewMode(isEditing ? 'view' : 'edit');
+}
+
+function populateProfilePageView() {
+  const profile = userProfile || {};
+  document.getElementById('profilePageViewName').textContent = profile.name || 'Add your name';
+  document.getElementById('profilePageViewMobile').textContent = profile.mobile || 'Not provided';
+  document.getElementById('profilePageViewEmail').textContent = profile.email || 'Not provided';
+  document.getElementById('profilePageViewCompany').textContent = profile.company || 'Not provided';
+  const hours = [profile.inTime, profile.outTime].filter(Boolean);
+  document.getElementById('profilePageViewHours').textContent = hours.length ? `${hours.join(' - ')} hrs` : 'Not set';
+  const preview = document.getElementById('profilePagePhoto');
+  if (preview && profile.profilePhoto) preview.src = profile.profilePhoto;
+  if (profile.profilePhoto) {
+    const previewEdit = document.getElementById('profilePagePhotoEdit');
+    if (previewEdit) previewEdit.src = profile.profilePhoto;
+  }
+}
+
+function populateProfilePageForm() {
+  const profile = userProfile || {};
+  const mobileValue = profile.mobile || '';
+  if (mobileValue && mobileValue.startsWith('+')) {
+    const match = mobileValue.match(/^(\+[0-9]{1,3})(.*)$/);
+    if (match) {
+      document.getElementById('profilePageCountryCode').value = match[1];
+      document.getElementById('profilePageMobile').value = match[2] || '';
+    } else {
+      document.getElementById('profilePageMobile').value = mobileValue;
+    }
+  } else {
+    document.getElementById('profilePageMobile').value = mobileValue;
+  }
+  document.getElementById('profilePageName').value = profile.name || '';
+  document.getElementById('profilePageEmail').value = profile.email || '';
+  document.getElementById('profilePageCompany').value = profile.company || '';
+  document.getElementById('profilePageInTime').value = profile.inTime || '';
+  document.getElementById('profilePageOutTime').value = profile.outTime || '';
+  const previewEdit = document.getElementById('profilePagePhotoEdit');
+  if (previewEdit && profile.profilePhoto) previewEdit.src = profile.profilePhoto;
+}
+
+function getStoredReminders() {
+  try {
+    return JSON.parse(localStorage.getItem('appReminders') || '[]');
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveRemindersToStorage() {
+  localStorage.setItem('appReminders', JSON.stringify(reminders));
+}
+
+function loadReminders() {
+  reminders = getStoredReminders().map(reminder => ({
+    ...reminder,
+    eventAt: Number(reminder.eventAt),
+    notifyAt: Number(reminder.notifyAt),
+    sent: !!reminder.sent
+  }));
+  populateReminderList();
+  startReminderWatcher();
+}
+
+function startReminderWatcher() {
+  if (reminderWatchInterval) return;
+  checkReminderDue();
+  reminderWatchInterval = setInterval(checkReminderDue, 30000);
+}
+
+function checkReminderDue() {
+  if (!reminders.length) return;
+  const now = Date.now();
+  let updated = false;
+  reminders.forEach(reminder => {
+    if (!reminder.sent && now >= reminder.notifyAt) {
+      showReminderNotification(reminder);
+      reminder.sent = true;
+      updated = true;
+    }
+  });
+  if (updated) {
+    saveRemindersToStorage();
+    populateReminderList();
+  }
+}
+
+function formatTime(date) {
+  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('Notifications are not supported in this browser.');
+    return;
+  }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission !== 'granted') {
+        alert('Please allow notifications to receive reminder alerts.');
+      }
+    });
+  }
+}
+
+function showFallbackReminder(reminder) {
+  const title = reminder.title || 'Reminder';
+  const body = reminder.eventAt
+    ? `Event at ${formatTime(reminder.eventAt)}.`
+    : 'Reminder alert.';
+  alert(`${title}\n${body}`);
+}
+
+function triggerReminderNotification(reminder) {
+  const title = reminder.title || 'Reminder';
+  const body = reminder.eventAt
+    ? `Event at ${formatTime(reminder.eventAt)}.`
+    : 'Reminder alert.';
+  const options = {
+    body,
+    icon: 'icon.svg',
+    badge: 'icon.svg',
+    tag: `reminder-${reminder.id}`,
+    renotify: true,
+    data: { reminderId: reminder.id }
+  };
+
+  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    navigator.serviceWorker.ready.then(registration => {
+      return registration.showNotification(title, options);
+    }).catch(() => {
+      if (Notification.permission === 'granted') {
+        new Notification(title, options);
+      } else {
+        showFallbackReminder(reminder);
+      }
+    });
+  } else if (Notification.permission === 'granted') {
+    try {
+      new Notification(title, options);
+    } catch (err) {
+      showFallbackReminder(reminder);
+    }
+  } else {
+    showFallbackReminder(reminder);
+  }
+}
+
+function showReminderNotification(reminder) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    triggerReminderNotification(reminder);
+    return;
+  }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        triggerReminderNotification(reminder);
+      }
+    });
+  }
+}
+
+function populateReminderList() {
+  const container = document.getElementById('reminderList');
+  if (!container) return;
+  if (!reminders.length) {
+    container.innerHTML = '<div class="reminder-empty">No reminders set. Add one above.</div>';
+    return;
+  }
+
+  reminders.sort((a, b) => a.notifyAt - b.notifyAt);
+  container.innerHTML = reminders.map(reminder => {
+    const eventTime = formatTime(reminder.eventAt);
+    const notifyBefore = reminder.offset > 0 ? `${reminder.offset} min before` : 'At time';
+    const status = reminder.sent ? '✔ Sent' : 'Pending';
+    return `
+      <div class="reminder-item">
+        <div>
+          <strong>${reminder.title}</strong>
+          <span>${reminder.date} ${eventTime} · ${notifyBefore} · ${status}</span>
+        </div>
+        <button class="reminder-remove" onclick="removeReminder('${reminder.id}')">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeReminder(id) {
+  reminders = reminders.filter(reminder => reminder.id !== id);
+  saveRemindersToStorage();
+  populateReminderList();
+}
+
+function saveReminder() {
+  const title = document.getElementById('reminderTitle').value.trim();
+  const dateValue = document.getElementById('reminderDate').value;
+  const timeValue = document.getElementById('reminderTime').value;
+  const offset = Number(document.getElementById('reminderOffset').value);
+
+  if (!title || !dateValue || !timeValue) {
+    alert('Please enter a reminder title, date, and time.');
+    return;
+  }
+
+  const eventAt = new Date(`${dateValue}T${timeValue}:00`).getTime();
+  if (!eventAt || eventAt <= Date.now()) {
+    alert('Please choose a future date and time for the reminder.');
+    return;
+  }
+
+  const notifyAt = eventAt - offset * 60000;
+  if (notifyAt <= Date.now()) {
+    alert('Reminder alert time must be in the future. Select a later time or smaller offset.');
+    return;
+  }
+
+  const reminder = {
+    id: `reminder-${Date.now()}`,
+    title,
+    date: dateValue,
+    time: timeValue,
+    offset,
+    eventAt,
+    notifyAt,
+    sent: false
+  };
+
+  reminders.push(reminder);
+  saveRemindersToStorage();
+  populateReminderList();
+  startReminderWatcher();
+  requestNotificationPermission();
+
+  document.getElementById('reminderTitle').value = '';
+  document.getElementById('reminderDate').value = '';
+  document.getElementById('reminderTime').value = '';
+  document.getElementById('reminderOffset').value = '15';
+
+  alert('Reminder saved. You will receive a notification before the event.');
+}
+
+async function saveProfilePage() {
+  const countryCode = document.getElementById('profilePageCountryCode').value;
+  const mobileValue = document.getElementById('profilePageMobile').value.trim();
+  const mobile = mobileValue ? `${countryCode}${mobileValue}` : '';
+  const userData = {
+    mobile,
+    name: document.getElementById('profilePageName').value,
+    email: document.getElementById('profilePageEmail').value,
+    company: document.getElementById('profilePageCompany').value,
+    inTime: document.getElementById('profilePageInTime').value,
+    outTime: document.getElementById('profilePageOutTime').value,
+    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
+  };
+
+  const userIdForSave = (currentUser && currentUser.phoneNumber) ? currentUser.phoneNumber : (mobileValue || null);
+  const uid = persistProfileLocally(userIdForSave, userData);
+
+  userProfile = userData;
+  updateHeaderProfile();
+  populateProfilePageView();
+  setProfilePageViewMode('view');
+
+  const remoteResult = await syncProfileToRemote(uid, userData);
+  if (remoteResult.success) {
+    alert('Profile updated locally and synced to Excel.');
+  } else {
+    alert('Profile saved locally. Remote sync will retry when possible.');
+  }
 }
 
 
@@ -2036,8 +2568,19 @@ function autoSaveProfile() {
 
 function showLogoutConfirm() {
   if (confirm('Are you sure you want to logout?')) {
-    auth.signOut();
+    if (auth && typeof auth.signOut === 'function') {
+      auth.signOut();
+    } else {
+      currentUser = null;
+      localStorage.removeItem('lastUserId');
+      closeSheet();
+      showLoginSheet();
+    }
   }
+}
+
+function showSupportInfo() {
+  alert('Contact: support@app.com');
 }
 
 function closeSheet() {
@@ -2078,13 +2621,29 @@ function showProfileSheet() {
 }
 
 
-function showApp() {
+function showDashboardView() {
+  document.getElementById('profilePage').style.display = 'none';
   document.querySelector('.calendar-area').style.display = 'block';
   document.querySelector('.summary').style.display = 'block';
   render();
+  closeDrawer();
+}
+
+function showProfilePage() {
+  document.getElementById('profilePage').style.display = 'block';
+  document.querySelector('.calendar-area').style.display = 'none';
+  document.querySelector('.summary').style.display = 'none';
+  populateProfilePageView();
+  setProfilePageViewMode('view');
+  closeDrawer();
+}
+
+function showApp() {
+  showDashboardView();
 }
 
 function hideApp() {
+  document.getElementById('profilePage').style.display = 'none';
   document.querySelector('.calendar-area').style.display = 'none';
   document.querySelector('.summary').style.display = 'none';
   attendanceData = {};
@@ -2104,17 +2663,6 @@ function openDrawer() {
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('show');
   document.getElementById('drawerOverlay').classList.remove('show');
-}
-
-// ===== DESKTOP MENU FUNCTIONS =====
-function toggleProfileDropdown() {
-  const dropdown = document.getElementById('profileDropdown');
-  dropdown.classList.toggle('show');
-}
-
-function closeDropdown() {
-  const dropdown = document.getElementById('profileDropdown');
-  dropdown.classList.remove('show');
 }
 
 function downloadCSV() {
@@ -2189,20 +2737,20 @@ document.getElementById('backdrop').onclick = () => {
   closeProfileSheet();
 };
 
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-  const dropdown = document.getElementById('profileDropdown');
-  const dropdownWrapper = document.querySelector('.dropdown-wrapper');
-  if (dropdown && dropdownWrapper && !dropdownWrapper.contains(e.target)) {
-    dropdown.classList.remove('show');
-  }
-});
-
 // ===== INIT =====
 window.addEventListener('load', () => {
   const stored = localStorage.getItem('googleScriptURL');
   if (stored) googleScriptURL = stored;
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('Service worker registered:', reg);
+      }).catch(err => console.warn('SW registration failed', err));
+    });
+  }
   
+  loadReminders();
   initializeAuth();
 });
 

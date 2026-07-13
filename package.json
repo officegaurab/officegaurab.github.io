@@ -1,0 +1,18 @@
+{
+  "name": "office-attendance-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Office Attendance Tracker PWA with Capacitor support",
+  "scripts": {
+    "build": "echo \"No build step defined. Use the project files directly for web and Capacitor apps.\"",
+    "cap:init": "npx cap init officeattendance OfficeAttendanceTracker --web-dir .",
+    "cap:copy": "npx cap copy",
+    "cap:open:android": "npx cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^5.0.0"
+  }
+}
