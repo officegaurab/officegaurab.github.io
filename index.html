@@ -1,4 +1,4 @@
-fix2<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -55,6 +55,12 @@ border:none;
 border-radius:0;
 box-shadow:none;
 overflow:hidden;
+}
+
+@media (min-width: 768px) {
+  .container {
+    height: calc(100vh - 48px);
+  }
 }
 
 @media(min-width:768px){
@@ -196,8 +202,10 @@ background:rgba(255,255,255,.24);
 
 /* CALENDAR AREA */
 .calendar-area{
-padding:8px;
+padding:8px 8px 4px;
 overflow:auto;
+flex:0 1 auto;
+min-height:0;
 }
 
 .nav-controls{
@@ -333,8 +341,10 @@ outline:3px solid var(--accent);
 background:white;
 padding:12px;
 border-top:1px solid #ddd;
-max-height:200px;
+flex:1 1 auto;
+min-height:0;
 overflow-y:auto;
+margin-top:0;
 }
 
 .legend{
@@ -1222,6 +1232,29 @@ background:#e0e0e0;
 color:var(--text-dark);
 }
 
+.inline-edit-btn{
+margin-left:4px;
+padding:0;
+border:none;
+outline:none;
+box-shadow:none;
+background:transparent;
+color:var(--primary);
+cursor:pointer;
+font-size:10px;
+line-height:1;
+appearance:none;
+-webkit-appearance:none;
+}
+
+.inline-edit-btn:hover,
+.inline-edit-btn:focus,
+.inline-edit-btn:active{
+outline:none;
+box-shadow:none;
+background:transparent;
+}
+
 .day{
 min-height:84px;
 font-size:15px;
@@ -1424,20 +1457,6 @@ width:380px;
 </div>
 
 <div class="office-progress" id="officeProgress" title="Office attendance this month"></div>
-<div class="period-controls">
-  <div class="period-control">
-    <label for="manualQuarterPercent">Quarter %</label>
-    <input id="manualQuarterPercent" type="number" min="0" max="100" step="0.1" placeholder="Auto" />
-  </div>
-  <div class="period-control">
-    <label for="manualYearPercent">Year %</label>
-    <input id="manualYearPercent" type="number" min="0" max="100" step="0.1" placeholder="Auto" />
-  </div>
-  <div class="period-control">
-    <button onclick="applyManualPeriodOverrides()">Apply</button>
-    <button class="secondary" onclick="clearManualPeriodOverrides()">Auto</button>
-  </div>
-</div>
 <div class="stat-overview" id="statsOverview" title="Click to view fiscal year breakdown"></div>
 <div class="stats" id="stats"></div>
 
@@ -2410,14 +2429,17 @@ function updateStats() {
   const remaining = Math.max(requiredOffice - officeDays, 0);
 
   const periodSummaries = calculateFiscalAttendanceSummaries(currentDate);
-  const effectiveQuarterPercent = getManualPeriodValue('quarter', periodSummaries.quarter.percent);
-  const effectiveYearPercent = getManualPeriodValue('year', periodSummaries.year.percent);
+  const quarterDisplay = getManualPeriodDisplay('quarter', periodSummaries.quarter);
+  const yearDisplay = getManualPeriodDisplay('year', periodSummaries.year);
   
   // Update office progress indicator
   document.getElementById('officeProgress').innerHTML = `Office: ${officePercent}% | Need ${remaining} more`;
   
   // Update period stats overview
-  document.getElementById('statsOverview').innerHTML = `Quarter: ${effectiveQuarterPercent.toFixed(1)}% (${periodSummaries.quarter.officeDays}/${periodSummaries.quarter.workDays} WFO/Work Days)<br>Year: ${effectiveYearPercent.toFixed(1)}% (${periodSummaries.year.officeDays}/${periodSummaries.year.workDays} WFO/Work Days)`;
+  document.getElementById('statsOverview').innerHTML = `
+    <div>Quarter: ${quarterDisplay.effective.toFixed(1)}% (${quarterDisplay.base.toFixed(1)} + ${quarterDisplay.delta.toFixed(1)}) | ${periodSummaries.quarter.officeDays}/${periodSummaries.quarter.workDays} WFO/Work Days <button class="inline-edit-btn" onclick="editManualPeriod('quarter')" title="Edit extra quarter %">✎</button></div>
+    <div>Year: ${yearDisplay.effective.toFixed(1)}% (${yearDisplay.base.toFixed(1)} + ${yearDisplay.delta.toFixed(1)}) | ${periodSummaries.year.officeDays}/${periodSummaries.year.workDays} WFO/Work Days <button class="inline-edit-btn" onclick="editManualPeriod('year')" title="Edit extra year %">✎</button></div>
+  `;
 
   document.getElementById('stats').innerHTML = `
     <div class="stat-card">Working Days: <b>${workingDays}</b></div>
@@ -2564,46 +2586,41 @@ function saveManualPeriodOverrides() {
   localStorage.setItem('attendanceManualPeriodOverrides', JSON.stringify(manualPeriodOverrides));
 }
 
-function populateManualPeriodInputs() {
-  const quarterInput = document.getElementById('manualQuarterPercent');
-  const yearInput = document.getElementById('manualYearPercent');
+function editManualPeriod(period) {
+  const currentValue = manualPeriodOverrides[period] === null || manualPeriodOverrides[period] === undefined ? 0 : manualPeriodOverrides[period];
+  const label = period === 'quarter' ? 'quarter' : 'year';
+  const value = prompt(`Enter extra ${label} % to add (current: ${currentValue}%)`, currentValue);
 
-  if (quarterInput) {
-    quarterInput.value = manualPeriodOverrides.quarter === null ? '' : manualPeriodOverrides.quarter;
+  if (value === null) return;
+
+  const parsedValue = value.trim() === '' ? 0 : Number(value);
+  if (!Number.isFinite(parsedValue) || parsedValue < 0 || parsedValue > 100) {
+    alert('Please enter a valid extra percentage between 0 and 100.');
+    return;
   }
 
-  if (yearInput) {
-    yearInput.value = manualPeriodOverrides.year === null ? '' : manualPeriodOverrides.year;
-  }
-}
-
-function applyManualPeriodOverrides() {
-  const quarterInput = document.getElementById('manualQuarterPercent');
-  const yearInput = document.getElementById('manualYearPercent');
-
-  manualPeriodOverrides = {
-    quarter: quarterInput && quarterInput.value !== '' ? Number(quarterInput.value) : null,
-    year: yearInput && yearInput.value !== '' ? Number(yearInput.value) : null
-  };
-
-  manualPeriodOverrides.quarter = manualPeriodOverrides.quarter === null ? null : Math.min(100, Math.max(0, manualPeriodOverrides.quarter));
-  manualPeriodOverrides.year = manualPeriodOverrides.year === null ? null : Math.min(100, Math.max(0, manualPeriodOverrides.year));
-
+  manualPeriodOverrides[period] = parsedValue;
   saveManualPeriodOverrides();
-  populateManualPeriodInputs();
   updateStats();
 }
 
 function clearManualPeriodOverrides() {
   manualPeriodOverrides = { quarter: null, year: null };
   saveManualPeriodOverrides();
-  populateManualPeriodInputs();
   updateStats();
 }
 
-function getManualPeriodValue(period, fallback) {
+function getManualPeriodDisplay(period, summary) {
   const override = manualPeriodOverrides[period];
-  return override === null || override === undefined ? fallback : override;
+  const base = summary.percent;
+  const delta = override === null || override === undefined ? 0 : override;
+  const effective = Math.min(100, base + delta);
+
+  return {
+    base,
+    delta,
+    effective
+  };
 }
 
 // ===== UI FUNCTIONS =====
@@ -3153,9 +3170,9 @@ function setupStatsInteractivity() {
     statsOverview.onclick = () => {
       const periodPercents = calculateFiscalAttendancePercents(currentDate);
       const summaries = calculateFiscalAttendanceSummaries(currentDate);
-      const quarterPercent = getManualPeriodValue('quarter', summaries.quarter.percent);
-      const yearPercent = getManualPeriodValue('year', summaries.year.percent);
-      alert(`Fiscal Year Breakdown:\n\nMonth: ${periodPercents.month}% (${summaries.month.officeDays}/${summaries.month.workDays} WFO/Work Days)\nQuarter: ${quarterPercent.toFixed(1)}% (${summaries.quarter.officeDays}/${summaries.quarter.workDays} WFO/Work Days)\nYear: ${yearPercent.toFixed(1)}% (${summaries.year.officeDays}/${summaries.year.workDays} WFO/Work Days)`);
+      const quarterDisplay = getManualPeriodDisplay('quarter', summaries.quarter);
+      const yearDisplay = getManualPeriodDisplay('year', summaries.year);
+      alert(`Fiscal Year Breakdown:\n\nMonth: ${periodPercents.month}% (${summaries.month.officeDays}/${summaries.month.workDays} WFO/Work Days)\nQuarter: ${quarterDisplay.effective.toFixed(1)}% (${quarterDisplay.base.toFixed(1)} + ${quarterDisplay.delta.toFixed(1)}) | ${summaries.quarter.officeDays}/${summaries.quarter.workDays} WFO/Work Days\nYear: ${yearDisplay.effective.toFixed(1)}% (${yearDisplay.base.toFixed(1)} + ${yearDisplay.delta.toFixed(1)}) | ${summaries.year.officeDays}/${summaries.year.workDays} WFO/Work Days`);
     };
   }
   
@@ -3210,7 +3227,6 @@ window.addEventListener('load', () => {
   }
   
   loadManualPeriodOverrides();
-  populateManualPeriodInputs();
   loadReminders();
   initializeAuth();
 });
