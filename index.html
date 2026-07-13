@@ -1,4 +1,4 @@
-w<!DOCTYPE html>
+fix2<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -561,10 +561,222 @@ cursor:pointer;
 font-size:14px;
 }
 
+.reminder-status{
+font-size:12px;
+font-weight:600;
+padding:4px 8px;
+border-radius:6px;
+display:inline-block;
+margin-top:6px;
+}
+
+.reminder-status-pending{
+background:#fff3cd;
+color:#856404;
+}
+
+.reminder-status-sent{
+background:#d4edda;
+color:#155724;
+}
+
+.reminder-upcoming{
+box-shadow:0 0 0 2px var(--primary);
+background:linear-gradient(135deg, rgba(25, 118, 210, 0.05), rgba(25, 118, 210, 0.02));
+}
+
 .reminder-empty{
 font-size:13px;
 color:var(--text-light);
 padding:10px 0;
+}
+
+/* REMINDER PAGE */
+.reminder-page{
+grid-column:1 / -1;
+padding:20px;
+overflow-y:auto;
+background:linear-gradient(135deg, #f4f6f8 0%, #eef4ff 100%);
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.reminder-page.show{
+display:flex;
+}
+
+.reminder-page-card{
+background:white;
+border-radius:16px;
+box-shadow:0 4px 20px rgba(15, 23, 42, 0.08);
+padding:24px;
+max-width:600px;
+width:100%;
+}
+
+.reminder-page-header{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+margin-bottom:24px;
+}
+
+.reminder-page-title{
+font-size:24px;
+font-weight:700;
+color:var(--text);
+margin-bottom:8px;
+}
+
+.reminder-page-subtitle{
+font-size:14px;
+color:var(--text-light);
+}
+
+.reminder-form-section{
+background:linear-gradient(135deg, #eff6ff, #f8fbff);
+border:1px solid #dbeafe;
+border-radius:12px;
+padding:16px;
+margin-bottom:24px;
+}
+
+.reminder-list-section{
+margin-top:20px;
+}
+
+@media(max-width:767px){
+.reminder-page{
+padding:12px;
+}
+
+.reminder-page-card{
+padding:16px;
+}
+
+.reminder-page-header{
+flex-direction:column;
+gap:12px;
+}
+
+.reminder-page-header button{
+align-self:flex-start;
+}
+}
+
+/* NOTIFICATION MODAL */
+.notification-modal{
+position:fixed;
+left:50%;
+top:50%;
+transform:translate(-50%, -50%);
+background:white;
+padding:24px;
+border-radius:16px;
+box-shadow:0 10px 40px rgba(0,0,0,0.3);
+z-index:9999;
+max-width:90%;
+width:100%;
+max-width:400px;
+display:none;
+animation:slideInUp .3s ease-out;
+}
+
+.notification-modal.show{
+display:block;
+}
+
+@keyframes slideInUp{
+from{
+opacity:0;
+transform:translate(-50%, -30%);
+}
+to{
+opacity:1;
+transform:translate(-50%, -50%);
+}
+}
+
+.notification-modal-backdrop{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.4);
+z-index:9998;
+display:none;
+}
+
+.notification-modal-backdrop.show{
+display:block;
+}
+
+.notification-modal-icon{
+font-size:48px;
+text-align:center;
+margin-bottom:16px;
+}
+
+.notification-modal-title{
+font-size:20px;
+font-weight:700;
+color:var(--text);
+margin-bottom:12px;
+text-align:center;
+}
+
+.notification-modal-body{
+font-size:14px;
+color:var(--text-light);
+line-height:1.6;
+margin-bottom:20px;
+text-align:center;
+}
+
+.notification-modal-time{
+font-size:13px;
+color:var(--primary);
+font-weight:600;
+margin-bottom:20px;
+padding:12px;
+background:#f0f7ff;
+border-radius:8px;
+text-align:center;
+}
+
+.notification-modal-buttons{
+display:flex;
+gap:10px;
+justify-content:center;
+}
+
+.notification-modal-buttons button{
+padding:10px 20px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:600;
+font-size:14px;
+transition:.2s ease;
+}
+
+.notification-modal-btn-close{
+background:#f0f0f0;
+color:var(--text);
+flex:1;
+}
+
+.notification-modal-btn-close:hover{
+background:#e0e0e0;
+}
+
+.notification-modal-btn-ok{
+background:var(--primary);
+color:white;
+flex:1;
+}
+
+.notification-modal-btn-ok:hover{
+background:#1565c0;
 }
 
 #profilePagePhotoInput{
@@ -1007,6 +1219,7 @@ width:380px;
 <div class="header-menu">
 <button class="menu-item" onclick="showDashboardView()">Dashboard</button>
 <button class="menu-item" onclick="showProfilePage()">My Profile</button>
+<button class="menu-item" onclick="showReminderPage()">Reminder</button>
 <button class="menu-item" onclick="downloadCSV()">Export Data</button>
 <button class="menu-item" onclick="showLogoutConfirm()">Logout</button>
 <button class="menu-item" onclick="showSupportInfo()">Help</button>
@@ -1096,9 +1309,21 @@ width:380px;
       </div>
       <button class="action-button btn-success" onclick="saveProfilePage()">Save Changes</button>
     </div>
+  </div>
+</div>
 
-    <div class="profile-reminder-card">
-      <div class="profile-page-subtitle" style="margin-bottom:12px;">Set reminders for meetings and receive local notifications before the event.</div>
+<!-- REMINDER PAGE -->
+<div class="reminder-page" id="reminderPage" style="display:none;">
+  <div class="reminder-page-card">
+    <div class="reminder-page-header">
+      <div>
+        <div class="reminder-page-title">Reminders</div>
+        <div class="reminder-page-subtitle">Set reminders for meetings and receive local notifications before the event.</div>
+      </div>
+      <button class="action-button btn-success" id="reminderPageBackBtn" onclick="showDashboardView()" style="width:auto; margin:0; padding:10px 14px;">← Back</button>
+    </div>
+
+    <div class="reminder-form-section">
       <div class="form-group">
         <label>Reminder Title:</label>
         <input type="text" id="reminderTitle" placeholder="e.g. Team meeting" />
@@ -1125,6 +1350,10 @@ width:380px;
         </select>
       </div>
       <button class="action-button btn-primary" onclick="saveReminder()">Save Reminder</button>
+    </div>
+ 
+    <div class="reminder-list-section">
+      <div class="reminder-page-subtitle">Your Reminders:</div>
       <div class="reminder-list" id="reminderList"></div>
     </div>
   </div>
@@ -1167,6 +1396,18 @@ width:380px;
 <!-- DRAWER OVERLAY -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
 
+<!-- NOTIFICATION MODAL -->
+<div class="notification-modal-backdrop" id="notificationModalBackdrop"></div>
+<div class="notification-modal" id="notificationModal">
+  <div class="notification-modal-icon">🔔</div>
+  <div class="notification-modal-title" id="notificationModalTitle">Reminder Alert</div>
+  <div class="notification-modal-time" id="notificationModalTime">Event at 2:30 PM</div>
+  <div class="notification-modal-buttons">
+    <button class="notification-modal-btn-close" onclick="closeNotificationModal()">Close</button>
+    <button class="notification-modal-btn-ok" onclick="closeNotificationModal()">OK</button>
+  </div>
+</div>
+
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
 <div class="drawer-header">
@@ -1183,6 +1424,10 @@ width:380px;
 <div class="drawer-item" onclick="showProfilePage();closeDrawer();">
 <span class="drawer-item-icon">👤</span>
 <span>My Profile</span>
+</div>
+<div class="drawer-item" onclick="showReminderPage();closeDrawer();">
+<span class="drawer-item-icon">🔔</span>
+<span>Reminder</span>
 </div>
 <div class="drawer-item" onclick="downloadCSV();closeDrawer();">
 <span class="drawer-item-icon">⬇️</span>
@@ -2351,7 +2596,7 @@ function loadReminders() {
 function startReminderWatcher() {
   if (reminderWatchInterval) return;
   checkReminderDue();
-  reminderWatchInterval = setInterval(checkReminderDue, 30000);
+  reminderWatchInterval = setInterval(checkReminderDue, 10000);
 }
 
 function checkReminderDue() {
@@ -2377,13 +2622,13 @@ function formatTime(date) {
 
 function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    alert('Notifications are not supported in this browser.');
+    console.warn('Notifications are not supported in this browser. Will use fallback modal.');
     return;
   }
   if (Notification.permission === 'default') {
     Notification.requestPermission().then(permission => {
       if (permission !== 'granted') {
-        alert('Please allow notifications to receive reminder alerts.');
+        console.warn('Notification permission denied. Will use fallback modal for reminders.');
       }
     });
   }
@@ -2391,10 +2636,33 @@ function requestNotificationPermission() {
 
 function showFallbackReminder(reminder) {
   const title = reminder.title || 'Reminder';
-  const body = reminder.eventAt
-    ? `Event at ${formatTime(reminder.eventAt)}.`
-    : 'Reminder alert.';
-  alert(`${title}\n${body}`);
+  const eventTime = reminder.eventAt ? formatTime(reminder.eventAt) : 'Now';
+  showNotificationModal(title, eventTime);
+}
+
+function showNotificationModal(title, eventTime) {
+  const modal = document.getElementById('notificationModal');
+  const backdrop = document.getElementById('notificationModalBackdrop');
+  const modalTitle = document.getElementById('notificationModalTitle');
+  const modalTime = document.getElementById('notificationModalTime');
+  
+  if (!modal || !backdrop) return;
+  
+  modalTitle.textContent = title;
+  modalTime.textContent = `Event at ${eventTime}`;
+  
+  modal.classList.add('show');
+  backdrop.classList.add('show');
+}
+
+function closeNotificationModal() {
+  const modal = document.getElementById('notificationModal');
+  const backdrop = document.getElementById('notificationModalBackdrop');
+  
+  if (!modal || !backdrop) return;
+  
+  modal.classList.remove('show');
+  backdrop.classList.remove('show');
 }
 
 function triggerReminderNotification(reminder) {
@@ -2408,23 +2676,31 @@ function triggerReminderNotification(reminder) {
     badge: 'icon.svg',
     tag: `reminder-${reminder.id}`,
     renotify: true,
+    requireInteraction: true,
     data: { reminderId: reminder.id }
   };
 
   if (navigator.serviceWorker && navigator.serviceWorker.ready) {
     navigator.serviceWorker.ready.then(registration => {
-      return registration.showNotification(title, options);
-    }).catch(() => {
-      if (Notification.permission === 'granted') {
-        new Notification(title, options);
-      } else {
-        showFallbackReminder(reminder);
-      }
+      return registration.showNotification(title, options).catch(err => {
+        console.warn('Service Worker notification failed:', err);
+        tryBrowserNotification(title, options, reminder);
+      });
+    }).catch(err => {
+      console.warn('Service Worker not ready:', err);
+      tryBrowserNotification(title, options, reminder);
     });
-  } else if (Notification.permission === 'granted') {
+  } else {
+    tryBrowserNotification(title, options, reminder);
+  }
+}
+
+function tryBrowserNotification(title, options, reminder) {
+  if (Notification.permission === 'granted') {
     try {
       new Notification(title, options);
     } catch (err) {
+      console.warn('Browser notification failed:', err);
       showFallbackReminder(reminder);
     }
   } else {
@@ -2433,7 +2709,10 @@ function triggerReminderNotification(reminder) {
 }
 
 function showReminderNotification(reminder) {
-  if (!('Notification' in window)) return;
+  if (!('Notification' in window)) {
+    showFallbackReminder(reminder);
+    return;
+  }
   if (Notification.permission === 'granted') {
     triggerReminderNotification(reminder);
     return;
@@ -2442,8 +2721,14 @@ function showReminderNotification(reminder) {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
         triggerReminderNotification(reminder);
+      } else {
+        showFallbackReminder(reminder);
       }
+    }).catch(() => {
+      showFallbackReminder(reminder);
     });
+  } else {
+    showFallbackReminder(reminder);
   }
 }
 
@@ -2459,12 +2744,17 @@ function populateReminderList() {
   container.innerHTML = reminders.map(reminder => {
     const eventTime = formatTime(reminder.eventAt);
     const notifyBefore = reminder.offset > 0 ? `${reminder.offset} min before` : 'At time';
-    const status = reminder.sent ? '✔ Sent' : 'Pending';
+    const status = reminder.sent ? '✔ Sent' : '⏳ Pending';
+    const statusClass = reminder.sent ? 'reminder-status-sent' : 'reminder-status-pending';
+    const timeUntilReminder = reminder.notifyAt - Date.now();
+    const isUpcoming = timeUntilReminder > 0 && timeUntilReminder < 3600000;
+    
     return `
-      <div class="reminder-item">
+      <div class="reminder-item ${isUpcoming ? 'reminder-upcoming' : ''}">
         <div>
           <strong>${reminder.title}</strong>
-          <span>${reminder.date} ${eventTime} · ${notifyBefore} · ${status}</span>
+          <span>${reminder.date} ${eventTime} · ${notifyBefore}</span>
+          <span class="reminder-status ${statusClass}">${status}</span>
         </div>
         <button class="reminder-remove" onclick="removeReminder('${reminder.id}')">✕</button>
       </div>
@@ -2523,7 +2813,16 @@ function saveReminder() {
   document.getElementById('reminderTime').value = '';
   document.getElementById('reminderOffset').value = '15';
 
-  alert('Reminder saved. You will receive a notification before the event.');
+  let notificationStatus = '';
+  if (!('Notification' in window)) {
+    notificationStatus = '\n\n📱 Notifications not supported - will show popup alerts';
+  } else if (Notification.permission === 'granted') {
+    notificationStatus = '\n\n✔ Browser notifications enabled';
+  } else {
+    notificationStatus = '\n\n⚠ Browser notifications disabled - will show popup alerts';
+  }
+
+  alert(`✓ Reminder saved successfully!${notificationStatus}`);
 }
 
 async function saveProfilePage() {
@@ -2623,6 +2922,7 @@ function showProfileSheet() {
 
 function showDashboardView() {
   document.getElementById('profilePage').style.display = 'none';
+  document.getElementById('reminderPage').style.display = 'none';
   document.querySelector('.calendar-area').style.display = 'block';
   document.querySelector('.summary').style.display = 'block';
   render();
@@ -2633,8 +2933,18 @@ function showProfilePage() {
   document.getElementById('profilePage').style.display = 'block';
   document.querySelector('.calendar-area').style.display = 'none';
   document.querySelector('.summary').style.display = 'none';
+  document.getElementById('reminderPage').style.display = 'none';
   populateProfilePageView();
   setProfilePageViewMode('view');
+  closeDrawer();
+}
+
+function showReminderPage() {
+  document.getElementById('reminderPage').style.display = 'flex';
+  document.getElementById('profilePage').style.display = 'none';
+  document.querySelector('.calendar-area').style.display = 'none';
+  document.querySelector('.summary').style.display = 'none';
+  loadReminders();
   closeDrawer();
 }
 
@@ -2644,6 +2954,7 @@ function showApp() {
 
 function hideApp() {
   document.getElementById('profilePage').style.display = 'none';
+  document.getElementById('reminderPage').style.display = 'none';
   document.querySelector('.calendar-area').style.display = 'none';
   document.querySelector('.summary').style.display = 'none';
   attendanceData = {};
