@@ -1,4 +1,4 @@
-const CACHE_NAME = 'office-attendance-v1';
+const CACHE_NAME = 'office-attendance-v2-google-auth';
 const ASSETS = [
   '.',
   'index.html',

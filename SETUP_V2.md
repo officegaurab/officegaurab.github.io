@@ -1,5 +1,7 @@
 # Office Attendance Tracker - V2 Setup Guide
 
+> **Current setup:** This guide describes the earlier Firebase phone-login version. Do not use its Firebase/OTP login steps for the current app. Follow [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md) to configure Google sign-in, the central profile sheet, and optional user-owned attendance sheets.
+
 ## 🎉 What's New in V2
 
 ✅ **Firebase Phone Authentication (OTP)**  

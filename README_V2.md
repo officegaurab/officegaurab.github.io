@@ -1,6 +1,6 @@
 # 📊 Office Attendance Tracker - V2
 
-> **Professional attendance management with Firebase authentication and Google Sheets database**
+> **Attendance management with Google sign-in and optional personal Google Sheets**
 
 ---
 
@@ -8,7 +8,7 @@
 
 ✅ Mark office/home/leave attendance  
 ✅ Track monthly attendance automatically  
-✅ Multi-user support (login with phone)  
+✅ Multi-device accounts (sign in with Google)
 ✅ User profiles with photos  
 ✅ Save rate limiting (prevent spam)  
 ✅ Real-time Google Sheet sync  
@@ -21,31 +21,23 @@
 ### Path 1️⃣: Complete Setup (First Time)
 **Time: 30 min | Level: Beginner**
 
-1. Read: [FIREBASE_QUICK_START.md](FIREBASE_QUICK_START.md) (Firebase config)
-2. Read: [SETUP_V2.md](SETUP_V2.md) (Complete guide)
+1. Read: [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md) (Google sign-in and Sheets setup)
+2. Set the OAuth client ID in the app and Apps Script
 3. Done! Deploy and test
 
-### Path 2️⃣: Firebase Only (Already have Google Apps Script)
-**Time: 5 min | Level: Intermediate**
-
-1. Read: [FIREBASE_QUICK_START.md](FIREBASE_QUICK_START.md)
-2. Update `index.html` with Firebase config
-3. Deploy and test
-
-### Path 3️⃣: Upgrading from V1
-**Time: 15 min | Level: Intermediate**
+### Existing Users
 
 1. Backup your Google Sheet
-2. Read: [CHANGELOG.md](CHANGELOG.md) (what's new)
-3. Follow: [SETUP_V2.md](SETUP_V2.md)
-4. Redeploy everything
+2. Review the migration notes in [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md)
+3. Deploy the updated Apps Script and frontend
 
 ---
 
 ## 📋 What You Need
 
-- ✅ Google Account (for Firebase + Sheet)
-- ✅ Phone number (for OTP login)
+- ✅ Google account
+- ✅ OAuth client ID configured
+- ✅ Owner-managed main profile spreadsheet
 - ✅ GitHub Pages (or any web host)
 - ✅ 30 minutes (one-time setup)
 
@@ -56,22 +48,22 @@
 ## 🎨 Features Overview
 
 ### 🔐 Authentication
-- Phone-based OTP login
-- Firebase (secure, verified users)
+- Google sign-in (verified account identity)
+- Explicit Google Drive permission for personal attendance storage
 - Multi-device support
-- Automatic session management
 
 ### 👤 User Profiles
 - **Editable fields**: Name, Email, Company, Office Hours
 - **Profile photo**: Upload and display (rounded)
-- **All fields optional** except mobile
-- **Auto-saved** to Google Sheet
+- **Required**: Name and mobile number
+- **Always saved** to the app owner's main Google Sheet
 
 ### 📅 Attendance Tracking
 - Mark: Office, Home, Holiday, Leave, No-Show
 - View: Monthly calendar with stats
 - Statistics: Working days, office %, required days
 - Progress bar: Visual representation
+- Attendance can use the central sheet or a user-authorized personal sheet
 
 ### 🎚️ Rate Limiting
 - **Limit**: 10 Google Sheets saves per day
@@ -96,22 +88,14 @@
 ## 🔧 System Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│      Firebase Phone Authentication      │
-│         (OTP via SMS)                   │
-└──────────────────┬──────────────────────┘
-                   │
-        ┌──────────┴──────────┐
-        │                     │
-   ┌────▼────┐         ┌─────▼──────┐
-   │ Browser │────────▶│   Google   │
-   │  (V2)   │         │   Sheet    │
-   │ index.  │◀────────│  Database  │
-   │  html   │         │(3 tabs)    │
-   └────────┘         └────────────┘
-        │
-        └──▶ Apps Script
-             (Backend logic)
+┌───────────────────┐      ┌──────────────────────────┐
+│ Browser           │─────▶│ Google Identity Services │
+│ Attendance PWA    │◀─────│ Verified Google account  │
+└─────────┬─────────┘      └──────────────────────────┘
+    │
+    ├────────▶ Owner Apps Script ─────▶ Main profile Sheet
+    │
+    └────────▶ Sheets API (Drive consent) ─▶ User attendance Sheet
 ```
 
 ---

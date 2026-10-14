@@ -11,11 +11,10 @@
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 :root{
@@ -34,7 +33,7 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:'Inter',system-ui,-apple-system,sans-serif;
+font-family:'DM Sans',system-ui,sans-serif;
 }
 
 body{
@@ -820,6 +819,177 @@ visibility:visible;
 animation:none;
 }
 
+#registrationSheet,
+#connectSheetModal{
+width:min(480px, calc(100vw - 28px));
+padding:30px;
+border:1px solid #dfe5e8;
+border-radius:12px;
+box-shadow:0 28px 80px rgba(18,36,47,.22);
+}
+
+#registrationSheet .sheet-title,
+#connectSheetModal .sheet-title{
+margin:0 0 22px;
+color:#20312b;
+font-family:'Manrope','DM Sans',sans-serif;
+font-size:23px;
+text-align:left;
+}
+
+#registrationSheet .auth-mark,
+#connectSheetModal .auth-mark{
+width:42px;
+height:42px;
+margin-bottom:14px;
+border-radius:10px;
+font-size:14px;
+}
+
+#registrationSheet .form-group{margin-bottom:16px;}
+#registrationSheet .form-group label{margin-bottom:7px;color:#52645a;font-size:12px;}
+#registrationSheet .form-group input,
+#registrationSheet .form-group select{
+min-height:44px;
+padding:11px 12px;
+border-color:#d5dfd8;
+border-radius:7px;
+background:#fff;
+font-size:14px;
+}
+#registrationSheet .form-group input:focus,
+#registrationSheet .form-group select:focus{
+border-color:#398264;
+box-shadow:0 0 0 3px rgba(57,130,100,.14);
+}
+#registrationSheet .form-group input[readonly]{background:#f1f5f2;color:#63746a;}
+#registrationSheet .action-button{
+min-height:46px;
+border-radius:7px;
+transition:transform .16s ease,box-shadow .16s ease,background .16s ease;
+}
+#registrationSheet .action-button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 14px rgba(28,75,52,.14);}
+#registrationSheet .action-button:focus-visible{outline:3px solid rgba(57,130,100,.3);outline-offset:2px;}
+#registrationSheet .auth-status:empty{display:none;}
+#saveProfileContinueBtn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none;}
+#saveProfileContinueBtn.is-ready{animation:profileReady .22s ease-out;}
+
+@keyframes profileReady{from{transform:scale(.985)}to{transform:scale(1)}}
+
+.login-screen{
+display:none;
+position:fixed;
+inset:0;
+z-index:30;
+grid-template-columns:minmax(0,1fr) minmax(380px,.82fr);
+min-height:100vh;
+background:#f7f9f7;
+}
+
+.login-screen.show{display:grid;animation:loginArrive .35s ease-out both;}
+
+.login-brand-panel{
+position:relative;
+display:flex;
+align-items:flex-end;
+min-height:100vh;
+overflow:hidden;
+padding:clamp(36px,7vw,96px);
+background:#173f32;
+color:#fff;
+}
+
+.login-brand-panel::before{
+content:"";
+position:absolute;
+inset:0;
+background-image:linear-gradient(rgba(225,239,230,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(225,239,230,.055) 1px,transparent 1px);
+background-size:36px 36px;
+mask-image:linear-gradient(to bottom,transparent,black 35%);
+}
+
+.login-brand-content{position:relative;max-width:520px;}
+.login-brand-kicker{color:#b8d6c7;font-size:12px;font-weight:700;}
+.login-brand-title{margin:18px 0 24px;font-family:'Manrope','DM Sans',sans-serif;font-size:42px;line-height:1.12;font-weight:700;}
+.login-brand-rule{width:64px;height:3px;background:#e67a5e;}
+.login-brand-foot{margin-top:18px;color:#c8d9d0;font-size:13px;}
+
+.login-panel{display:grid;place-items:center;padding:48px;}
+.login-panel-inner{width:min(100%,380px);}
+.login-panel-brand{display:flex;align-items:center;gap:10px;margin-bottom:54px;color:#176b4a;font-size:13px;font-weight:700;}
+.login-panel-brand .brand-mark{width:34px;height:34px;background:#176b4a;}
+.login-kicker{color:#78867f;font-size:11px;font-weight:700;}
+.login-panel-title{margin-top:10px;color:#20312b;font-family:'Manrope','DM Sans',sans-serif;font-size:30px;font-weight:700;}
+.login-panel-copy{margin:8px 0 26px;color:#65736d;font-size:14px;line-height:1.5;}
+.google-login-fallback{
+width:100%;
+min-height:46px;
+border:1px solid #d7dfda;
+border-radius:6px;
+background:#fff;
+color:#35453d;
+font:600 14px 'DM Sans',sans-serif;
+}
+.google-login-fallback:disabled{color:#738078;background:#eef1ef;cursor:not-allowed;}
+#googleSignInButton{min-height:46px;}
+.login-panel .auth-status{margin-top:14px;color:#8c5545;}
+
+@keyframes loginArrive{from{opacity:0}to{opacity:1}}
+
+.auth-mark{
+width:48px;
+height:48px;
+display:grid;
+place-items:center;
+margin-bottom:20px;
+border-radius:12px;
+background:#e5f2ec;
+color:#176b4a;
+font-size:20px;
+font-weight:800;
+}
+
+.auth-copy{
+margin:8px 0 24px;
+color:#617079;
+font-size:14px;
+line-height:1.6;
+}
+
+.auth-status{
+min-height:22px;
+margin-top:14px;
+color:#617079;
+font-size:13px;
+line-height:1.5;
+}
+
+.auth-divider{
+height:1px;
+margin:22px 0 16px;
+background:#e5eaec;
+}
+
+.auth-note{
+color:#69767d;
+font-size:12px;
+line-height:1.55;
+}
+
+@media(max-width:520px){
+  #registrationSheet,
+  #connectSheetModal{padding:24px 20px;}
+}
+
+@media(max-width:760px){
+  .login-screen{grid-template-columns:1fr;grid-template-rows:auto 1fr;}
+  .login-brand-panel{min-height:0;padding:24px 28px 22px;}
+  .login-brand-title{margin:12px 0 14px;font-size:27px;}
+  .login-brand-foot{display:none;}
+  .login-panel{padding:36px 28px;}
+  .login-panel-brand{margin-bottom:34px;}
+}
+
 @keyframes slideUp{
 from{
 opacity:0;
@@ -1037,27 +1207,6 @@ display:inline-block;
 display:none;
 }
 
-#regProfilePhotoInput{
-display:none;
-}
-
-/* SAVE LIMIT INDICATOR */
-.save-limit-display{
-background:#fff3cd;
-padding:12px;
-border-radius:8px;
-margin-bottom:10px;
-font-size:13px;
-text-align:center;
-border:1px solid #ffc107;
-}
-
-.save-limit-display.limit-reached{
-background:#f8d7da;
-border-color:#f5c6cb;
-color:#721c24;
-}
-
 /* MODAL */
 .backdrop{
 position:fixed;
@@ -1270,6 +1419,145 @@ width:380px;
 }
 }
 
+:root{
+--primary:#176b4a;
+--accent:#e67a5e;
+--success:#26845e;
+--warning:#f2c66d;
+--danger:#c94e4e;
+--bg:#edf1ed;
+--card:#ffffff;
+--text:#20312b;
+--text-light:#65736d;
+}
+
+body{
+background-color:#e9efea;
+background-image:linear-gradient(rgba(23,107,74,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(23,107,74,.025) 1px,transparent 1px);
+background-size:28px 28px;
+}
+
+.container{
+background:#f8faf8;
+}
+
+.header{
+background:#173f32;
+box-shadow:0 8px 24px rgba(20,52,41,.14);
+}
+
+.header-title{font-size:17px;}
+.header-subtitle{color:#c8d9d0;}
+.menu-item{border-radius:6px;}
+.header-title,.calendar-heading-title,.sheet-title{font-family:'Manrope','DM Sans',sans-serif;}
+.brand-mark{
+width:40px;
+height:40px;
+display:grid;
+place-items:center;
+flex:none;
+border:1px solid rgba(255,255,255,.24);
+border-radius:9px;
+background:#28664f;
+color:#fff;
+font-size:13px;
+font-weight:800;
+}
+
+.calendar-area{
+padding:20px 16px 18px;
+background:#f8faf8;
+}
+
+.calendar-heading{
+display:flex;
+align-items:flex-end;
+justify-content:space-between;
+gap:12px;
+margin:0 0 18px;
+}
+
+.calendar-heading-label{
+color:#65736d;
+font-size:11px;
+font-weight:700;
+text-transform:uppercase;
+}
+
+.calendar-heading-title{
+margin-top:4px;
+color:#20312b;
+font-size:21px;
+font-weight:700;
+}
+
+.calendar-area .nav-controls{margin-bottom:12px;}
+.calendar-area .nav-btn{
+background:#e4eee8;
+color:#176b4a;
+border:1px solid #d1e0d7;
+}
+.calendar-area .nav-btn:hover{background:#d7e8dd;box-shadow:none;}
+.month-title{color:#20312b;}
+.weekdays{color:#78867f;font-size:11px;text-transform:uppercase;}
+.calendar{gap:6px;}
+.day{
+min-height:56px;
+border-color:#e1e8e3;
+border-radius:7px;
+color:#32443b;
+}
+.day.home{border-color:#4b9876;color:#176b4a;background:#edf6f0;}
+.day.weekend,.day.holiday{background:#f8edcf;color:#6c5425;}
+.day.today{outline:2px solid var(--accent);outline-offset:1px;}
+
+.summary{
+background:#f2f6f2;
+border-top:1px solid #dfe7e1;
+padding:16px;
+}
+.legend{gap:12px;color:#57675f;}
+.office-progress{
+background:#176b4a;
+border-radius:7px;
+padding:12px;
+text-align:left;
+box-shadow:none;
+}
+.stat-overview{
+background:#e5eee8;
+border:1px solid #d7e3db;
+border-radius:7px;
+}
+.stat-overview:hover{background:#dce9e0;box-shadow:none;}
+.stats{gap:8px;}
+.stat-card{
+min-height:48px;
+padding:10px;
+background:#fff;
+border:1px solid #e0e8e2;
+border-left:3px solid #4b9876;
+border-radius:7px;
+color:#53635b;
+}
+.stat-card:hover{background:#fff;box-shadow:0 4px 12px rgba(25,60,43,.07);}
+.stat-card b{color:#176b4a;}
+
+#backdrop{background:rgba(15,31,24,.62);backdrop-filter:blur(3px);}
+
+@media(min-width:768px){
+  .container{grid-template-columns:minmax(0,1.08fr) minmax(340px,.92fr);}
+  .calendar-area{padding:24px 28px 26px;}
+  .summary{padding:26px 28px;}
+  .day{min-height:66px;}
+}
+
+@media(max-width:767px){
+  .calendar-heading-title{font-size:19px;}
+  .calendar-area{padding:18px 12px 14px;}
+  .day{min-height:46px;}
+}
+
 </style>
 
 </head>
@@ -1280,6 +1568,7 @@ width:380px;
 <!-- HEADER -->
 <div class="header">
 <div class="header-left">
+<div class="brand-mark" aria-hidden="true">OA</div>
 <div>
 <div class="header-title" id="headerTitle">Attendance Tracker</div>
 <div class="header-subtitle" id="headerSubtitle">Unknown User (Please login to save the data)</div>
@@ -1325,6 +1614,12 @@ width:380px;
         <div class="profile-value" id="profilePageViewCompany">Not provided</div>
         <div class="profile-label">Office Hours</div>
         <div class="profile-value" id="profilePageViewHours">Not set</div>
+      </div>
+      <div class="profile-view-card" id="personalSheetCard">
+        <div class="profile-label">Attendance storage</div>
+        <div class="profile-value" id="personalSheetStatus">Using the app's main attendance sheet</div>
+        <button class="action-button btn-primary" id="connectPersonalSheetFromProfileBtn" onclick="openPersonalSheetSetup()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Connect personal sheet</button>
+        <button class="action-button btn-secondary" id="reconnectSheetBtn" onclick="reconnectPersonalSheet()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Reconnect Google Drive</button>
       </div>
     </div>
 
@@ -1432,6 +1727,12 @@ width:380px;
 
 <!-- CALENDAR AREA -->
 <div class="calendar-area">
+<div class="calendar-heading">
+  <div>
+    <div class="calendar-heading-label">Your work schedule</div>
+    <div class="calendar-heading-title">Attendance overview</div>
+  </div>
+</div>
 <div class="nav-controls">
 <button class="nav-btn" id="prev">◀ Prev</button>
 <div class="month-title" id="monthTitle"></div>
@@ -1518,15 +1819,37 @@ width:380px;
 <!-- BACKDROP -->
 <div class="backdrop" id="backdrop"></div>
 
-<!-- LOGIN SHEET -->
-<div class="sheet" id="loginSheet">
-<div class="sheet-title">Mobile Login</div>
-<div style="text-align:center;margin-bottom:12px;color:var(--text-light);font-size:13px;">Use your mobile number to continue securely.</div>
+<!-- GOOGLE SIGN-IN -->
+<div class="login-screen" id="loginSheet" aria-labelledby="loginTitle">
+  <section class="login-brand-panel">
+    <div class="login-brand-content">
+      <div class="login-brand-kicker">OFFICE ATTENDANCE</div>
+      <h1 class="login-brand-title">Work, accounted for.</h1>
+      <div class="login-brand-rule"></div>
+      <div class="login-brand-foot">A clear view of where your work happens.</div>
+    </div>
+  </section>
+  <section class="login-panel">
+    <div class="login-panel-inner">
+      <div class="login-panel-brand"><span class="brand-mark" aria-hidden="true">OA</span><span>OFFICE ATTENDANCE</span></div>
+      <div class="login-kicker">ACCOUNT ACCESS</div>
+      <h2 class="login-panel-title" id="loginTitle">Sign in</h2>
+      <p class="login-panel-copy">Continue with your Google account.</p>
+      <div id="googleSignInButton"></div>
+      <button class="google-login-fallback" id="googleSignInFallback" type="button" disabled>Google sign-in unavailable</button>
+      <div class="auth-status" id="loginStatus" role="status" aria-live="polite">Checking sign-in setup…</div>
+    </div>
+  </section>
+</div>
 
-<div id="phoneInputSection">
+<!-- REGISTRATION SHEET -->
+<div class="sheet" id="registrationSheet" role="dialog" aria-modal="true" aria-labelledby="registrationTitle">
+<div class="sheet-title" id="registrationTitle">Complete your profile</div>
+
 <div class="form-group">
-<label>Select Country Code:</label>
-<select id="countryCodeSelect">
+<label for="regMobile">Mobile number <span aria-hidden="true">*</span></label>
+<div class="form-row">
+<select id="regCountryCode" aria-label="Mobile country code" onchange="validateRegistrationForm()">
 <option value="+91">+91 India</option>
 <option value="+1">+1 USA/Canada</option>
 <option value="+44">+44 UK</option>
@@ -1540,41 +1863,18 @@ width:380px;
 <option value="+27">+27 South Africa</option>
 <option value="+86">+86 China</option>
 </select>
+<input type="tel" id="regMobile" placeholder="98765 43210" autocomplete="tel-national" oninput="validateRegistrationForm()" required />
 </div>
-<div class="form-group">
-<label>Enter Mobile Number:</label>
-<input type="tel" id="phoneInput" placeholder="98765 43210" />
-</div>
-<button class="action-button btn-primary" onclick="loginWithPhoneNumber()">Continue</button>
-<div id="loginStatus" style="font-size:12px;color:var(--text-light);margin-top:8px;text-align:center;display:none;"></div>
-</div>
-</div>
-
-<!-- REGISTRATION SHEET -->
-<div class="sheet" id="registrationSheet">
-<div class="sheet-title">Complete Your Profile</div>
-
-<div class="save-limit-display" id="saveLimitMsg"></div>
-
-<div class="profile-photo-container">
-  <img id="regDisplayPhoto" class="profile-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
-  <button class="photo-upload-btn" onclick="triggerRegProfilePhotoUpload()">Upload Photo</button>
-  <input type="file" id="regProfilePhotoInput" accept="image/*" onchange="uploadRegProfilePhoto(event)" />
 </div>
 
 <div class="form-group">
-<label>Mobile (Required):</label>
-<input type="tel" id="regMobile" placeholder="Already registered" disabled />
+<label for="regName">Full name <span aria-hidden="true">*</span></label>
+<input type="text" id="regName" placeholder="Your name" autocomplete="name" oninput="validateRegistrationForm()" required />
 </div>
 
 <div class="form-group">
-<label>Name:</label>
-<input type="text" id="regName" placeholder="Your name" />
-</div>
-
-<div class="form-group">
-<label>Email:</label>
-<input type="email" id="regEmail" placeholder="your@email.com" />
+<label for="regEmail">Email</label>
+<input type="email" id="regEmail" placeholder="name@example.com" readonly />
 </div>
 
 <div class="form-group">
@@ -1598,8 +1898,17 @@ width:380px;
 </div>
 </div>
 
-<button class="action-button btn-success" onclick="completeRegistration()">Save Profile</button>
-<button class="action-button btn-secondary" onclick="skipRegistration()">Skip For Now</button>
+<div class="auth-status" id="registrationStatus" role="status" aria-live="polite"></div>
+<button class="action-button btn-success" id="saveProfileContinueBtn" onclick="completeRegistration()" aria-describedby="registrationStatus" disabled>Save profile</button>
+</div>
+
+<div class="sheet" id="connectSheetModal" role="dialog" aria-modal="true" aria-labelledby="connectSheetTitle">
+  <div class="auth-mark" aria-hidden="true">Drive</div>
+  <div class="sheet-title" id="connectSheetTitle">Connect your attendance sheet</div>
+  <p class="profile-connect-copy">Create a private attendance spreadsheet in your Google Drive. Your profile remains saved in the app's main sheet.</p>
+  <button class="action-button btn-primary" id="connectSheetBtn" onclick="connectPersonalSheet()">Allow and create my sheet</button>
+  <button class="action-button btn-secondary" id="continueWithoutSheetBtn" onclick="continueWithoutSheet()">Continue without connecting</button>
+  <div class="auth-status" id="profileConnectStatus" role="status" aria-live="polite"></div>
 </div>
 
 <!-- PROFILE SHEET -->
@@ -1682,39 +1991,16 @@ width:380px;
 
 <script>
 
-// ===== FIREBASE SETUP =====
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_ID",
-  appId: "YOUR_APP_ID"
-};
-
-let auth = null;
-try {
-  if (window.firebase && firebase.apps.length === 0) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  auth = firebase.auth();
-} catch (error) {
-  console.warn('Firebase auth is unavailable. Falling back to local mobile login.', error);
-  auth = {
-    signOut: async function () {
-      currentUser = null;
-      localStorage.removeItem('lastUserId');
-      closeSheet();
-      showLoginSheet();
-    }
-  };
-}
-
 // ===== GLOBALS =====
 let currentUser = null;
 let currentDate = new Date();
 let selectedKey = null;
-let confirmationResult = null;
+let googleIdToken = '';
+let googleAccessToken = '';
+let googleTokenClient = null;
+let googleTokenRefreshTimer = null;
+const GOOGLE_OAUTH_CLIENT_ID = '83272451338-s55v870hpabod4lkr0bvkbgouulrnuso.apps.googleusercontent.com';
+const PERSONAL_SHEET_SCOPE = 'openid email profile https://www.googleapis.com/auth/drive.file';
 // Deployed Google Apps Script Web App URL
 let googleScriptURL = 'https://script.google.com/macros/s/AKfycbyHdXTO6WUcjt_I0Nr0h1VEy6OkOVGdjefnLXWVdJ7DCkbPmz0_EV5Z6D94MauVwG8QPQ/exec';
 let attendanceData = {};
@@ -1723,37 +2009,133 @@ let saveCount = 0;
 let reminders = [];
 let reminderWatchInterval = null;
 let manualPeriodOverrides = { quarter: null, year: null };
-const SAVE_LIMIT = 3;
+let auth = { signOut: signOutGoogle };
 
-// ===== AUTH FUNCTIONS =====
-function normalizeMobileNumber(phoneNumber, countryCode) {
-  const input = (phoneNumber || '').trim();
-  const cleaned = (phoneNumber || '').replace(/\D/g, '');
-  const countryDigits = (countryCode || '').replace(/\D/g, '');
-  if (!cleaned) return '';
-  if (input.startsWith('+')) return `+${cleaned}`;
-  if (countryDigits && cleaned.startsWith(countryDigits) && cleaned.length > countryDigits.length) {
-    return `+${cleaned}`;
-  }
-  return `${countryCode}${cleaned}`;
-}
-
+// ===== GOOGLE AUTH =====
 function initializeAuth() {
-  const lastId = localStorage.getItem('lastUserId');
-  if (lastId) {
-    currentUser = { phoneNumber: lastId };
-    const storedProfile = getLocalStorageUserProfile(lastId);
-    if (storedProfile) {
-      userProfile = storedProfile;
-      updateHeaderProfile();
-    }
-    loadUserProfile(lastId);
-    showApp();
+  hideApp();
+  showLoginSheet();
+  if (GOOGLE_OAUTH_CLIENT_ID.startsWith('YOUR_')) {
+    document.getElementById('googleSignInButton').style.display = 'none';
+    document.getElementById('googleSignInFallback').style.display = 'block';
+    setLoginStatus('Sign-in setup is incomplete. Contact the app administrator.', true);
     return;
   }
 
+  const initializeGoogle = () => {
+    if (!window.google || !google.accounts || !google.accounts.id) {
+      setTimeout(initializeGoogle, 200);
+      return;
+    }
+
+    document.getElementById('googleSignInFallback').style.display = 'none';
+    document.getElementById('googleSignInButton').style.display = 'block';
+    google.accounts.id.initialize({
+      client_id: GOOGLE_OAUTH_CLIENT_ID,
+      callback: handleGoogleCredentialResponse,
+      auto_select: true
+    });
+    google.accounts.id.renderButton(document.getElementById('googleSignInButton'), {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      text: 'signin_with',
+      width: Math.max(120, Math.min(360, window.innerWidth - 80))
+    });
+
+    const restoredClaims = restoreGoogleSession();
+    if (restoredClaims) {
+      document.getElementById('loginSheet').classList.remove('show');
+      checkAndShowRegistration(restoredClaims.sub);
+      scheduleGoogleTokenRefresh(restoredClaims);
+    } else {
+      google.accounts.id.prompt();
+    }
+  };
+
+  initializeGoogle();
+}
+
+function decodeGoogleCredential(credential) {
+  const encodedPayload = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const binaryPayload = atob(encodedPayload);
+  const bytes = Uint8Array.from(binaryPayload, character => character.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function restoreGoogleSession() {
+  try {
+    const credential = sessionStorage.getItem('googleIdToken');
+    if (!credential) return null;
+    const claims = decodeGoogleCredential(credential);
+    if (!claims.sub || !claims.email || claims.aud !== GOOGLE_OAUTH_CLIENT_ID || claims.exp * 1000 <= Date.now() + 30000) {
+      sessionStorage.removeItem('googleIdToken');
+      return null;
+    }
+
+    googleIdToken = credential;
+    currentUser = {
+      userId: claims.sub,
+      email: claims.email,
+      name: claims.name || '',
+      picture: claims.picture || ''
+    };
+    localStorage.setItem('lastUserId', claims.sub);
+    return claims;
+  } catch (error) {
+    sessionStorage.removeItem('googleIdToken');
+    return null;
+  }
+}
+
+function scheduleGoogleTokenRefresh(claims) {
+  if (googleTokenRefreshTimer) clearTimeout(googleTokenRefreshTimer);
+  const refreshDelay = claims.exp * 1000 - Date.now() - 60000;
+  if (refreshDelay <= 0) {
+    google.accounts.id.prompt();
+    return;
+  }
+  googleTokenRefreshTimer = setTimeout(() => google.accounts.id.prompt(), refreshDelay);
+}
+
+async function handleGoogleCredentialResponse(response) {
+  try {
+    const claims = decodeGoogleCredential(response.credential);
+    if (!claims.sub || !claims.email) throw new Error('Google did not return a verified account.');
+    googleIdToken = response.credential;
+    sessionStorage.setItem('googleIdToken', googleIdToken);
+    currentUser = {
+      userId: claims.sub,
+      email: claims.email,
+      name: claims.name || '',
+      picture: claims.picture || ''
+    };
+    localStorage.setItem('lastUserId', claims.sub);
+    scheduleGoogleTokenRefresh(claims);
+    document.getElementById('loginSheet').classList.remove('show');
+    await checkAndShowRegistration(claims.sub);
+  } catch (error) {
+    console.error('Google sign-in failed:', error);
+    showLoginSheet();
+    setLoginStatus('Google sign-in could not be completed. Please try again.', true);
+  }
+}
+
+function signOutGoogle() {
+  if (window.google && google.accounts && google.accounts.id) {
+    google.accounts.id.disableAutoSelect();
+  }
   currentUser = null;
-  showApp();
+  userProfile = null;
+  googleIdToken = '';
+  googleAccessToken = '';
+  if (googleTokenRefreshTimer) clearTimeout(googleTokenRefreshTimer);
+  sessionStorage.removeItem('googleIdToken');
+  localStorage.removeItem('lastUserId');
+  attendanceData = {};
+  closeSheet();
+  hideApp();
   showLoginSheet();
 }
 
@@ -1764,13 +2146,13 @@ function updateHeaderProfile() {
 
   if (userProfile && userProfile.name) {
     titleEl.textContent = `Welcome, ${userProfile.name}`;
-    subtitleEl.textContent = `Logged in as ${currentUser?.phoneNumber || 'unknown'}`;
+    subtitleEl.textContent = currentUser ? currentUser.email : 'Signed in with Google';
     return;
   }
 
-  if (currentUser && currentUser.phoneNumber) {
+  if (currentUser) {
     titleEl.textContent = 'Attendance Tracker';
-    subtitleEl.textContent = `Logged in as ${currentUser.phoneNumber}`;
+    subtitleEl.textContent = `Signed in as ${currentUser.email}`;
     return;
   }
 
@@ -1786,31 +2168,15 @@ function setLoginStatus(message, isError = false) {
   statusEl.style.color = isError ? '#c62828' : '#4caf50';
 }
 
-async function loginWithPhoneNumber() {
-  const countryCode = document.getElementById('countryCodeSelect').value;
-  const phoneNumber = document.getElementById('phoneInput').value.trim();
-  const phone = normalizeMobileNumber(phoneNumber, countryCode);
-
-  if (!phoneNumber) {
-    setLoginStatus('Please enter your mobile number.', true);
-    return;
+function normalizeMobileNumber(phoneNumber, countryCode) {
+  const input = (phoneNumber || '').trim();
+  const digits = input.replace(/\D/g, '');
+  const countryDigits = (countryCode || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (input.startsWith('+') || (countryDigits && digits.startsWith(countryDigits))) {
+    return `+${digits}`;
   }
-
-  const loginButton = document.querySelector('#loginSheet .action-button');
-  if (loginButton) loginButton.disabled = true;
-  setLoginStatus('Signing in…');
-
-  currentUser = { phoneNumber: phone };
-  localStorage.setItem('lastUserId', phone);
-
-  try {
-    await checkAndShowRegistration(phone);
-  } catch (error) {
-    console.error('Login failed', error);
-    setLoginStatus('Unable to continue right now. Please try again.', true);
-  } finally {
-    if (loginButton) loginButton.disabled = false;
-  }
+  return `${countryCode}${digits}`;
 }
 
 // ===== USER PROFILE =====
@@ -1830,6 +2196,7 @@ function buildScriptPayload(fields) {
       params.append(key, String(value));
     }
   });
+  if (googleIdToken) params.set('idToken', googleIdToken);
   return params;
 }
 
@@ -1860,7 +2227,7 @@ function setLocalStorageAttendance(userId, data) {
 }
 
 function persistProfileLocally(userId, userData) {
-  const uid = userId || (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
   setLocalStorageUserProfile(uid, userData);
   setLocalStorageAttendance(uid, attendanceData || {});
   localStorage.setItem('lastUserId', uid);
@@ -1869,7 +2236,7 @@ function persistProfileLocally(userId, userData) {
 }
 
 async function syncProfileToRemote(userId, userData) {
-  if (!isGoogleScriptConfigured()) {
+  if (!isGoogleScriptConfigured() || !googleIdToken) {
     return { success: false, localOnly: true };
   }
 
@@ -1891,88 +2258,13 @@ async function syncProfileToRemote(userId, userData) {
   }
 }
 
-async function loadUserProfile(userId) {
-  if (!isGoogleScriptConfigured()) {
-    const storedProfile = getLocalStorageUserProfile(userId);
-    if (storedProfile) {
-      userProfile = storedProfile;
-      updateHeaderProfile();
-      loadAttendanceData(userId);
-      checkSaveLimit();
-      showApp();
-      return;
-    }
-
-    document.getElementById('regMobile').value = userId;
-    populateHourSelects('reg');
-    showApp();
-    showRegistrationSheet();
-    return;
-  }
-
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({ action: 'getUser', userId: userId }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-      userProfile = result.data;
-      updateHeaderProfile();
-      loadAttendanceData(userId);
-      checkSaveLimit();
-    } else {
-      const storedProfile = getLocalStorageUserProfile(userId);
-      if (storedProfile) {
-        userProfile = storedProfile;
-        updateHeaderProfile();
-        loadAttendanceData(userId);
-        checkSaveLimit();
-        showApp();
-        return;
-      }
-      // New user - show registration form
-      document.getElementById('regMobile').value = userId;
-      populateHourSelects('reg');
-      showApp();
-      showRegistrationSheet();
-    }
-  } catch (error) {
-    console.error('Failed to load profile:', error);
-    const storedProfile = getLocalStorageUserProfile(userId);
-    if (storedProfile) {
-      userProfile = storedProfile;
-      updateHeaderProfile();
-      loadAttendanceData(userId);
-      checkSaveLimit();
-      showApp();
-      return;
-    }
-    // On error, still show app with empty data
-    showApp();
-    render();
-  }
-}
-
 async function checkAndShowRegistration(userId = null) {
-  const activeUserId = userId || (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId');
-
-  if (!activeUserId) {
+  const activeUserId = userId || (currentUser && currentUser.userId);
+  if (!activeUserId || !googleIdToken) {
     showLoginSheet();
     return;
   }
 
-  if (!isGoogleScriptConfigured()) {
-    document.getElementById('regMobile').value = activeUserId;
-    populateHourSelects('reg');
-    showApp();
-    showRegistrationSheet();
-    return;
-  }
-  
   try {
     const response = await fetch(googleScriptURL, {
       method: 'POST',
@@ -1982,87 +2274,292 @@ async function checkAndShowRegistration(userId = null) {
 
     const text = await response.text();
     const result = text ? JSON.parse(text) : null;
+    if (!result || (!result.success && result.data !== 'User not found')) {
+      throw new Error((result && result.data) || 'Could not load the central profile.');
+    }
 
-    if (!result || !result.success || !result.data) {
-      const storedProfile = getLocalStorageUserProfile(activeUserId);
-      if (storedProfile) {
-        userProfile = storedProfile;
-        updateHeaderProfile();
-        loadAttendanceData(activeUserId);
-        checkSaveLimit();
+    userProfile = result.success ? (result.data || {}) : {};
+    userProfile.email = currentUser.email;
+    const profileIsComplete = Boolean(userProfile.name && userProfile.mobile);
+    const regName = document.getElementById('regName');
+    const regEmail = document.getElementById('regEmail');
+    const regMobile = document.getElementById('regMobile');
+    const regCountryCode = document.getElementById('regCountryCode');
+
+    regName.value = userProfile.name || currentUser.name || '';
+    regEmail.value = currentUser.email;
+    if (userProfile.mobile) {
+      const mobileDigits = userProfile.mobile.replace(/\D/g, '');
+      const country = Array.from(regCountryCode.options).find(option => mobileDigits.startsWith(option.value.replace(/\D/g, '')));
+      if (country) {
+        regCountryCode.value = country.value;
+        regMobile.value = mobileDigits.slice(country.value.replace(/\D/g, '').length);
+      } else {
+        regMobile.value = mobileDigits;
+      }
+    }
+
+    populateHourSelects('reg');
+    validateRegistrationForm();
+    if (profileIsComplete) {
+      updateHeaderProfile();
+      if (userProfile.personalSpreadsheetId || userProfile.personalSheetSkipped) {
         showApp();
         closeSheet();
-        setLoginStatus('Signed in locally. Complete your profile to sync.');
+        loadAttendanceData(activeUserId);
+        checkSaveLimit();
         return;
       }
-
-      document.getElementById('regMobile').value = activeUserId;
-      populateHourSelects('reg');
       showApp();
-      showRegistrationSheet();
-      setLoginStatus('Welcome! Complete your profile to continue.');
-    } else {
-      userProfile = result.data;
-      updateHeaderProfile();
-      loadAttendanceData(activeUserId);
-      checkSaveLimit();
-      showApp();
-      closeSheet();
-      setLoginStatus('Signed in successfully.');
+      showConnectSheetModal();
+      document.getElementById('profileConnectStatus').textContent = 'Your profile record is ready.';
+      return;
     }
-  } catch (error) {
-    console.error('Error checking registration:', error);
-    document.getElementById('regMobile').value = activeUserId;
-    populateHourSelects('reg');
+    document.getElementById('saveProfileContinueBtn').style.display = 'block';
     showApp();
     showRegistrationSheet();
-    setLoginStatus('Signed in locally. Complete your profile to sync.', true);
+  } catch (error) {
+    console.error('Error checking Google profile:', error);
+    showLoginSheet();
+    setLoginStatus(error.message || 'Could not load your profile. Please try again.', true);
   }
 }
 
 async function completeRegistration() {
-  const userData = {
-    mobile: document.getElementById('regMobile').value,
-    name: document.getElementById('regName').value,
-    email: document.getElementById('regEmail').value,
-    company: document.getElementById('regCompany').value,
-    inTime: document.getElementById('regInTime').value,
-    outTime: document.getElementById('regOutTime').value,
-    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
-  };
-  
-  if (!userData.mobile) {
-    alert('Mobile is required');
+  if (!currentUser || !currentUser.userId || !googleIdToken) {
+    setRegistrationStatus('Sign in with Google before saving your profile.', true);
     return;
   }
 
-  const uid = persistProfileLocally((currentUser && currentUser.phoneNumber) || userData.mobile || 'local_user', userData);
-  updateHeaderProfile();
-  loadAttendanceData(uid);
-  checkSaveLimit();
-  showApp();
-  closeRegistrationSheet();
+  const mobile = normalizeMobileNumber(
+    document.getElementById('regMobile').value,
+    document.getElementById('regCountryCode').value
+  );
+  const name = document.getElementById('regName').value.trim();
+  if (!name || !mobile) {
+    setRegistrationStatus('Enter your name and mobile number to continue.', true);
+    return;
+  }
 
-  const remoteResult = await syncProfileToRemote(uid, userData);
-  if (remoteResult.success) {
-    alert('Profile saved locally and synced to Excel.');
-  } else {
-    alert('Profile saved locally. Remote sync will retry the next time you save.');
+  const userData = {
+    mobile: mobile,
+    name: name,
+    email: currentUser.email,
+    company: document.getElementById('regCompany').value,
+    inTime: document.getElementById('regInTime').value,
+    outTime: document.getElementById('regOutTime').value,
+    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
+    personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
+    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
+  };
+
+  const saveButton = document.getElementById('saveProfileContinueBtn');
+  saveButton.disabled = true;
+  saveButton.textContent = 'Saving profile…';
+  setRegistrationStatus('Saving your profile to the main Google Sheet…');
+  try {
+    const result = await syncProfileToRemote(currentUser.userId, userData);
+    if (!result.success) throw new Error('The main profile sheet could not be reached. Please try again.');
+    userProfile = userData;
+    persistProfileLocally(currentUser.userId, userData);
+    updateHeaderProfile();
+    closeRegistrationSheet();
+    showConnectSheetModal('Profile saved successfully.');
+  } catch (error) {
+    setRegistrationStatus(error.message, true);
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = 'Save profile';
   }
 }
 
-function skipRegistration() {
+function setRegistrationStatus(message, isError = false) {
+  const status = document.getElementById('registrationStatus');
+  status.textContent = message;
+  status.style.color = isError ? '#c62828' : '#176b4a';
+}
+
+function validateRegistrationForm() {
+  const name = document.getElementById('regName').value.trim();
+  const mobile = normalizeMobileNumber(
+    document.getElementById('regMobile').value,
+    document.getElementById('regCountryCode').value
+  );
+  const saveButton = document.getElementById('saveProfileContinueBtn');
+  const isValid = Boolean(name && mobile);
+  saveButton.disabled = !isValid;
+  saveButton.classList.toggle('is-ready', isValid);
+  if (isValid) document.getElementById('registrationStatus').textContent = '';
+  return isValid;
+}
+
+async function continueWithoutSheet() {
+  if (userProfile && userProfile.personalSpreadsheetId) {
+    finishProfileSetup();
+    return;
+  }
+  const continueButton = document.getElementById('continueWithoutSheetBtn');
+  continueButton.disabled = true;
+  try {
+    userProfile.personalSheetSkipped = true;
+    const result = await syncProfileToRemote(currentUser.userId, userProfile);
+    if (!result.success) throw new Error('Could not save your preference. Try again.');
+    persistProfileLocally(currentUser.userId, userProfile);
+    finishProfileSetup();
+  } catch (error) {
+    document.getElementById('profileConnectStatus').textContent = error.message;
+  } finally {
+    continueButton.disabled = false;
+  }
+}
+
+function finishProfileSetup() {
+  closeConnectSheetModal();
   showApp();
+  loadAttendanceData(currentUser.userId);
+  checkSaveLimit();
+}
+
+function openPersonalSheetSetup() {
+  showConnectSheetModal();
+  document.getElementById('profileConnectStatus').textContent = '';
+  document.getElementById('connectSheetBtn').textContent = 'Allow and create my sheet';
+  document.getElementById('continueWithoutSheetBtn').textContent = 'Continue without connecting';
+}
+
+function showConnectSheetModal(statusMessage = '') {
   closeRegistrationSheet();
+  document.getElementById('profileConnectStatus').textContent = statusMessage;
+  document.getElementById('connectSheetModal').classList.add('show');
+  document.getElementById('backdrop').classList.add('show');
+}
+
+function closeConnectSheetModal() {
+  document.getElementById('connectSheetModal').classList.remove('show');
+  document.getElementById('backdrop').classList.remove('show');
+}
+
+function requestPersonalSheetAccess(prompt = '') {
+  return new Promise((resolve, reject) => {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      reject(new Error('Google Drive authorization is unavailable. Reload the page and try again.'));
+      return;
+    }
+
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_OAUTH_CLIENT_ID,
+      scope: PERSONAL_SHEET_SCOPE,
+      callback: response => {
+        if (response.error || !response.access_token) {
+          reject(new Error(response.error_description || 'Google Drive permission was not granted.'));
+          return;
+        }
+        googleAccessToken = response.access_token;
+        personalSheetRequest('https://www.googleapis.com/oauth2/v3/userinfo')
+          .then(profile => {
+            if (!currentUser || profile.sub !== currentUser.userId) {
+              reject(new Error('Authorize Drive with the same Google account you used to sign in.'));
+              return;
+            }
+            resolve(googleAccessToken);
+          })
+          .catch(reject);
+      },
+      error_callback: error => reject(new Error(error.message || 'Google authorization was closed.'))
+    });
+    tokenClient.requestAccessToken({ prompt: prompt });
+  });
+}
+
+async function personalSheetRequest(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${googleAccessToken}`
+    }
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || 'Google Sheets request failed.');
+  return result;
+}
+
+async function connectPersonalSheet() {
+  const button = document.getElementById('connectSheetBtn');
+  const status = document.getElementById('profileConnectStatus');
+  button.disabled = true;
+  button.textContent = 'Connecting…';
+  status.textContent = 'Requesting permission to create a spreadsheet in your Drive…';
+  try {
+    await requestPersonalSheetAccess('consent');
+    const created = await personalSheetRequest('https://sheets.googleapis.com/v4/spreadsheets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        properties: { title: 'Office Attendance - ' + userProfile.name },
+        sheets: [{ properties: { title: 'Attendance', gridProperties: { frozenRowCount: 1 } } }]
+      })
+    });
+    const centralResponse = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload({ action: 'getAttendance', userId: currentUser.userId }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+    const centralResult = await centralResponse.json();
+    if (!centralResult.success) throw new Error('Could not migrate your existing attendance records.');
+
+    const values = [['Date', 'Status']];
+    Object.keys(centralResult.data || {}).sort().forEach(date => {
+      const statusValue = centralResult.data[date];
+      if (statusValue !== null && statusValue !== undefined && statusValue !== '') {
+        values.push([date, statusValue]);
+      }
+    });
+    await personalSheetRequest(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(created.spreadsheetId)}/values/${encodeURIComponent('Attendance!A1:B' + values.length)}?valueInputOption=RAW`,
+      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: values }) }
+    );
+
+    userProfile.personalSpreadsheetId = created.spreadsheetId;
+    userProfile.personalSheetSkipped = false;
+    const profileResult = await syncProfileToRemote(currentUser.userId, userProfile);
+    if (!profileResult.success) {
+      persistProfileLocally(currentUser.userId, userProfile);
+      throw new Error('The sheet was created, but the app could not save its link to your profile. Retry after checking your connection.');
+    }
+    persistProfileLocally(currentUser.userId, userProfile);
+    status.textContent = 'Your attendance sheet is connected and ready.';
+    button.textContent = 'Connected';
+    document.getElementById('continueWithoutSheetBtn').textContent = 'Continue to calendar';
+    loadAttendanceData(currentUser.userId);
+  } catch (error) {
+    status.textContent = error.message;
+    button.textContent = 'Allow and create my sheet';
+    console.error('Personal spreadsheet connection failed:', error);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function reconnectPersonalSheet() {
+  const button = document.getElementById('reconnectSheetBtn');
+  const status = document.getElementById('personalSheetStatus');
+  button.disabled = true;
+  status.textContent = 'Reconnecting to Google Drive…';
+  try {
+    await requestPersonalSheetAccess('');
+    await loadAttendanceData(currentUser.userId);
+    status.textContent = 'Connected to your personal attendance sheet.';
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
 }
 
 // ===== PROFILE PHOTO =====
 function triggerPhotoUpload() {
   document.getElementById('profilePhotoInput')?.click();
-}
-
-function triggerRegProfilePhotoUpload() {
-  document.getElementById('regProfilePhotoInput')?.click();
 }
 
 function triggerProfilePhotoUpload() {
@@ -2077,23 +2574,6 @@ function uploadPhoto(event) {
   reader.onload = (e) => {
     const base64 = e.target.result;
     const preview = document.getElementById('displayPhoto') || document.getElementById('profilePagePhotoEdit');
-    if (preview) preview.src = base64;
-    if (!userProfile) {
-      userProfile = {};
-    }
-    userProfile.profilePhoto = base64;
-  };
-  reader.readAsDataURL(file);
-}
-
-function uploadRegProfilePhoto(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const base64 = e.target.result;
-    const preview = document.getElementById('regDisplayPhoto');
     if (preview) preview.src = base64;
     if (!userProfile) {
       userProfile = {};
@@ -2122,8 +2602,34 @@ function uploadProfilePagePhoto(event) {
 
 // ===== SAVE/LOAD FUNCTIONS =====
 async function loadAttendanceData(userId) {
-  const uid = userId || (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+  const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
   const localAttendance = getLocalStorageAttendance(uid);
+
+  if (userProfile && userProfile.personalSpreadsheetId) {
+    if (!googleAccessToken) {
+      attendanceData = localAttendance;
+      render();
+      return;
+    }
+    try {
+      const result = await personalSheetRequest(
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(userProfile.personalSpreadsheetId)}/values/${encodeURIComponent('Attendance!A2:B')}`
+      );
+      const remoteAttendance = {};
+      (result.values || []).forEach(row => {
+        if (row[0] && row[1]) remoteAttendance[row[0]] = row[1];
+      });
+      attendanceData = { ...remoteAttendance, ...localAttendance };
+      setLocalStorageAttendance(uid, attendanceData);
+      render();
+      return;
+    } catch (error) {
+      console.error('Could not load personal attendance sheet:', error);
+      attendanceData = localAttendance;
+      render();
+      return;
+    }
+  }
 
   if (!isGoogleScriptConfigured()) {
     attendanceData = localAttendance;
@@ -2165,7 +2671,7 @@ async function checkSaveLimit() {
   }
 
   try {
-    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+    const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
     const response = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -2187,8 +2693,17 @@ async function checkSaveLimit() {
 
 async function saveAttendance(date, status) {
   try {
+    const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
+    if (userProfile && userProfile.personalSpreadsheetId) {
+      attendanceData[date] = status;
+      setLocalStorageAttendance(uid, attendanceData);
+      render();
+      await requestPersonalSheetAccess('');
+      await writePersonalAttendance(date, status);
+      return;
+    }
+
     // First, check if we can sync to Google Sheet (rate limit)
-    const uid = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
     const limitResponse = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -2254,40 +2769,71 @@ async function saveAttendance(date, status) {
   } catch (error) {
     console.error('Error:', error.message);
     attendanceData[date] = status;
-    const localUserId = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
+    const localUserId = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
     setLocalStorageAttendance(localUserId, attendanceData);
     render();
   }
 }
 
+async function writePersonalAttendance(date, status) {
+  const spreadsheetId = userProfile.personalSpreadsheetId;
+  const current = await personalSheetRequest(
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent('Attendance!A2:B')}`
+  );
+  const rows = current.values || [];
+  const rowIndex = rows.findIndex(row => row[0] === date);
+  if (rowIndex >= 0) {
+    const range = `Attendance!A${rowIndex + 2}:B${rowIndex + 2}`;
+    await personalSheetRequest(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
+      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: [[date, status || '']] }) }
+    );
+    return;
+  }
+  if (status === null) return;
+  await personalSheetRequest(
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent('Attendance!A:B')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: [[date, status]] }) }
+  );
+}
+
 async function saveProfile(syncRemote = true) {
   const profileCountryCode = document.getElementById('profileCountryCode').value;
   const profileMobileValue = document.getElementById('profileMobile').value.trim();
-  const mobileValue = profileMobileValue ? `${profileCountryCode}${profileMobileValue}` : '';
+  const mobileValue = normalizeMobileNumber(profileMobileValue, profileCountryCode);
   const userData = {
     mobile: mobileValue,
-    name: document.getElementById('profileName').value,
-    email: document.getElementById('profileEmail').value,
+    name: document.getElementById('profileName').value.trim(),
+    email: currentUser ? currentUser.email : document.getElementById('profileEmail').value,
     company: document.getElementById('profileCompany').value,
     inTime: document.getElementById('profileInTime').value,
     outTime: document.getElementById('profileOutTime').value,
-    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
+    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
+    personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
+    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
   };
-  
-  const userIdForSave = (currentUser && currentUser.phoneNumber) ? currentUser.phoneNumber : (profileMobileValue || null);
-  const uid = persistProfileLocally(userIdForSave, userData);
-  userProfile = userData;
-  updateHeaderProfile();
+
+  if (!userData.name || !userData.mobile || !currentUser) {
+    alert('Name and mobile number are required.');
+    return;
+  }
+  const uid = currentUser.userId;
 
   if (!syncRemote) {
+    userProfile = userData;
+    persistProfileLocally(uid, userData);
     return;
   }
 
   const remoteResult = await syncProfileToRemote(uid, userData);
   if (remoteResult.success) {
+    userProfile = userData;
+    persistProfileLocally(uid, userData);
+    updateHeaderProfile();
     alert('Profile updated locally and synced to Excel.');
   } else {
-    alert('Profile saved locally. Remote sync will retry when possible.');
+    alert('Profile was not updated. The main Google Sheet could not be reached.');
+    return;
   }
   closeProfileSheet();
 }
@@ -2696,6 +3242,17 @@ function populateProfilePageView() {
   document.getElementById('profilePageViewCompany').textContent = profile.company || 'Not provided';
   const hours = [profile.inTime, profile.outTime].filter(Boolean);
   document.getElementById('profilePageViewHours').textContent = hours.length ? `${hours.join(' - ')} hrs` : 'Not set';
+  const storageStatus = document.getElementById('personalSheetStatus');
+  const reconnectButton = document.getElementById('reconnectSheetBtn');
+  if (profile.personalSpreadsheetId) {
+    storageStatus.textContent = googleAccessToken ? 'Connected to your personal Google Sheet' : 'Personal Google Sheet linked; reconnect to load it on this device';
+    reconnectButton.style.display = 'inline-flex';
+    document.getElementById('connectPersonalSheetFromProfileBtn').style.display = 'none';
+  } else {
+    storageStatus.textContent = 'Using the app\'s main attendance sheet';
+    reconnectButton.style.display = 'none';
+    document.getElementById('connectPersonalSheetFromProfileBtn').style.display = 'inline-flex';
+  }
   const preview = document.getElementById('profilePagePhoto');
   if (preview && profile.profilePhoto) preview.src = profile.profilePhoto;
   if (profile.profilePhoto) {
@@ -2708,10 +3265,13 @@ function populateProfilePageForm() {
   const profile = userProfile || {};
   const mobileValue = profile.mobile || '';
   if (mobileValue && mobileValue.startsWith('+')) {
-    const match = mobileValue.match(/^(\+[0-9]{1,3})(.*)$/);
-    if (match) {
-      document.getElementById('profilePageCountryCode').value = match[1];
-      document.getElementById('profilePageMobile').value = match[2] || '';
+    const countryCodeSelect = document.getElementById('profilePageCountryCode');
+    const country = Array.from(countryCodeSelect.options)
+      .sort((first, second) => second.value.length - first.value.length)
+      .find(option => mobileValue.startsWith(option.value));
+    if (country) {
+      countryCodeSelect.value = country.value;
+      document.getElementById('profilePageMobile').value = mobileValue.slice(country.value.length);
     } else {
       document.getElementById('profilePageMobile').value = mobileValue;
     }
@@ -2985,40 +3545,44 @@ function saveReminder() {
 async function saveProfilePage() {
   const countryCode = document.getElementById('profilePageCountryCode').value;
   const mobileValue = document.getElementById('profilePageMobile').value.trim();
-  const mobile = mobileValue ? `${countryCode}${mobileValue}` : '';
+  const mobile = normalizeMobileNumber(mobileValue, countryCode);
   const userData = {
     mobile,
-    name: document.getElementById('profilePageName').value,
-    email: document.getElementById('profilePageEmail').value,
+    name: document.getElementById('profilePageName').value.trim(),
+    email: currentUser ? currentUser.email : document.getElementById('profilePageEmail').value,
     company: document.getElementById('profilePageCompany').value,
     inTime: document.getElementById('profilePageInTime').value,
     outTime: document.getElementById('profilePageOutTime').value,
-    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : ''
+    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
+    personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
+    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
   };
 
-  const userIdForSave = (currentUser && currentUser.phoneNumber) ? currentUser.phoneNumber : (mobileValue || null);
-  const uid = persistProfileLocally(userIdForSave, userData);
+  if (!userData.name || !userData.mobile || !currentUser) {
+    alert('Name and mobile number are required.');
+    return;
+  }
+
+  const remoteResult = await syncProfileToRemote(currentUser.userId, userData);
+  if (!remoteResult.success) {
+    alert('Profile was not updated. The main Google Sheet could not be reached.');
+    return;
+  }
 
   userProfile = userData;
+  persistProfileLocally(currentUser.userId, userData);
   updateHeaderProfile();
   populateProfilePageView();
   setProfilePageViewMode('view');
-
-  const remoteResult = await syncProfileToRemote(uid, userData);
-  if (remoteResult.success) {
-    alert('Profile updated locally and synced to Excel.');
-  } else {
-    alert('Profile saved locally. Remote sync will retry when possible.');
-  }
+  alert('Profile updated locally and synced to Excel.');
 }
-
 
 // Auto-save profile helper (debounced simple implementation)
 let _autoSaveTimer = null;
 function autoSaveProfile() {
   if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(() => {
-    saveProfile(false);
+    saveProfile(true);
   }, 700);
 }
 
@@ -3042,6 +3606,7 @@ function showSupportInfo() {
 function closeSheet() {
   document.getElementById('loginSheet').classList.remove('show');
   document.getElementById('registrationSheet').classList.remove('show');
+  document.getElementById('connectSheetModal').classList.remove('show');
   document.getElementById('attendanceSheet').classList.remove('show');
   document.getElementById('backdrop').classList.remove('show');
 }
@@ -3058,7 +3623,6 @@ function closeAttendanceSheet() {
 
 function showLoginSheet() {
   document.getElementById('loginSheet').classList.add('show');
-  document.getElementById('backdrop').classList.add('show');
 }
 
 function showRegistrationSheet() {

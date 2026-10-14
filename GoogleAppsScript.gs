@@ -1,9 +1,10 @@
 // Google Apps Script for Attendance Tracker v3
-// Multi-tab database, direct mobile login, Dirty document tracking
+// Multi-tab database, Google identity verification, Dirty document tracking
 // Deploy as web app: Deploy > New Deployment > Type: Web app
 
 const SPREADSHEET_ID = '1xRWs999mHz51IGToz8gA-WjMuxAt9TB8fJXDqKv38-U';
 const DAILY_SAVE_LIMIT = 10;
+const GOOGLE_OAUTH_CLIENT_ID = '83272451338-s55v870hpabod4lkr0bvkbgouulrnuso.apps.googleusercontent.com';
 
 // Sheet names
 const SHEETS = {
@@ -17,6 +18,11 @@ function doPost(e) {
   try {
     const payload = parsePayload(e);
     const action = payload.action;
+    const identity = verifyGoogleIdToken(payload.idToken);
+    if (!payload.userId || payload.userId !== identity.sub) {
+      return formatResponse(false, 'The requested account does not match the signed-in Google account.');
+    }
+    payload.verifiedEmail = identity.email;
 
     switch(action) {
       case 'saveAttendance':
@@ -24,7 +30,7 @@ function doPost(e) {
       case 'getAttendance':
         return getAttendance(payload.userId);
       case 'saveUser':
-        return saveUser(payload.userId, payload.userData);
+        return saveUser(payload.userId, payload.userData, payload.verifiedEmail);
       case 'getUser':
         return getUser(payload.userId);
       case 'checkSaveLimit':
@@ -42,6 +48,34 @@ function doPost(e) {
     Logger.log('Error in doPost: ' + error.toString());
     return formatResponse(false, error.toString());
   }
+}
+
+function verifyGoogleIdToken(idToken) {
+  if (!idToken || GOOGLE_OAUTH_CLIENT_ID.indexOf('YOUR_') === 0) {
+    throw new Error('Google sign-in is not configured.');
+  }
+
+  const cache = CacheService.getScriptCache();
+  const cacheKey = 'google-identity-' + idToken.slice(-96);
+  const cachedClaims = cache.get(cacheKey);
+  if (cachedClaims) return JSON.parse(cachedClaims);
+
+  const response = UrlFetchApp.fetch(
+    'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
+    { muteHttpExceptions: true }
+  );
+  if (response.getResponseCode() !== 200) {
+    throw new Error('Google sign-in expired. Please sign in again.');
+  }
+
+  const claims = JSON.parse(response.getContentText());
+  const emailIsVerified = claims.email_verified === true || claims.email_verified === 'true';
+  const issuerIsGoogle = claims.iss === 'https://accounts.google.com' || claims.iss === 'accounts.google.com';
+  if (claims.aud !== GOOGLE_OAUTH_CLIENT_ID || !claims.sub || !emailIsVerified || !issuerIsGoogle) {
+    throw new Error('Google identity could not be verified.');
+  }
+  cache.put(cacheKey, JSON.stringify(claims), 300);
+  return claims;
 }
 
 function parsePayload(e) {
@@ -162,36 +196,38 @@ function getAttendance(userId) {
 
 // ===== USER FUNCTIONS =====
 
-function saveUser(userId, userData) {
+function saveUser(userId, userData, verifiedEmail) {
   try {
+    if (!userData || !String(userData.name || '').trim() || !String(userData.mobile || '').trim()) {
+      return formatResponse(false, 'Name and mobile number are required.');
+    }
+    userData.email = verifiedEmail;
     ensureSheets();
     const usersSheet = getSheet(SHEETS.users);
     const values = usersSheet.getDataRange().getValues();
-    
-    let found = false;
-    
-    // Check if user exists
+    let targetRow = -1;
+    let oldUserId = '';
+
     for (let i = 1; i < values.length; i++) {
       if (values[i][0] === userId) {
-        // Update existing user
-        usersSheet.getRange(i + 1, 1, 1, 8).setValues([[
-          userId,
-          userData.mobile || '',
-          userData.name || '',
-          userData.email || '',
-          userData.company || '',
-          userData.inTime || '',
-          userData.outTime || '',
-          userData.profilePhoto || ''
-        ]]);
-        found = true;
+        targetRow = i + 1;
+        oldUserId = values[i][0];
         break;
       }
     }
-    
-    if (!found) {
-      // Create new user
-      usersSheet.appendRow([
+
+    // Reclaim legacy records only when their stored email matches Google's verified email.
+    if (targetRow < 0 && verifiedEmail) {
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][3] || '').trim().toLowerCase() === verifiedEmail.trim().toLowerCase()) {
+          targetRow = i + 1;
+          oldUserId = values[i][0];
+          break;
+        }
+      }
+    }
+
+    const profileRow = [
         userId,
         userData.mobile || '',
         userData.name || '',
@@ -200,8 +236,16 @@ function saveUser(userId, userData) {
         userData.inTime || '',
         userData.outTime || '',
         userData.profilePhoto || '',
-        new Date().toISOString()
-      ]);
+        targetRow > 0 ? (values[targetRow - 1][8] || new Date().toISOString()) : new Date().toISOString(),
+        userData.personalSpreadsheetId || '',
+        userData.personalSheetSkipped === true
+      ];
+
+    if (targetRow > 0) {
+      usersSheet.getRange(targetRow, 1, 1, profileRow.length).setValues([profileRow]);
+      if (oldUserId && oldUserId !== userId) migrateLegacyUserData(oldUserId, userId);
+    } else {
+      usersSheet.appendRow(profileRow);
     }
     
     Logger.log('User saved: ' + userId);
@@ -227,7 +271,9 @@ function getUser(userId) {
           company: values[i][4],
           inTime: values[i][5],
           outTime: values[i][6],
-          profilePhoto: values[i][7]
+          profilePhoto: values[i][7],
+          personalSpreadsheetId: values[i][9] || '',
+          personalSheetSkipped: values[i][10] === true || values[i][10] === 'TRUE'
         });
       }
     }
@@ -239,6 +285,26 @@ function getUser(userId) {
 }
 
 // ===== SAVE LIMIT FUNCTIONS =====
+
+function migrateLegacyUserData(oldUserId, newUserId) {
+  const attendanceSheet = getSheet(SHEETS.attendance);
+  const attendanceValues = attendanceSheet.getDataRange().getValues();
+  for (let i = 1; i < attendanceValues.length; i++) {
+    if (attendanceValues[i][1] === oldUserId) attendanceSheet.getRange(i + 1, 2).setValue(newUserId);
+  }
+
+  const dirtySheet = getSheet(SHEETS.dirtyDocs);
+  const dirtyValues = dirtySheet.getDataRange().getValues();
+  for (let i = 1; i < dirtyValues.length; i++) {
+    if (dirtyValues[i][0] === oldUserId) dirtySheet.getRange(i + 1, 1).setValue(newUserId);
+  }
+
+  const saveLogsSheet = getSheet(SHEETS.saveLogs);
+  const saveLogValues = saveLogsSheet.getDataRange().getValues();
+  for (let i = 1; i < saveLogValues.length; i++) {
+    if (saveLogValues[i][0] === oldUserId) saveLogsSheet.getRange(i + 1, 1).setValue(newUserId);
+  }
+}
 
 function checkSaveLimit(userId) {
   try {
@@ -311,9 +377,18 @@ function ensureSheets() {
   // Users sheet
   if (!ss.getSheetByName(SHEETS.users)) {
     const sheet = ss.insertSheet(SHEETS.users);
-    sheet.appendRow(['UserID', 'Mobile', 'Name', 'Email', 'Company', 'InTime', 'OutTime', 'ProfilePhoto', 'CreatedAt']);
+    sheet.appendRow(['UserID', 'Mobile', 'Name', 'Email', 'Company', 'InTime', 'OutTime', 'ProfilePhoto', 'CreatedAt', 'PersonalSpreadsheetId', 'PersonalSheetSkipped']);
   }
   
+  const usersSheet = ss.getSheetByName(SHEETS.users);
+  const existingColumns = usersSheet.getLastColumn();
+  if (existingColumns < 10) {
+    usersSheet.getRange(1, existingColumns + 1, 1, 2)
+      .setValues([['PersonalSpreadsheetId', 'PersonalSheetSkipped']]);
+  } else if (existingColumns === 10) {
+    usersSheet.getRange(1, 11).setValue('PersonalSheetSkipped');
+  }
+
   // SaveLogs sheet
   if (!ss.getSheetByName(SHEETS.saveLogs)) {
     const sheet = ss.insertSheet(SHEETS.saveLogs);

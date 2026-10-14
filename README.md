@@ -83,16 +83,12 @@ Your attendance app now has:
 
 ---
 
-## 📱 Phase 2: Firebase Multi-User (Next)
+## Google Sign-In and Sheets
 
-When you're ready for Firebase mobile auth with OTP:
+The current app uses Google sign-in. Required name and mobile profile fields are saved to the app owner's main Google Sheet. Users can separately authorize a personal attendance spreadsheet in Drive.
 
-- See **FIREBASE_SETUP.md** for complete guide
-- Replace device ID with phone number / email
-- Same Google Sheet structure
-- Multi-device sync for same user
-- OTP verification
-- Estimated: ~2 hours to implement
+- Follow [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md) to configure OAuth and deploy the Apps Script.
+- Legacy Firebase OTP instructions are retained for reference only and do not match the current app.
 
 ---
 

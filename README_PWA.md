@@ -7,7 +7,7 @@ This app is now configured as a Progressive Web App (PWA) with offline support, 
 - `sw.js` to cache the app shell and allow offline loading
 - `icon.svg` for app icons
 - install banner prompt via `beforeinstallprompt`
-- full mobile login and local persistence functionality
+- Google sign-in and local attendance fallback
 
 ## How to test
 1. Host the app using a static server.
