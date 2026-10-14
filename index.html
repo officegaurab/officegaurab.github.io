@@ -1727,8 +1727,14 @@ const SAVE_LIMIT = 3;
 
 // ===== AUTH FUNCTIONS =====
 function normalizeMobileNumber(phoneNumber, countryCode) {
+  const input = (phoneNumber || '').trim();
   const cleaned = (phoneNumber || '').replace(/\D/g, '');
+  const countryDigits = (countryCode || '').replace(/\D/g, '');
   if (!cleaned) return '';
+  if (input.startsWith('+')) return `+${cleaned}`;
+  if (countryDigits && cleaned.startsWith(countryDigits) && cleaned.length > countryDigits.length) {
+    return `+${cleaned}`;
+  }
   return `${countryCode}${cleaned}`;
 }
 
@@ -2198,11 +2204,7 @@ async function saveAttendance(date, status) {
       const canSync = limitResult.data.allowed;
       
       // LOCAL SAVE (always works, no limit)
-      if (status === null) {
-        delete attendanceData[date];
-      } else {
-        attendanceData[date] = status;
-      }
+      attendanceData[date] = status;
       const localUserId = uid;
       setLocalStorageAttendance(localUserId, attendanceData);
       render();
@@ -2239,21 +2241,19 @@ async function saveAttendance(date, status) {
         
         if (result.success) {
           console.log('✅ Saved to Google Sheet');
+        } else if (result.data && result.data.limitReached) {
+          alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally on this device. Google Sheet sync was not completed.');
         }
       } else {
         console.warn('⚠️ Limit reached for Google Sheet sync');
-        alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally.\nGoogle Sheet sync will resume tomorrow.');
+        alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally on this device. Google Sheet sync was not completed.');
       }
       
       checkSaveLimit();
     }
   } catch (error) {
     console.error('Error:', error.message);
-    if (status === null) {
-      delete attendanceData[date];
-    } else {
-      attendanceData[date] = status;
-    }
+    attendanceData[date] = status;
     const localUserId = (currentUser && currentUser.phoneNumber) || localStorage.getItem('lastUserId') || 'local_user';
     setLocalStorageAttendance(localUserId, attendanceData);
     render();
@@ -2297,18 +2297,14 @@ function setStatus(status) {
   if (!selectedKey) return;
   
   // Update data immediately
-  if (status === 'reset') {
-    delete attendanceData[selectedKey];
-  } else {
-    attendanceData[selectedKey] = status;
-  }
+  attendanceData[selectedKey] = status === 'reset' ? null : status;
   
   // Update display immediately
   render();
   setupStatsInteractivity();
   
   // Save to backend
-  saveAttendance(selectedKey, status || null);
+  saveAttendance(selectedKey, status === 'reset' ? null : status || null);
   closeAttendanceSheet();
 }
 
@@ -2390,7 +2386,6 @@ function updateStats() {
     if (isWeekend) {
       holidayDays++;
     } else if (!status) {
-      wfhDays++;
       workingDays++;
     }
     

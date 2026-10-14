@@ -230,10 +230,10 @@ To change sync times, edit in `index.html`:
 const syncTimes = [9, 13, 17]; // Change these hours (24-hour format)
 ```
 
-### Daily Sync Limit (Default: 3)
+### Daily Sync Limit (Default: 10)
 To change max syncs per day, edit in `GoogleAppsScript.gs`:
 ```javascript
-const limit = 3; // Change this number
+const DAILY_SAVE_LIMIT = 10; // Change this number
 ```
 
 ### Month Approval Threshold (Default: 5 saves)

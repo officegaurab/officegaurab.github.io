@@ -6,7 +6,7 @@
 ✅ **Google Sheets Database** (Attendance + Users + SaveLogs)  
 ✅ **Right-Side Navigation Drawer**  
 ✅ **User Profile Management** (with photo upload)  
-✅ **2-3 Saves Per Day Limit**  
+✅ **10 Saves Per Day Limit**
 ✅ **Auto-Registration on First Save**  
 ✅ **Editable Profile Fields** (optional)  
 ✅ **Rounded Profile Photos** (Base64 storage)  
@@ -208,10 +208,10 @@ UserID          | Date       | Count
 
 ## 🔑 Key Features Explained
 
-### Free Tier (2-3 saves/day)
-- Users can mark attendance up to 3 times per day
+### Daily Google Sheets Save Limit (10/day)
+- Users can sync attendance changes up to 10 times per day
 - Counter resets at midnight
-- After limit: "Limit reached. Try tomorrow"
+- After limit: changes remain saved locally on the current device
 
 ### Save Limit Logic
 - Tracks: `SaveLogs` sheet

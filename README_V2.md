@@ -74,7 +74,7 @@
 - Progress bar: Visual representation
 
 ### 🎚️ Rate Limiting
-- **Limit**: 3 saves per day
+- **Limit**: 10 Google Sheets saves per day
 - **Purpose**: Prevent accidental spam
 - **Resets**: Daily at midnight
 - **Feedback**: Shows remaining saves
@@ -275,7 +275,7 @@ UserID         | Date       | Count
 
 ### Can't save attendance
 - Check: Did you register? (should auto-trigger)
-- Check: Have you reached 3/day limit?
+- Check: Have you reached the 10/day limit?
 - Check: Google Apps Script URL in Settings
 
 ### Profile photo not showing

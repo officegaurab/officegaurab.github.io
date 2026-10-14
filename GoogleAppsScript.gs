@@ -3,6 +3,7 @@
 // Deploy as web app: Deploy > New Deployment > Type: Web app
 
 const SPREADSHEET_ID = '1xRWs999mHz51IGToz8gA-WjMuxAt9TB8fJXDqKv38-U';
+const DAILY_SAVE_LIMIT = 10;
 
 // Sheet names
 const SHEETS = {
@@ -78,10 +79,21 @@ function createJsonResponse(response) {
 // ===== ATTENDANCE FUNCTIONS =====
 
 function saveAttendance(userId, date, status) {
+  let lock = null;
   try {
+    lock = LockService.getScriptLock();
+    lock.waitLock(10000);
     ensureSheets();
     const attendanceSheet = getSheet(SHEETS.attendance);
     const dirtySheet = getSheet(SHEETS.dirtyDocs);
+    const count = getDailySaveCount(userId);
+    if (count >= DAILY_SAVE_LIMIT) {
+      return formatResponse(false, {
+        limitReached: true,
+        count: count,
+        limit: DAILY_SAVE_LIMIT
+      });
+    }
     
     // Find and update existing entry or create new
     const values = attendanceSheet.getDataRange().getValues();
@@ -97,7 +109,6 @@ function saveAttendance(userId, date, status) {
     
     if (!found) {
       attendanceSheet.appendRow([date, userId, status]);
-      logSave(userId);
     }
     
     // Log to dirty docs for tracking
@@ -116,11 +127,15 @@ function saveAttendance(userId, date, status) {
     if (!dirtyFound) {
       dirtySheet.appendRow([userId, date, status, new Date().toISOString(), false, '']);
     }
+
+    logSave(userId);
     
     Logger.log('Attendance saved: ' + userId + ' - ' + date + ' - ' + status);
     return formatResponse(true, 'Attendance saved');
   } catch (error) {
     return formatResponse(false, error.toString());
+  } finally {
+    if (lock) lock.releaseLock();
   }
 }
 
@@ -229,7 +244,7 @@ function checkSaveLimit(userId) {
   try {
     ensureSheets();
     const count = getDailySaveCount(userId);
-    const limit = 3; // 2-3 saves per day
+    const limit = DAILY_SAVE_LIMIT;
     const allowed = count < limit;
     
     return formatResponse(true, {
