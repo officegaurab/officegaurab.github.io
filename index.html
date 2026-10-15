@@ -2279,6 +2279,7 @@ async function checkAndShowRegistration(userId = null) {
     }
 
     userProfile = result.success ? (result.data || {}) : {};
+    userProfile.mobile = String(userProfile.mobile ?? '');
     userProfile.email = currentUser.email;
     const profileIsComplete = Boolean(userProfile.name && userProfile.mobile);
     const regName = document.getElementById('regName');

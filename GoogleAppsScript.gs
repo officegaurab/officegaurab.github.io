@@ -14,6 +14,15 @@ const SHEETS = {
   dirtyDocs: 'DirtyDocs'
 };
 
+function authorizeRequiredServices() {
+  const spreadsheetName = SpreadsheetApp.openById(SPREADSHEET_ID).getName();
+  const response = UrlFetchApp.fetch(
+    'https://oauth2.googleapis.com/tokeninfo?id_token=authorization-check',
+    { muteHttpExceptions: true }
+  );
+  return 'Authorized spreadsheet access for "' + spreadsheetName + '" and external requests. Token check status: ' + response.getResponseCode();
+}
+
 function doPost(e) {
   try {
     const payload = parsePayload(e);

@@ -24,9 +24,11 @@ The client ID is public configuration, not a client secret. Never add a client s
 
 1. Keep `SPREADSHEET_ID` pointed at the app owner's main spreadsheet.
 2. Copy the updated `GoogleAppsScript.gs` into that spreadsheet's Apps Script project.
-3. Deploy as a Web app that **executes as you**, the spreadsheet owner.
-4. Set access to **Anyone** so the static app can call it. The script verifies the Google ID token and checks that its subject matches the requested account before touching profile or attendance data.
-5. Deploy a new version and set the resulting URL as `googleScriptURL` in `index.html`.
+3. In **Project Settings**, enable **Show `appsscript.json` manifest file**. Replace its contents with [appsscript.json](appsscript.json), which declares the spreadsheet and external-request scopes used by the script.
+4. Save the project. In the Apps Script editor, select `authorizeRequiredServices` in the function list and click **Run** while signed in as the spreadsheet owner. Review and allow the requested spreadsheet and external-request permissions. The helper makes a harmless token-info request with an invalid test token to trigger the external-request authorization; an HTTP 400 status in its return message is expected.
+5. Deploy as a Web app that **executes as you**, the spreadsheet owner.
+6. Set access to **Anyone** so the static app can call it. The script verifies the Google ID token and checks that its subject matches the requested account before touching profile or attendance data.
+7. Create a **new deployment version** after authorizing the script, then confirm `googleScriptURL` in `index.html` points to that deployment.
 
 The first successful profile save upgrades the existing `Users` tab with personal-sheet metadata columns. Existing mobile-keyed profiles and attendance rows are migrated only when the saved email matches the signed-in Google account's verified email. Records without that match are not automatically claimed based on an unverified phone number.
 
