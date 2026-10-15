@@ -1507,8 +1507,15 @@ border-color:#e1e8e3;
 border-radius:7px;
 color:#32443b;
 }
-.day.home{border-color:#4b9876;color:#176b4a;background:#edf6f0;}
-.day.weekend,.day.holiday{background:#f8edcf;color:#6c5425;}
+.day.home{border-color:#a9bee6;color:#315b9d;background:#eaf1ff;}
+.day.weekend{border-color:#e0a800;background:#fbc02d;color:#493900;}
+.day.holiday{border-color:#e0a800;background:#fbc02d;color:#493900;}
+.day.leave{
+background:repeating-linear-gradient(-45deg,#fbc02d,#fbc02d 7px,#e53935 7px,#e53935 10px);
+color:#493900;
+}
+.day.noShowHome{background:#e53935;color:#fff;}
+.day.noShowOffice{background:#4caf50;color:#fff;}
 .day.today{outline:2px solid var(--accent);outline-offset:1px;}
 
 .summary{
@@ -1525,15 +1532,56 @@ text-align:left;
 box-shadow:none;
 }
 .stat-overview{
-background:#e5eee8;
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:6px;
+margin-bottom:4px;
+padding:0;
+background:transparent;
+border:0;
+}
+.stat-overview:hover{background:transparent;box-shadow:none;}
+.period-stat-tag{
+position:relative;
+display:flex;
+min-width:0;
+min-height:38px;
+align-items:center;
+justify-content:space-between;
+gap:4px;
+padding:6px 24px 6px 8px;
 border:1px solid #d7e3db;
 border-radius:7px;
+background:#e5eee8;
+color:#20312b;
+white-space:nowrap;
 }
-.stat-overview:hover{background:#dce9e0;box-shadow:none;}
+.period-stat-label{
+font-size:9px;
+font-weight:600;
+color:#65736d;
+}
+.period-stat-value{
+font-size:10px;
+font-weight:700;
+line-height:1.2;
+}
+.period-stat-detail{
+font-size:9px;
+line-height:1.2;
+}
+.period-stat-tag .inline-edit-btn{
+position:absolute;
+top:50%;
+right:5px;
+margin:0;
+font-size:11px;
+transform:translateY(-50%);
+}
 .stats{gap:8px;}
 .stat-card{
-min-height:48px;
-padding:10px;
+min-height:42px;
+padding:7px 8px;
 background:#fff;
 border:1px solid #e0e8e2;
 border-left:3px solid #4b9876;
@@ -1729,8 +1777,7 @@ color:#53635b;
 <div class="calendar-area">
 <div class="calendar-heading">
   <div>
-    <div class="calendar-heading-label">Your work schedule</div>
-    <div class="calendar-heading-title">Attendance overview</div>
+    <div class="calendar-heading-label">Attendance overview</div>
   </div>
 </div>
 <div class="nav-controls">
@@ -1752,8 +1799,9 @@ color:#53635b;
 
 <div class="legend">
 <div class="legend-item"><span class="dot" style="background:#4caf50"></span>Office</div>
-<div class="legend-item"><span class="dot" style="background:#fff;border:1px solid #aaa"></span>WFH</div>
-<div class="legend-item"><span class="dot" style="background:#ffd54f"></span>Holiday</div>
+<div class="legend-item"><span class="dot" style="background:#eaf1ff;border:1px solid #a9bee6"></span>WFH</div>
+<div class="legend-item"><span class="dot" style="background:#fbc02d;border:1px solid #e0a800"></span>Holiday</div>
+<div class="legend-item"><span class="dot" style="background:repeating-linear-gradient(-45deg,#fbc02d,#fbc02d 4px,#e53935 4px,#e53935 6px);border:1px solid #e0a800"></span>Leave</div>
 <div class="legend-item"><span class="dot" style="background:#e53935"></span>No Show</div>
 </div>
 
@@ -2979,8 +3027,26 @@ function updateStats() {
   
   // Update period stats overview
   document.getElementById('statsOverview').innerHTML = `
-    <div>Quarter: ${quarterDisplay.effective.toFixed(1)}% (${quarterDisplay.base.toFixed(1)} + ${quarterDisplay.delta.toFixed(1)}) | ${periodSummaries.quarter.officeDays}/${periodSummaries.quarter.workDays} WFO/Work Days <button class="inline-edit-btn" onclick="editManualPeriod('quarter')" title="Edit extra quarter %">✎</button></div>
-    <div>Year: ${yearDisplay.effective.toFixed(1)}% (${yearDisplay.base.toFixed(1)} + ${yearDisplay.delta.toFixed(1)}) | ${periodSummaries.year.officeDays}/${periodSummaries.year.workDays} WFO/Work Days <button class="inline-edit-btn" onclick="editManualPeriod('year')" title="Edit extra year %">✎</button></div>
+    <div class="period-stat-tag">
+      <span class="period-stat-label">Quarter</span>
+      <span class="period-stat-value">${quarterDisplay.effective.toFixed(1)}%</span>
+      <span class="period-stat-detail">(${quarterDisplay.base.toFixed(1)}+${quarterDisplay.delta.toFixed(1)})</span>
+      <button class="inline-edit-btn" onclick="event.stopPropagation(); editManualPeriod('quarter')" title="Edit extra quarter %" aria-label="Edit extra quarter percentage">✎</button>
+    </div>
+    <div class="period-stat-tag">
+      <span class="period-stat-label">Qtr WFO / days</span>
+      <span class="period-stat-value">${periodSummaries.quarter.officeDays}/${periodSummaries.quarter.workDays}</span>
+    </div>
+    <div class="period-stat-tag">
+      <span class="period-stat-label">Year</span>
+      <span class="period-stat-value">${yearDisplay.effective.toFixed(1)}%</span>
+      <span class="period-stat-detail">(${yearDisplay.base.toFixed(1)}+${yearDisplay.delta.toFixed(1)})</span>
+      <button class="inline-edit-btn" onclick="event.stopPropagation(); editManualPeriod('year')" title="Edit extra year %" aria-label="Edit extra year percentage">✎</button>
+    </div>
+    <div class="period-stat-tag">
+      <span class="period-stat-label">Year WFO / days</span>
+      <span class="period-stat-value">${periodSummaries.year.officeDays}/${periodSummaries.year.workDays}</span>
+    </div>
   `;
 
   document.getElementById('stats').innerHTML = `
