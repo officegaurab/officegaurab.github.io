@@ -3,7 +3,6 @@
 // Deploy as web app: Deploy > New Deployment > Type: Web app
 
 const SPREADSHEET_ID = '1xRWs999mHz51IGToz8gA-WjMuxAt9TB8fJXDqKv38-U';
-const DAILY_SAVE_LIMIT = 10;
 const GOOGLE_OAUTH_CLIENT_ID = '83272451338-s55v870hpabod4lkr0bvkbgouulrnuso.apps.googleusercontent.com';
 
 // Sheet names
@@ -129,14 +128,6 @@ function saveAttendance(userId, date, status) {
     ensureSheets();
     const attendanceSheet = getSheet(SHEETS.attendance);
     const dirtySheet = getSheet(SHEETS.dirtyDocs);
-    const count = getDailySaveCount(userId);
-    if (count >= DAILY_SAVE_LIMIT) {
-      return formatResponse(false, {
-        limitReached: true,
-        count: count,
-        limit: DAILY_SAVE_LIMIT
-      });
-    }
     
     // Find and update existing entry or create new
     const values = attendanceSheet.getDataRange().getValues();
@@ -343,14 +334,12 @@ function checkSaveLimit(userId) {
   try {
     ensureSheets();
     const count = getDailySaveCount(userId);
-    const limit = DAILY_SAVE_LIMIT;
-    const allowed = count < limit;
     
     return formatResponse(true, {
-      allowed: allowed,
+      allowed: true,
       count: count,
-      limit: limit,
-      remaining: Math.max(0, limit - count)
+      limit: null,
+      remaining: null
     });
   } catch (error) {
     return formatResponse(false, error.toString());

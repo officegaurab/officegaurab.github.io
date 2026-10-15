@@ -2722,6 +2722,67 @@ function clearCalendarLoading() {
   document.getElementById('calendarLoading').hidden = true;
 }
 
+function getPendingAttendance(uid) {
+  try {
+    return JSON.parse(localStorage.getItem(`attendancePending_${uid}`) || '{}');
+  } catch (error) {
+    console.error('Could not read pending attendance changes:', error);
+    return {};
+  }
+}
+
+function setPendingAttendance(uid, pending) {
+  const key = `attendancePending_${uid}`;
+  if (Object.keys(pending).length) {
+    localStorage.setItem(key, JSON.stringify(pending));
+  } else {
+    localStorage.removeItem(key);
+  }
+}
+
+function clearPendingAttendanceDate(uid, date, status) {
+  const latestPending = getPendingAttendance(uid);
+  if (Object.prototype.hasOwnProperty.call(latestPending, date) && latestPending[date] === status) {
+    delete latestPending[date];
+    setPendingAttendance(uid, latestPending);
+  }
+}
+
+async function syncAttendanceRecord(uid, date, status) {
+  if (userProfile && userProfile.personalSpreadsheetId) {
+    await writePersonalAttendance(date, status);
+    return;
+  }
+
+  const response = await fetch(googleScriptURL, {
+    method: 'POST',
+    body: buildScriptPayload({
+      action: 'saveAttendance',
+      userId: uid,
+      date: date,
+      status: status
+    }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+  });
+  const result = await response.json();
+  if (!response.ok || !result || !result.success) {
+    throw new Error((result && result.data) || 'Google Sheets did not confirm the attendance save.');
+  }
+}
+
+async function flushPendingAttendance(uid) {
+  const pending = getPendingAttendance(uid);
+  for (const [date, status] of Object.entries(pending)) {
+    try {
+      await syncAttendanceRecord(uid, date, status);
+      clearPendingAttendanceDate(uid, date, status);
+    } catch (error) {
+      console.error(`Could not sync pending attendance for ${date}:`, error);
+    }
+  }
+  return Object.keys(getPendingAttendance(uid)).length > 0;
+}
+
 async function retryAttendanceLoad() {
   if (userProfile && userProfile.personalSpreadsheetId) {
     setCalendarLoading('Requesting Google Drive access…');
@@ -2754,6 +2815,7 @@ async function loadAttendanceData(userId) {
       }
     }
     try {
+      const hasUnsyncedChanges = await flushPendingAttendance(uid);
       const result = await personalSheetRequest(
         `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(userProfile.personalSpreadsheetId)}/values/${encodeURIComponent('Attendance!A2:B')}`
       );
@@ -2761,10 +2823,14 @@ async function loadAttendanceData(userId) {
       (result.values || []).forEach(row => {
         if (row[0] && row[1]) remoteAttendance[row[0]] = row[1];
       });
-      attendanceData = { ...localAttendance, ...remoteAttendance };
+      attendanceData = { ...localAttendance, ...remoteAttendance, ...getPendingAttendance(uid) };
       setLocalStorageAttendance(uid, attendanceData);
       render();
-      clearCalendarLoading();
+      if (hasUnsyncedChanges) {
+        setCalendarLoadError('Some attendance changes are still waiting to sync. Check your connection and retry.', 'Reconnect Google Drive');
+      } else {
+        clearCalendarLoading();
+      }
       return;
     } catch (error) {
       console.error('Could not load personal attendance sheet:', error);
@@ -2783,6 +2849,7 @@ async function loadAttendanceData(userId) {
   }
 
   try {
+    const hasUnsyncedChanges = await flushPendingAttendance(uid);
     const response = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -2800,12 +2867,17 @@ async function loadAttendanceData(userId) {
 
     // Preserve local attendance edits when offline or before sync completes.
     attendanceData = {
+      ...localAttendance,
       ...remoteAttendance,
-      ...localAttendance
+      ...getPendingAttendance(uid)
     };
     setLocalStorageAttendance(uid, attendanceData);
     render();
-    clearCalendarLoading();
+    if (hasUnsyncedChanges) {
+      setCalendarLoadError('Some attendance changes are still waiting to sync. Check your connection and retry.');
+    } else {
+      clearCalendarLoading();
+    }
   } catch (error) {
     console.error('Failed to load attendance:', error);
     attendanceData = localAttendance;
@@ -2842,86 +2914,36 @@ async function checkSaveLimit() {
 }
 
 async function saveAttendance(date, status) {
-  try {
-    const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-    if (userProfile && userProfile.personalSpreadsheetId) {
-      attendanceData[date] = status;
-      setLocalStorageAttendance(uid, attendanceData);
-      render();
+  const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
+  attendanceData[date] = status;
+  setLocalStorageAttendance(uid, attendanceData);
+  render();
+
+  if (userProfile && userProfile.personalSpreadsheetId) {
+    const pending = getPendingAttendance(uid);
+    pending[date] = status;
+    setPendingAttendance(uid, pending);
+    try {
       await requestPersonalSheetAccess('');
       await writePersonalAttendance(date, status);
-      return;
+      clearPendingAttendanceDate(uid, date, status);
+    } catch (error) {
+      console.error('Could not save attendance to the personal Google Sheet:', error);
+      alert('Your change is saved on this device but has not synced to your Google Sheet yet. It will be retried when attendance loads; do not clear this browser’s data until sync succeeds.');
     }
+    return;
+  }
 
-    // First, check if we can sync to Google Sheet (rate limit)
-    const limitResponse = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'checkSaveLimit',
-        userId: uid
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const limitResult = await limitResponse.json();
-    
-    if (limitResult.success) {
-      const canSync = limitResult.data.allowed;
-      
-      // LOCAL SAVE (always works, no limit)
-      attendanceData[date] = status;
-      const localUserId = uid;
-      setLocalStorageAttendance(localUserId, attendanceData);
-      render();
-
-      // Track local-only calendar saves and show login after 5
-      try {
-        const key = 'localCalendarSaveCount';
-        let c = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-        c += 1;
-        localStorage.setItem(key, String(c));
-        const lastId = localUserId;
-        if (lastId) localStorage.setItem('lastUserId', lastId);
-        if (c >= 5 && !currentUser) {
-          showLoginSheet();
-        }
-      } catch (e) {
-        console.warn('Failed to update local save counter', e);
-      }
-      
-      // REMOTE SYNC (limited to 2-3/day)
-      if (canSync) {
-        const response = await fetch(googleScriptURL, {
-          method: 'POST',
-          body: buildScriptPayload({
-            action: 'saveAttendance',
-            userId: localUserId,
-            date: date,
-            status: status
-          }),
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          console.log('✅ Saved to Google Sheet');
-        } else if (result.data && result.data.limitReached) {
-          alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally on this device. Google Sheet sync was not completed.');
-        }
-      } else {
-        console.warn('⚠️ Limit reached for Google Sheet sync');
-        alert('⚠️ Daily save limit reached!\n\nYour changes are saved locally on this device. Google Sheet sync was not completed.');
-      }
-      
-      checkSaveLimit();
-    }
+  const pending = getPendingAttendance(uid);
+  pending[date] = status;
+  setPendingAttendance(uid, pending);
+  try {
+    await syncAttendanceRecord(uid, date, status);
+    clearPendingAttendanceDate(uid, date, status);
+    checkSaveLimit();
   } catch (error) {
-    console.error('Error:', error.message);
-    attendanceData[date] = status;
-    const localUserId = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-    setLocalStorageAttendance(localUserId, attendanceData);
-    render();
+    console.error('Could not sync attendance to Google Sheets:', error);
+    alert('Your change is saved on this device but has not synced to Google Sheets yet. It will be retried when attendance loads; do not clear this browser’s data until sync succeeds.');
   }
 }
 
