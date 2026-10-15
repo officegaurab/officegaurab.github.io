@@ -1507,7 +1507,7 @@ border-color:#e1e8e3;
 border-radius:7px;
 color:#32443b;
 }
-.day.home{border-color:#a9bee6;color:#315b9d;background:#eaf1ff;}
+.day.home{border-color:#d9dee3;color:#315b9d;background:#f8f9fa;}
 .day.weekend{border-color:#e0a800;background:#fbc02d;color:#493900;}
 .day.holiday{border-color:#e0a800;background:#fbc02d;color:#493900;}
 .day.leave{
@@ -1557,7 +1557,7 @@ color:#20312b;
 white-space:nowrap;
 }
 .period-stat-label{
-font-size:9px;
+font-size:12px;
 font-weight:600;
 color:#65736d;
 }
@@ -1799,7 +1799,7 @@ color:#53635b;
 
 <div class="legend">
 <div class="legend-item"><span class="dot" style="background:#4caf50"></span>Office</div>
-<div class="legend-item"><span class="dot" style="background:#eaf1ff;border:1px solid #a9bee6"></span>WFH</div>
+<div class="legend-item"><span class="dot" style="background:#f8f9fa;border:1px solid #d9dee3"></span>WFH</div>
 <div class="legend-item"><span class="dot" style="background:#fbc02d;border:1px solid #e0a800"></span>Holiday</div>
 <div class="legend-item"><span class="dot" style="background:repeating-linear-gradient(-45deg,#fbc02d,#fbc02d 4px,#e53935 4px,#e53935 6px);border:1px solid #e0a800"></span>Leave</div>
 <div class="legend-item"><span class="dot" style="background:#e53935"></span>No Show</div>
@@ -2888,6 +2888,13 @@ async function saveProfile(syncRemote = true) {
 }
 
 // ===== CALENDAR FUNCTIONS =====
+function getAttendanceStatus(key, date) {
+  const status = attendanceData[key];
+  if (status) return status;
+  const dayOfWeek = date.getDay();
+  return dayOfWeek > 0 && dayOfWeek < 6 ? 'home' : null;
+}
+
 function setStatus(status) {
   if (!selectedKey) return;
   
@@ -2944,7 +2951,7 @@ function render() {
     }
     
     cell.innerText = day;
-    let status = attendanceData[key];
+    let status = getAttendanceStatus(key, dateObj);
     
     if (isWeekend) {
       cell.classList.add('weekend');
@@ -2976,7 +2983,7 @@ function updateStats() {
     const monthPad = String(month + 1).padStart(2, '0');
     const dayPad = String(day).padStart(2, '0');
     const key = `${year}-${monthPad}-${dayPad}`;
-    let status = attendanceData[key];
+    let status = getAttendanceStatus(key, dateObj);
     
     if (isWeekend) {
       holidayDays++;
