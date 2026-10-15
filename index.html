@@ -205,7 +205,47 @@ padding:8px 8px 4px;
 overflow:auto;
 flex:0 1 auto;
 min-height:0;
+position:relative;
 }
+
+.calendar-loading{
+position:absolute;
+inset:0;
+z-index:5;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+background:rgba(248,250,248,.88);
+}
+
+.calendar-loading[hidden]{display:none;}
+
+.calendar-loading-card{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:12px;
+max-width:360px;
+padding:20px 24px;
+border:1px solid #d1e0d7;
+border-radius:12px;
+background:#fff;
+color:#20312b;
+text-align:center;
+box-shadow:0 8px 24px rgba(20,52,41,.12);
+}
+
+.calendar-spinner{
+width:30px;
+height:30px;
+border:3px solid #d1e0d7;
+border-top-color:#176b4a;
+border-radius:50%;
+animation:calendar-spin .8s linear infinite;
+}
+
+@keyframes calendar-spin{to{transform:rotate(360deg);}}
 
 .nav-controls{
 display:flex;
@@ -1792,6 +1832,13 @@ color:#53635b;
 </div>
 
 <div class="calendar" id="calendar"></div>
+<div class="calendar-loading" id="calendarLoading" role="status" aria-live="polite" hidden>
+  <div class="calendar-loading-card">
+    <span class="calendar-spinner" id="calendarSpinner" aria-hidden="true"></span>
+    <span id="calendarLoadingMessage">Loading attendance…</span>
+    <button class="action-button btn-secondary" id="calendarLoadActionBtn" onclick="retryAttendanceLoad()" hidden>Retry</button>
+  </div>
+</div>
 </div>
 
 <!-- SUMMARY -->
@@ -2650,15 +2697,61 @@ function uploadProfilePagePhoto(event) {
 }
 
 // ===== SAVE/LOAD FUNCTIONS =====
+function setCalendarLoading(message = 'Loading attendance…') {
+  const overlay = document.getElementById('calendarLoading');
+  const spinner = document.getElementById('calendarSpinner');
+  const actionButton = document.getElementById('calendarLoadActionBtn');
+  overlay.hidden = false;
+  spinner.hidden = false;
+  actionButton.hidden = true;
+  document.getElementById('calendarLoadingMessage').textContent = message;
+}
+
+function setCalendarLoadError(message, actionLabel = 'Retry') {
+  const overlay = document.getElementById('calendarLoading');
+  const spinner = document.getElementById('calendarSpinner');
+  const actionButton = document.getElementById('calendarLoadActionBtn');
+  overlay.hidden = false;
+  spinner.hidden = true;
+  actionButton.textContent = actionLabel;
+  actionButton.hidden = false;
+  document.getElementById('calendarLoadingMessage').textContent = message;
+}
+
+function clearCalendarLoading() {
+  document.getElementById('calendarLoading').hidden = true;
+}
+
+async function retryAttendanceLoad() {
+  if (userProfile && userProfile.personalSpreadsheetId) {
+    setCalendarLoading('Requesting Google Drive access…');
+    try {
+      await requestPersonalSheetAccess('');
+    } catch (error) {
+      console.error('Could not authorize the personal attendance sheet:', error);
+      setCalendarLoadError(error.message || 'Could not connect to your Google Sheet.', 'Reconnect Google Drive');
+      return;
+    }
+  }
+  await loadAttendanceData(currentUser && currentUser.userId);
+}
+
 async function loadAttendanceData(userId) {
   const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
   const localAttendance = getLocalStorageAttendance(uid);
+  setCalendarLoading();
 
   if (userProfile && userProfile.personalSpreadsheetId) {
     if (!googleAccessToken) {
-      attendanceData = localAttendance;
-      render();
-      return;
+      try {
+        await requestPersonalSheetAccess('');
+      } catch (error) {
+        console.error('Google Drive access is required to load the personal attendance sheet:', error);
+        attendanceData = localAttendance;
+        render();
+        setCalendarLoadError('Reconnect Google Drive on this device to load your saved attendance.', 'Reconnect Google Drive');
+        return;
+      }
     }
     try {
       const result = await personalSheetRequest(
@@ -2668,14 +2761,16 @@ async function loadAttendanceData(userId) {
       (result.values || []).forEach(row => {
         if (row[0] && row[1]) remoteAttendance[row[0]] = row[1];
       });
-      attendanceData = { ...remoteAttendance, ...localAttendance };
+      attendanceData = { ...localAttendance, ...remoteAttendance };
       setLocalStorageAttendance(uid, attendanceData);
       render();
+      clearCalendarLoading();
       return;
     } catch (error) {
       console.error('Could not load personal attendance sheet:', error);
       attendanceData = localAttendance;
       render();
+      setCalendarLoadError('Could not load your Google Sheet. Check your connection and try again.', 'Reconnect Google Drive');
       return;
     }
   }
@@ -2683,6 +2778,7 @@ async function loadAttendanceData(userId) {
   if (!isGoogleScriptConfigured()) {
     attendanceData = localAttendance;
     render();
+    clearCalendarLoading();
     return;
   }
 
@@ -2697,7 +2793,10 @@ async function loadAttendanceData(userId) {
     });
     
     const result = await response.json();
-    const remoteAttendance = result && result.success ? result.data : {};
+    if (!response.ok || !result || !result.success) {
+      throw new Error((result && result.data) || 'The attendance sheet could not be loaded.');
+    }
+    const remoteAttendance = result.data || {};
 
     // Preserve local attendance edits when offline or before sync completes.
     attendanceData = {
@@ -2706,10 +2805,12 @@ async function loadAttendanceData(userId) {
     };
     setLocalStorageAttendance(uid, attendanceData);
     render();
+    clearCalendarLoading();
   } catch (error) {
     console.error('Failed to load attendance:', error);
     attendanceData = localAttendance;
     render();
+    setCalendarLoadError('Could not load attendance from Google Sheets. Check your connection and try again.');
   }
 }
 

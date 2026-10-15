@@ -41,7 +41,7 @@ function doPost(e) {
       case 'saveUser':
         return saveUser(payload.userId, payload.userData, payload.verifiedEmail);
       case 'getUser':
-        return getUser(payload.userId);
+        return getUser(payload.userId, payload.verifiedEmail);
       case 'checkSaveLimit':
         return checkSaveLimit(payload.userId);
       case 'getSaveCount':
@@ -264,32 +264,56 @@ function saveUser(userId, userData, verifiedEmail) {
   }
 }
 
-function getUser(userId) {
+function getUser(userId, verifiedEmail) {
+  let lock = null;
   try {
+    lock = LockService.getScriptLock();
+    lock.waitLock(10000);
     ensureSheets();
     const usersSheet = getSheet(SHEETS.users);
     const values = usersSheet.getDataRange().getValues();
+    let userRow = -1;
     
     for (let i = 1; i < values.length; i++) {
       if (values[i][0] === userId) {
-        return formatResponse(true, {
-          userId: values[i][0],
-          mobile: values[i][1],
-          name: values[i][2],
-          email: values[i][3],
-          company: values[i][4],
-          inTime: values[i][5],
-          outTime: values[i][6],
-          profilePhoto: values[i][7],
-          personalSpreadsheetId: values[i][9] || '',
-          personalSheetSkipped: values[i][10] === true || values[i][10] === 'TRUE'
-        });
+        userRow = i;
+        break;
       }
+    }
+
+    if (userRow < 0 && verifiedEmail) {
+      const normalizedEmail = String(verifiedEmail).trim().toLowerCase();
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][3] || '').trim().toLowerCase() === normalizedEmail) {
+          userRow = i;
+          const oldUserId = values[i][0];
+          usersSheet.getRange(i + 1, 1).setValue(userId);
+          if (oldUserId && oldUserId !== userId) migrateLegacyUserData(oldUserId, userId);
+          break;
+        }
+      }
+    }
+
+    if (userRow >= 0) {
+      return formatResponse(true, {
+        userId: userId,
+        mobile: values[userRow][1],
+        name: values[userRow][2],
+        email: values[userRow][3],
+        company: values[userRow][4],
+        inTime: values[userRow][5],
+        outTime: values[userRow][6],
+        profilePhoto: values[userRow][7],
+        personalSpreadsheetId: values[userRow][9] || '',
+        personalSheetSkipped: values[userRow][10] === true || values[userRow][10] === 'TRUE'
+      });
     }
     
     return formatResponse(false, 'User not found');
   } catch (error) {
     return formatResponse(false, error.toString());
+  } finally {
+    if (lock) lock.releaseLock();
   }
 }
 
