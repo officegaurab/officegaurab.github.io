@@ -1,3 +1,7 @@
+/* HEADER AVATAR */
+.header-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(255,255,255,.7);box-shadow:0 2px 8px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s;background:rgba(255,255,255,.18);}
+.header-avatar:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(0,0,0,.35);}
+
 :root{
 --primary:#1976d2;
 --accent:#ff6b6b;

@@ -27,7 +27,9 @@
 <!-- HEADER -->
 <div class="header">
 <div class="header-left">
-<div class="brand-mark" aria-hidden="true">OA</div>
+<div id="headerAvatarWrap" style="cursor:pointer;flex-shrink:0;" onclick="showProfilePage()" title="My Profile">
+  <img id="headerAvatar" class="header-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23fff'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23fff'/%3E%3C/svg%3E" alt="Profile" />
+</div>
 <div>
 <div class="header-title" id="headerTitle">Attendance Tracker</div>
 <div class="header-subtitle" id="headerSubtitle">Unknown User (Please login to save the data)</div>
@@ -79,6 +81,14 @@
         <div class="profile-value" id="personalSheetStatus">Using the app's main attendance sheet</div>
         <button class="action-button btn-primary" id="connectPersonalSheetFromProfileBtn" onclick="openPersonalSheetSetup()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Connect personal sheet</button>
         <button class="action-button btn-secondary" id="reconnectSheetBtn" onclick="reconnectPersonalSheet()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Reconnect Google Drive</button>
+      </div>
+
+      <!-- Test Notification Card -->
+      <div class="profile-view-card" id="notifTestCard">
+        <div class="profile-label">🔔 Notifications</div>
+        <div class="profile-value" id="notifPermStatus" style="font-size:13px;">—</div>
+        <button class="action-button btn-primary" id="testNotifBtn" onclick="sendTestNotification()" style="width:auto;margin-top:12px;padding:9px 14px;font-size:13px;">📲 Send Test Notification</button>
+        <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Sends an immediate test notification so you can verify it works on this device.</div>
       </div>
 
       <!-- Location view cards -->
@@ -398,9 +408,10 @@
 <!-- CALENDAR AREA -->
 <div class="calendar-area">
 <div class="calendar-heading">
-  <div>
+  <div style="flex:1;">
     <div class="calendar-heading-label">Attendance overview</div>
   </div>
+  <button id="batchSaveBtn" onclick="flushBatchChanges()" style="display:none;padding:7px 13px;border:none;border-radius:10px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(22,163,74,.4);transition:transform .15s;" title="Save all pending changes">💾 Save changes (<span id="batchCount">0</span>)</button>
 </div>
 <div class="nav-controls">
 <button class="nav-btn" id="prev">◀ Prev</button>
@@ -490,6 +501,17 @@
 <span class="drawer-item-icon">❓</span>
 <span>Help</span>
 </div>
+</div>
+
+<!-- Drawer version footer -->
+<div style="padding:16px 20px 24px;margin-top:auto;border-top:1px solid rgba(255,255,255,.08);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:rgba(255,255,255,.6);">OA</div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">Office Attendance</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">v<span id="drawerVersionBadge">4.0</span></div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -669,6 +691,7 @@
 <script>
 
 // ===== GLOBALS =====
+const APP_VERSION = '4.0'; // bump this alongside CACHE_NAME in sw.js
 let currentUser = null;
 let currentDate = new Date();
 let selectedKey = null;
@@ -876,22 +899,37 @@ function signOutGoogle() {
 }
 
 function updateHeaderProfile() {
-  const titleEl = document.getElementById('headerTitle');
+  const titleEl    = document.getElementById('headerTitle');
   const subtitleEl = document.getElementById('headerSubtitle');
+  const avatarEl   = document.getElementById('headerAvatar');
   if (!titleEl || !subtitleEl) return;
+
+  // Profile picture — prefer Google picture from token, fallback to stored photo
+  const picUrl = (currentUser && currentUser.picture) ||
+                 (userProfile && userProfile.profilePhoto) || '';
+  if (avatarEl && picUrl) {
+    avatarEl.src = picUrl;
+    avatarEl.onerror = () => { avatarEl.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23fff'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23fff'/%3E%3C/svg%3E`; };
+  }
+
+  // Also update notification permission status on profile card
+  const notifStatusEl = document.getElementById('notifPermStatus');
+  if (notifStatusEl && 'Notification' in window) {
+    const p = Notification.permission;
+    notifStatusEl.textContent = p === 'granted' ? '✅ Notifications enabled' : p === 'denied' ? '🚫 Blocked — enable in device settings' : '⏳ Permission not yet granted';
+    notifStatusEl.style.color  = p === 'granted' ? '#16a34a' : p === 'denied' ? '#dc2626' : 'var(--text-light)';
+  }
 
   if (userProfile && userProfile.name) {
     titleEl.textContent = `Welcome, ${userProfile.name}`;
     subtitleEl.textContent = currentUser ? currentUser.email : 'Signed in with Google';
     return;
   }
-
   if (currentUser) {
     titleEl.textContent = 'Attendance Tracker';
     subtitleEl.textContent = `Signed in as ${currentUser.email}`;
     return;
   }
-
   titleEl.textContent = 'Attendance Tracker';
   subtitleEl.textContent = 'Unknown User (Please login to save the data)';
 }
@@ -1017,6 +1055,14 @@ async function checkAndShowRegistration(userId = null) {
     userProfile = result.success ? (result.data || {}) : {};
     userProfile.mobile = String(userProfile.mobile ?? '');
     userProfile.email = currentUser.email;
+
+    // Backfill profile photo from Google token if not yet stored in the sheet
+    if (!userProfile.profilePhoto && currentUser && currentUser.picture) {
+      userProfile.profilePhoto = currentUser.picture;
+      // Save silently in background so future logins on new devices get the picture
+      syncProfileToRemote(activeUserId, userProfile).catch(() => {});
+    }
+
     const profileIsComplete = Boolean(userProfile.name && userProfile.mobile);
     const regName = document.getElementById('regName');
     const regEmail = document.getElementById('regEmail');
@@ -1085,7 +1131,9 @@ async function completeRegistration() {
     company: document.getElementById('regCompany').value,
     inTime: document.getElementById('regInTime').value,
     outTime: document.getElementById('regOutTime').value,
-    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
+    // Store Google profile picture URL so it appears on other devices
+    profilePhoto: (currentUser && currentUser.picture) ||
+                  (userProfile && userProfile.profilePhoto) || '',
     personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
     personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
   };
@@ -1740,19 +1788,67 @@ function getAttendanceStatus(key, date) {
   return dayOfWeek > 0 && dayOfWeek < 6 ? 'home' : null;
 }
 
+// ===== BATCH SAVE =====
+let _batchPending = {}; // { dateKey: status|null }
+
 function setStatus(status) {
   if (!selectedKey) return;
-  
-  // Update data immediately
-  attendanceData[selectedKey] = status === 'reset' ? null : status;
-  
-  // Update display immediately
+  const val = status === 'reset' ? null : status;
+  attendanceData[selectedKey] = val;
+  // Queue in batch instead of immediate server call
+  _batchPending[selectedKey] = val;
   render();
   setupStatsInteractivity();
-  
-  // Save to backend
-  saveAttendance(selectedKey, status === 'reset' ? null : status || null);
+  updateBatchSaveBtn();
   closeAttendanceSheet();
+}
+
+function updateBatchSaveBtn() {
+  const btn   = document.getElementById('batchSaveBtn');
+  const count = document.getElementById('batchCount');
+  if (!btn) return;
+  const n = Object.keys(_batchPending).length;
+  if (n > 0) {
+    btn.style.display = 'inline-flex';
+    btn.style.alignItems = 'center';
+    btn.style.gap = '4px';
+    if (count) count.textContent = n;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+async function flushBatchChanges() {
+  const btn = document.getElementById('batchSaveBtn');
+  if (!Object.keys(_batchPending).length) return;
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Saving…'; }
+  const entries = { ..._batchPending };
+  let allOk = true;
+  for (const [dateKey, status] of Object.entries(entries)) {
+    try {
+      await saveAttendance(dateKey, status);
+      delete _batchPending[dateKey];
+    } catch (e) {
+      allOk = false;
+    }
+  }
+  if (btn) {
+    btn.disabled = false;
+    if (allOk) {
+      btn.innerHTML = '✅ Saved!';
+      // Tell SW attendance is done today → skip afternoon duplicate notification
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          if (reg.active) reg.active.postMessage({ type: 'ATTENDANCE_MARKED_TODAY' });
+        });
+      }
+      setTimeout(() => { updateBatchSaveBtn(); }, 2000);
+    } else {
+      btn.innerHTML = '⚠️ Some failed — retry';
+      btn.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
+      setTimeout(() => { updateBatchSaveBtn(); btn.style.background = ''; }, 3000);
+    }
+  }
 }
 
 function render() {
@@ -2605,6 +2701,9 @@ function showReminderPage() {
 
 function showApp() {
   showDashboardView();
+  // Keep version badge in sync with the JS constant
+  const badge = document.getElementById('drawerVersionBadge');
+  if (badge) badge.textContent = APP_VERSION;
 }
 
 function hideApp() {
@@ -2948,6 +3047,50 @@ function cancelAttendanceReminder() {
   navigator.serviceWorker.ready.then(reg => {
     if (reg.active) reg.active.postMessage({ type: 'CANCEL_ATTENDANCE_REMINDER' });
   });
+}
+
+// ── Test notification ────────────────────────────────────────────────
+async function sendTestNotification() {
+  const btn = document.getElementById('testNotifBtn');
+  if (!('Notification' in window)) {
+    alert('Notifications are not supported in this browser.');
+    return;
+  }
+  if (Notification.permission !== 'granted') {
+    const perm = await Notification.requestPermission();
+    updateHeaderProfile(); // refresh status display
+    if (perm !== 'granted') {
+      alert('Permission denied. Please enable notifications in your device/browser settings.');
+      return;
+    }
+  }
+  try {
+    // Use SW registration for best visual (large icon, action buttons)
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('📋 Test Notification', {
+      body: `Hi ${(userProfile && userProfile.name) || 'there'}! Notifications are working correctly on this device. ✅`,
+      icon: './icon.svg',
+      badge: './icon.svg',
+      tag: 'test-notification',
+      vibrate: [200, 100, 200],
+      data: { url: window.location.href },
+      actions: [
+        { action: 'open', title: '✅ Looks good!' }
+      ]
+    });
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✅ Notification sent!';
+      btn.style.background = '#16a34a';
+      setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 3000);
+    }
+  } catch (e) {
+    // Fallback: plain Notification API
+    new Notification('📋 Test Notification', {
+      body: `Hi ${(userProfile && userProfile.name) || 'there'}! Notifications are working. ✅`,
+      icon: './icon.svg'
+    });
+  }
 }
 
 if ('serviceWorker' in navigator) {
