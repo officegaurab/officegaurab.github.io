@@ -16,1637 +16,8 @@
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<style>
-:root{
---primary:#1976d2;
---accent:#ff6b6b;
---success:#4caf50;
---warning:#ffd54f;
---danger:#e53935;
---bg:#f4f6f8;
---card:#ffffff;
---text:#222;
---text-light:#666;
-}
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'DM Sans',system-ui,sans-serif;
-}
-
-body{
-background:linear-gradient(135deg,#f4f6f8 0%, #eef4ff 100%);
-color:var(--text);
-min-height:100vh;
-overflow:auto;
-padding:0;
-}
-
-.container{
-min-height:100vh;
-display:flex;
-flex-direction:column;
-background:rgba(255,255,255,0.9);
-backdrop-filter:blur(14px);
-border:none;
-border-radius:0;
-box-shadow:none;
-overflow:hidden;
-}
-
-@media (min-width: 768px) {
-  .container {
-    height: calc(100vh - 48px);
-  }
-}
-
-@media(min-width:768px){
-body{
-padding:24px;
-}
-
-.container{
-min-height:calc(100vh - 48px);
-border:1px solid rgba(15,23,42,0.06);
-border-radius:24px;
-box-shadow:0 20px 60px rgba(15,23,42,0.08);
-}
-}
-
-/* HEADER */
-.header{
-background:linear-gradient(135deg, #1e3a8a, #2563eb);
-color:white;
-padding:12px 16px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:16px;
-box-shadow:0 12px 28px rgba(15, 23, 42, 0.14);
-position:relative;
-min-height:60px;
-border-bottom:1px solid rgba(255,255,255,0.12);
-flex-wrap:wrap;
-}
-
-.header-left{
-display:flex;
-align-items:center;
-gap:14px;
-flex:1 1 auto;
-min-width:0;
-}
-
-.logo-badge{
-width:48px;
-height:48px;
-border-radius:14px;
-background:rgba(255,255,255,0.18);
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:700;
-font-size:18px;
-letter-spacing:0.02em;
-}
-
-.header-title{
-font-size:18px;
-font-weight:700;
-line-height:1.1;
-}
-
-.header-subtitle{
-font-size:12px;
-color:rgba(255,255,255,0.85);
-margin-top:4px;
-}
-
-.header-buttons{
-display:flex;
-align-items:center;
-gap:12px;
-margin-left:auto;
-}
-
-.icon-btn{
-background:transparent;
-border:none;
-color:white;
-width:40px;
-height:40px;
-border-radius:12px;
-cursor:pointer;
-font-size:18px;
-display:flex;
-align-items:center;
-justify-content:center;
-transition:transform .2s ease, background .2s ease;
-}
-
-.icon-btn:hover{
-background:rgba(255,255,255,0.22);
-transform:translateY(-1px) scale(1.02);
-}
-
-/* DESKTOP MENU */
-.header-menu {
-display:none;
-align-items:center;
-gap:4px;
-margin-left:auto;
-flex-wrap:wrap;
-justify-content:flex-end;
-}
-
-.menu-item {
-color:white;
-background:transparent;
-border:none;
-padding:6px 12px;
-border-radius:8px;
-font-size:13px;
-font-weight:500;
-cursor:pointer;
-transition:.2s ease;
-white-space:nowrap;
-position:relative;
-}
-
-.menu-item:hover {
-background:rgba(255,255,255,0.18);
-}
-
-.menu-item.active {
-background:rgba(255,255,255,0.24);
-border-bottom:2px solid white;
-}
-
-.nav-btn{
-border:none;
-background:rgba(255,255,255,.14);
-color:white;
-padding:10px 14px;
-border-radius:12px;
-font-weight:600;
-cursor:pointer;
-transition:.2s ease;
-}
-
-.nav-btn:hover{
-background:rgba(255,255,255,.24);
-}
-
-/* CALENDAR AREA */
-.calendar-area{
-padding:8px 8px 4px;
-overflow:auto;
-flex:0 1 auto;
-min-height:0;
-position:relative;
-}
-
-.calendar-loading{
-position:absolute;
-inset:0;
-z-index:5;
-display:flex;
-align-items:center;
-justify-content:center;
-padding:20px;
-background:rgba(248,250,248,.88);
-}
-
-.calendar-loading[hidden]{display:none;}
-
-.calendar-loading-card{
-display:flex;
-flex-direction:column;
-align-items:center;
-gap:12px;
-max-width:360px;
-padding:20px 24px;
-border:1px solid #d1e0d7;
-border-radius:12px;
-background:#fff;
-color:#20312b;
-text-align:center;
-box-shadow:0 8px 24px rgba(20,52,41,.12);
-}
-
-.calendar-spinner{
-width:30px;
-height:30px;
-border:3px solid #d1e0d7;
-border-top-color:#176b4a;
-border-radius:50%;
-animation:calendar-spin .8s linear infinite;
-}
-
-@keyframes calendar-spin{to{transform:rotate(360deg);}}
-
-.nav-controls{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px;
-}
-
-.nav-btn{
-border:none;
-background:var(--primary);
-color:white;
-padding:8px 12px;
-border-radius:8px;
-cursor:pointer;
-font-size:14px;
-transition:.2s ease;
-font-weight:500;
-}
-
-.nav-btn:hover{
-background:var(--primary);
-transform:translateY(-2px);
-box-shadow:0 4px 12px rgba(25, 118, 210, 0.3);
-}
-
-.nav-btn:active{
-transform:translateY(0);
-}
-
-.month-title{
-font-size:18px;
-font-weight:700;
-flex:1;
-text-align:center;
-}
-
-.weekdays{
-display:grid;
-grid-template-columns:repeat(7,1fr);
-gap:4px;
-margin-bottom:5px;
-font-weight:600;
-font-size:12px;
-text-align:center;
-}
-
-.calendar{
-display:grid;
-grid-template-columns:repeat(7,1fr);
-gap:4px;
-}
-
-.day{
-background:white;
-border-radius:8px;
-min-height:50px;
-display:flex;
-align-items:center;
-justify-content:center;
-position:relative;
-border:1px solid #e5e5e5;
-cursor:pointer;
-font-size:13px;
-font-weight:500;
-transition:.2s ease;
-user-select:none;
--webkit-user-select:none;
--moz-user-select:none;
--ms-user-select:none;
-}
-
-.day:hover:not(.empty){
-transform:translateY(-2px);
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-border-color:var(--primary);
-}
-
-.day.empty{
-background:transparent;
-border:none;
-cursor:default;
-}
-
-.day.office{
-background:var(--success);
-color:white;
-}
-
-.day.home{
-background:white;
-border:2px solid var(--primary);
-}
-
-.day.weekend{
-background:var(--warning);
-}
-
-.day.holiday{
-background:var(--warning);
-}
-
-.day.leave{
-background:repeating-linear-gradient(-45deg,var(--warning),var(--warning) 8px,#c7a52d 8px,#c7a52d 12px);
-}
-
-.day.noShowHome{
-background:var(--danger);
-color:white;
-}
-
-.day.noShowOffice{
-background:var(--success);
-color:white;
-position:relative;
-}
-
-.day.noShowOffice::after{
-content:"";
-position:absolute;
-inset:0;
-border-radius:8px;
-background:repeating-linear-gradient(-45deg,transparent,transparent 6px,rgba(255,0,0,.8) 6px,rgba(255,0,0,.8) 10px);
-}
-
-.day.today{
-outline:3px solid var(--accent);
-}
-
-/* SUMMARY */
-.summary{
-background:white;
-padding:12px;
-border-top:1px solid #ddd;
-flex:1 1 auto;
-min-height:0;
-overflow-y:auto;
-margin-top:0;
-}
-
-.legend{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-margin-bottom:6px;
-font-size:11px;
-}
-
-.legend-item{
-display:flex;
-align-items:center;
-gap:4px;
-}
-
-.dot{
-width:12px;
-height:12px;
-border-radius:3px;
-}
-
-.stats{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:4px;
-font-size:12px;
-}
-
-.stat-card{
-background:#f7f9fb;
-padding:6px 8px;
-border-radius:8px;
-text-align:center;
-border-left:4px solid var(--primary);
-transition:.2s ease;
-min-height:auto;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.stat-card:hover{
-background:#e3f2fd;
-box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-.stat-card b{
-font-size:14px;
-color:var(--primary);
-margin-left:4px;
-font-weight:700;
-}
-
-.office-progress {
-background:linear-gradient(135deg, #4caf50, #45a049);
-color:white;
-padding:8px 10px;
-border-radius:8px;
-margin-bottom:4px;
-font-size:12px;
-font-weight:600;
-text-align:center;
-box-shadow:0 2px 8px rgba(76, 175, 80, 0.2);
-transition:.2s ease;
-cursor:pointer;
-line-height:1.3;
-}
-
-.office-progress:hover {
-box-shadow:0 4px 14px rgba(76, 175, 80, 0.35);
-transform:translateY(-1px);
-}
-
-.stat-overview{
-font-size:12px;
-font-weight:600;
-margin-bottom:4px;
-color:var(--text);
-padding:6px 10px;
-border-radius:8px;
-background:linear-gradient(135deg, #e3f2fd, #f3e5f5);
-transition:.2s ease;
-cursor:pointer;
-user-select:none;
-line-height:1.3;
-}
-
-.stat-overview:hover {
-background:linear-gradient(135deg, #bbdefb, #e1bee7);
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* PROFILE PAGE */
-.profile-page{
-display:none;
-padding:16px;
-background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(241,247,255,0.97));
-min-height:calc(100vh - 80px);
-}
-
-.profile-page-card{
-background:white;
-border-radius:20px;
-padding:18px;
-box-shadow:0 12px 30px rgba(15,23,42,0.08);
-max-width:760px;
-margin:0 auto;
-}
-
-.profile-page-title{
-font-size:20px;
-font-weight:700;
-color:var(--text);
-}
-
-.profile-page-subtitle{
-font-size:13px;
-color:var(--text-light);
-margin-top:4px;
-}
-
-.profile-page-actions{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:14px;
-}
-
-.profile-view-grid{
-display:grid;
-gap:12px;
-}
-
-.profile-view-card{
-background:linear-gradient(135deg, #eff6ff, #f8fbff);
-border:1px solid #dbeafe;
-border-radius:14px;
-padding:14px;
-}
-
-.profile-avatar{
-width:84px;
-height:84px;
-border-radius:50%;
-object-fit:cover;
-border:3px solid var(--primary);
-margin-bottom:10px;
-}
-
-.profile-label{
-font-size:12px;
-font-weight:700;
-text-transform:uppercase;
-letter-spacing:0.04em;
-color:var(--text-light);
-margin-bottom:4px;
-}
-
-.profile-value{
-font-size:15px;
-font-weight:600;
-color:var(--text);
-margin-bottom:10px;
-word-break:break-word;
-}
-
-.profile-edit-grid{
-display:grid;
-gap:12px;
-}
-
-.profile-photo-button{
-background:var(--primary);
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:999px;
-cursor:pointer;
-font-size:12px;
-font-weight:600;
-margin-top:8px;
-}
-
-.profile-reminder-card{
-background:linear-gradient(135deg, #eff6ff, #f8fbff);
-border:1px solid #dbeafe;
-border-radius:14px;
-padding:16px;
-margin-top:18px;
-}
-
-.reminder-list{
-margin-top:14px;
-}
-
-.reminder-item{
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:12px 14px;
-background:white;
-border:1px solid rgba(15,23,42,0.06);
-border-radius:12px;
-margin-bottom:10px;
-}
-
-.reminder-item strong{
-display:block;
-font-size:14px;
-margin-bottom:4px;
-}
-
-.reminder-item span{
-font-size:12px;
-color:var(--text-light);
-}
-
-.reminder-remove{
-background:transparent;
-border:none;
-color:var(--danger);
-cursor:pointer;
-font-size:14px;
-}
-
-.reminder-status{
-font-size:12px;
-font-weight:600;
-padding:4px 8px;
-border-radius:6px;
-display:inline-block;
-margin-top:6px;
-}
-
-.reminder-status-pending{
-background:#fff3cd;
-color:#856404;
-}
-
-.reminder-status-sent{
-background:#d4edda;
-color:#155724;
-}
-
-.reminder-upcoming{
-box-shadow:0 0 0 2px var(--primary);
-background:linear-gradient(135deg, rgba(25, 118, 210, 0.05), rgba(25, 118, 210, 0.02));
-}
-
-.reminder-empty{
-font-size:13px;
-color:var(--text-light);
-padding:10px 0;
-}
-
-/* REMINDER PAGE */
-.reminder-page{
-grid-column:1 / -1;
-padding:20px;
-overflow-y:auto;
-background:linear-gradient(135deg, #f4f6f8 0%, #eef4ff 100%);
-display:flex;
-flex-direction:column;
-align-items:center;
-}
-
-.reminder-page.show{
-display:flex;
-}
-
-.reminder-page-card{
-background:white;
-border-radius:16px;
-box-shadow:0 4px 20px rgba(15, 23, 42, 0.08);
-padding:24px;
-max-width:600px;
-width:100%;
-}
-
-.reminder-page-header{
-display:flex;
-justify-content:space-between;
-align-items:flex-start;
-margin-bottom:24px;
-}
-
-.reminder-page-title{
-font-size:24px;
-font-weight:700;
-color:var(--text);
-margin-bottom:8px;
-}
-
-.reminder-page-subtitle{
-font-size:14px;
-color:var(--text-light);
-}
-
-.reminder-form-section{
-background:linear-gradient(135deg, #eff6ff, #f8fbff);
-border:1px solid #dbeafe;
-border-radius:12px;
-padding:16px;
-margin-bottom:24px;
-}
-
-.reminder-list-section{
-margin-top:20px;
-}
-
-@media(max-width:767px){
-.reminder-page{
-padding:12px;
-}
-
-.reminder-page-card{
-padding:16px;
-}
-
-.reminder-page-header{
-flex-direction:column;
-gap:12px;
-}
-
-.reminder-page-header button{
-align-self:flex-start;
-}
-}
-
-/* NOTIFICATION MODAL */
-.notification-modal{
-position:fixed;
-left:50%;
-top:50%;
-transform:translate(-50%, -50%);
-background:white;
-padding:24px;
-border-radius:16px;
-box-shadow:0 10px 40px rgba(0,0,0,0.3);
-z-index:9999;
-max-width:90%;
-width:100%;
-max-width:400px;
-display:none;
-animation:slideInUp .3s ease-out;
-}
-
-.notification-modal.show{
-display:block;
-}
-
-@keyframes slideInUp{
-from{
-opacity:0;
-transform:translate(-50%, -30%);
-}
-to{
-opacity:1;
-transform:translate(-50%, -50%);
-}
-}
-
-.notification-modal-backdrop{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.4);
-z-index:9998;
-display:none;
-}
-
-.notification-modal-backdrop.show{
-display:block;
-}
-
-.notification-modal-icon{
-font-size:48px;
-text-align:center;
-margin-bottom:16px;
-}
-
-.notification-modal-title{
-font-size:20px;
-font-weight:700;
-color:var(--text);
-margin-bottom:12px;
-text-align:center;
-}
-
-.notification-modal-body{
-font-size:14px;
-color:var(--text-light);
-line-height:1.6;
-margin-bottom:20px;
-text-align:center;
-}
-
-.notification-modal-time{
-font-size:13px;
-color:var(--primary);
-font-weight:600;
-margin-bottom:20px;
-padding:12px;
-background:#f0f7ff;
-border-radius:8px;
-text-align:center;
-}
-
-.notification-modal-buttons{
-display:flex;
-gap:10px;
-justify-content:center;
-}
-
-.notification-modal-buttons button{
-padding:10px 20px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:600;
-font-size:14px;
-transition:.2s ease;
-}
-
-.notification-modal-btn-close{
-background:#f0f0f0;
-color:var(--text);
-flex:1;
-}
-
-.notification-modal-btn-close:hover{
-background:#e0e0e0;
-}
-
-.notification-modal-btn-ok{
-background:var(--primary);
-color:white;
-flex:1;
-}
-
-.notification-modal-btn-ok:hover{
-background:#1565c0;
-}
-
-#profilePagePhotoInput{
-display:none;
-}
-
-/* BOTTOM SHEET */
-.sheet{
-position:fixed;
-left:50%;
-top:50%;
-width:min(560px, calc(100vw - 24px));
-max-width:560px;
-background:white;
-border-radius:20px;
-padding:18px 18px 20px;
-transition:opacity .25s ease, transform .25s ease, visibility .25s ease;
-box-shadow:0 20px 55px rgba(0,0,0,.22);
-z-index:10;
-max-height:min(85vh, 760px);
-overflow-y:auto;
-transform:translate(-50%, 120%);
-visibility:hidden;
-opacity:0;
-}
-
-.sheet.show{
-transform:translate(-50%, -50%);
-opacity:1;
-visibility:visible;
-animation:none;
-}
-
-#registrationSheet,
-#connectSheetModal{
-width:min(480px, calc(100vw - 28px));
-padding:30px;
-border:1px solid #dfe5e8;
-border-radius:12px;
-box-shadow:0 28px 80px rgba(18,36,47,.22);
-}
-
-#registrationSheet .sheet-title,
-#connectSheetModal .sheet-title{
-margin:0 0 22px;
-color:#20312b;
-font-family:'Manrope','DM Sans',sans-serif;
-font-size:23px;
-text-align:left;
-}
-
-#registrationSheet .auth-mark,
-#connectSheetModal .auth-mark{
-width:42px;
-height:42px;
-margin-bottom:14px;
-border-radius:10px;
-font-size:14px;
-}
-
-#registrationSheet .form-group{margin-bottom:16px;}
-#registrationSheet .form-group label{margin-bottom:7px;color:#52645a;font-size:12px;}
-#registrationSheet .form-group input,
-#registrationSheet .form-group select{
-min-height:44px;
-padding:11px 12px;
-border-color:#d5dfd8;
-border-radius:7px;
-background:#fff;
-font-size:14px;
-}
-#registrationSheet .form-group input:focus,
-#registrationSheet .form-group select:focus{
-border-color:#398264;
-box-shadow:0 0 0 3px rgba(57,130,100,.14);
-}
-#registrationSheet .form-group input[readonly]{background:#f1f5f2;color:#63746a;}
-#registrationSheet .action-button{
-min-height:46px;
-border-radius:7px;
-transition:transform .16s ease,box-shadow .16s ease,background .16s ease;
-}
-#registrationSheet .action-button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 14px rgba(28,75,52,.14);}
-#registrationSheet .action-button:focus-visible{outline:3px solid rgba(57,130,100,.3);outline-offset:2px;}
-#registrationSheet .auth-status:empty{display:none;}
-#saveProfileContinueBtn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none;}
-#saveProfileContinueBtn.is-ready{animation:profileReady .22s ease-out;}
-
-@keyframes profileReady{from{transform:scale(.985)}to{transform:scale(1)}}
-
-.login-screen{
-display:none;
-position:fixed;
-inset:0;
-z-index:30;
-grid-template-columns:minmax(0,1fr) minmax(380px,.82fr);
-min-height:100vh;
-background:#f7f9f7;
-}
-
-.login-screen.show{display:grid;animation:loginArrive .35s ease-out both;}
-
-.login-brand-panel{
-position:relative;
-display:flex;
-align-items:flex-end;
-min-height:100vh;
-overflow:hidden;
-padding:clamp(36px,7vw,96px);
-background:#173f32;
-color:#fff;
-}
-
-.login-brand-panel::before{
-content:"";
-position:absolute;
-inset:0;
-background-image:linear-gradient(rgba(225,239,230,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(225,239,230,.055) 1px,transparent 1px);
-background-size:36px 36px;
-mask-image:linear-gradient(to bottom,transparent,black 35%);
-}
-
-.login-brand-content{position:relative;max-width:520px;}
-.login-brand-kicker{color:#b8d6c7;font-size:12px;font-weight:700;}
-.login-brand-title{margin:18px 0 24px;font-family:'Manrope','DM Sans',sans-serif;font-size:42px;line-height:1.12;font-weight:700;}
-.login-brand-rule{width:64px;height:3px;background:#e67a5e;}
-.login-brand-foot{margin-top:18px;color:#c8d9d0;font-size:13px;}
-
-.login-panel{display:grid;place-items:center;padding:48px;}
-.login-panel-inner{width:min(100%,380px);}
-.login-panel-brand{display:flex;align-items:center;gap:10px;margin-bottom:54px;color:#176b4a;font-size:13px;font-weight:700;}
-.login-panel-brand .brand-mark{width:34px;height:34px;background:#176b4a;}
-.login-kicker{color:#78867f;font-size:11px;font-weight:700;}
-.login-panel-title{margin-top:10px;color:#20312b;font-family:'Manrope','DM Sans',sans-serif;font-size:30px;font-weight:700;}
-.login-panel-copy{margin:8px 0 26px;color:#65736d;font-size:14px;line-height:1.5;}
-.google-login-fallback{
-width:100%;
-min-height:46px;
-border:1px solid #d7dfda;
-border-radius:6px;
-background:#fff;
-color:#35453d;
-font:600 14px 'DM Sans',sans-serif;
-}
-.google-login-fallback:disabled{color:#738078;background:#eef1ef;cursor:not-allowed;}
-#googleSignInButton{min-height:46px;}
-.login-panel .auth-status{margin-top:14px;color:#8c5545;}
-
-@keyframes loginArrive{from{opacity:0}to{opacity:1}}
-
-.auth-mark{
-width:48px;
-height:48px;
-display:grid;
-place-items:center;
-margin-bottom:20px;
-border-radius:12px;
-background:#e5f2ec;
-color:#176b4a;
-font-size:20px;
-font-weight:800;
-}
-
-.auth-copy{
-margin:8px 0 24px;
-color:#617079;
-font-size:14px;
-line-height:1.6;
-}
-
-.auth-status{
-min-height:22px;
-margin-top:14px;
-color:#617079;
-font-size:13px;
-line-height:1.5;
-}
-
-.auth-divider{
-height:1px;
-margin:22px 0 16px;
-background:#e5eaec;
-}
-
-.auth-note{
-color:#69767d;
-font-size:12px;
-line-height:1.55;
-}
-
-@media(max-width:520px){
-  #registrationSheet,
-  #connectSheetModal{padding:24px 20px;}
-}
-
-@media(max-width:760px){
-  .login-screen{grid-template-columns:1fr;grid-template-rows:auto 1fr;}
-  .login-brand-panel{min-height:0;padding:24px 28px 22px;}
-  .login-brand-title{margin:12px 0 14px;font-size:27px;}
-  .login-brand-foot{display:none;}
-  .login-panel{padding:36px 28px;}
-  .login-panel-brand{margin-bottom:34px;}
-}
-
-@keyframes slideUp{
-from{
-opacity:0;
-transform:translateY(20px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
-.sheet-title{
-font-weight:700;
-margin-bottom:15px;
-text-align:center;
-font-size:16px;
-}
-
-.form-group{
-margin-bottom:12px;
-}
-
-.form-group label{
-display:block;
-margin-bottom:4px;
-font-size:13px;
-font-weight:600;
-color:var(--text-light);
-}
-
-.form-group input,
-.form-group select{
-width:100%;
-padding:10px;
-border:1px solid #ddd;
-border-radius:6px;
-font-size:13px;
-transition:.2s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus{
-outline:none;
-border-color:var(--primary);
-box-shadow:0 0 0 3px rgba(25, 118, 210, 0.1);
-}
-
-.form-row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-}
-
-.action-button{
-width:100%;
-padding:12px;
-margin:8px 0;
-border:none;
-border-radius:8px;
-font-size:14px;
-font-weight:600;
-cursor:pointer;
-transition:.2s ease;
-}
-
-.action-button:hover{
-transform:translateY(-2px);
-box-shadow:0 4px 12px rgba(0,0,0,0.15);
-}
-
-.action-button:active{
-transform:translateY(0);
-}
-
-.btn-primary{
-background:var(--primary);
-color:white;
-}
-
-.btn-success{
-background:var(--success);
-color:white;
-}
-
-.btn-office{
-background:var(--success);
-color:white;
-}
-
-.btn-home{
-background:var(--primary);
-color:white;
-}
-
-.btn-holiday{
-background:var(--warning);
-}
-
-.btn-leave{
-background:#ffca28;
-}
-
-.btn-danger{
-background:var(--danger);
-color:white;
-}
-
-.btn-secondary{
-background:#999;
-color:white;
-}
-
-/* NAVIGATION DRAWER */
-.drawer-overlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.45);
-display:none;
-z-index:8;
-}
-
-.drawer-overlay.show{
-display:block;
-}
-
-.drawer{
-position:fixed;
-top:0;
-right:0;
-bottom:0;
-left:auto;
-width:320px;
-max-width:88vw;
-background:linear-gradient(180deg,#111f35,#17293f);
-color:white;
-transform:translateX(100%);
-transition:transform .28s ease, box-shadow .28s ease;
-z-index:9;
-box-shadow:-24px 0 60px rgba(0,0,0,.32);
-overflow-y:auto;
-}
-
-.drawer.show{
-transform:translateX(0);
-}
-
-.drawer-header{
-background:rgba(255,255,255,.08);
-color:white;
-padding:20px;
-font-size:18px;
-font-weight:700;
-}
-
-.drawer-menu{
-padding:16px 0;
-}
-
-.drawer-item{
-padding:14px 18px;
-border-radius:16px;
-cursor:pointer;
-display:flex;
-align-items:center;
-gap:14px;
-font-size:15px;
-transition:background .2s ease, transform .2s ease;
-}
-
-.drawer-item:hover{
-background:rgba(255,255,255,0.08);
-transform:translateX(-2px);
-}
-
-.drawer-item-icon{
-font-size:18px;
-width:38px;
-height:38px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:rgba(255,255,255,0.08);
-border-radius:12px;
-}
-
-/* PROFILE SHEET */
-.profile-photo-container{
-text-align:center;
-margin-bottom:15px;
-}
-
-.profile-photo{
-width:120px;
-height:120px;
-border-radius:50%;
-object-fit:cover;
-border:3px solid var(--primary);
-margin:0 auto;
-display:block;
-}
-
-.photo-upload-btn{
-background:var(--primary);
-color:white;
-border:none;
-padding:8px 16px;
-border-radius:20px;
-cursor:pointer;
-font-size:12px;
-margin-top:10px;
-display:inline-block;
-}
-
-#profilePhotoInput{
-display:none;
-}
-
-/* MODAL */
-.backdrop{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.4);
-display:none;
-z-index:5;
-transition:.2s ease;
-}
-
-.backdrop.show{
-display:block;
-animation:fadeIn .2s ease;
-}
-
-@keyframes fadeIn{
-from{
-opacity:0;
-}
-to{
-opacity:1;
-}
-}
-
-.modal{
-position:fixed;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 4px 20px rgba(0,0,0,.3);
-z-index:11;
-max-width:90%;
-max-height:80vh;
-overflow-y:auto;
-display:none;
-transition:.3s ease;
-}
-
-.modal.show{
-display:block;
-animation:zoomIn .3s ease;
-}
-
-@keyframes zoomIn{
-from{
-opacity:0;
-transform:translate(-50%,-50%) scale(0.95);
-}
-to{
-opacity:1;
-transform:translate(-50%,-50%) scale(1);
-}
-}
-
-/* RESPONSIVE */
-@media(min-width:768px){
-body{
-padding:24px;
-}
-
-.container{
-min-height:calc(100vh - 48px);
-border:1px solid rgba(15,23,42,0.06);
-border-radius:24px;
-box-shadow:0 20px 60px rgba(15,23,42,0.08);
-display:grid;
-grid-template-columns:1fr 1fr;
-grid-template-rows:auto 1fr;
-}
-
-.header {
-justify-content:space-between;
-flex-wrap:nowrap;
-grid-column:1 / -1;
-width:100%;
-}
-
-.header-menu {
-display:flex;
-margin-left:auto;
-margin-right:0;
-flex:1 1 auto;
-justify-content:flex-end;
-}
-
-.header-left {
-flex:0 0 auto;
-}
-
-.header-buttons {
-margin-left:0;
-}
-
-.icon-btn#drawerBtn {
-display:none;
-}
-
-.calendar-area{
-grid-column:1;
-border-right:1px solid #e2e8f0;
-padding:20px 22px 24px;
-}
-
-.summary{
-grid-column:2;
-max-height:none;
-padding:18px 20px 22px;
-background:linear-gradient(180deg,#fbfdff 0%, #f7faff 100%);
-}
-
-.day{
-min-height:72px;
-font-size:14px;
-}
-
-.stats{
-grid-template-columns:repeat(2,1fr);
-}
-
-.drawer{
-width:360px;
-}
-} 
-
-@media(min-width:1024px){
-.calendar-area{
-padding:24px 28px 28px;
-}
-
-.summary{
-padding:22px 24px 28px;
-}
-
-.period-controls{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-margin:10px 0 12px;
-}
-
-.period-control{
-display:flex;
-align-items:center;
-gap:6px;
-font-size:13px;
-color:var(--text-light);
-}
-
-.period-control input{
-width:78px;
-padding:6px 8px;
-border:1px solid #d0d0d0;
-border-radius:8px;
-font-size:13px;
-}
-
-.period-control button{
-padding:7px 10px;
-border:none;
-border-radius:8px;
-background:var(--primary);
-color:white;
-cursor:pointer;
-font-size:13px;
-}
-
-.period-control button.secondary{
-background:#e0e0e0;
-color:var(--text-dark);
-}
-
-.inline-edit-btn{
-margin-left:4px;
-padding:0;
-border:none;
-outline:none;
-box-shadow:none;
-background:transparent;
-color:var(--primary);
-cursor:pointer;
-font-size:10px;
-line-height:1;
-appearance:none;
--webkit-appearance:none;
-}
-
-.inline-edit-btn:hover,
-.inline-edit-btn:focus,
-.inline-edit-btn:active{
-outline:none;
-box-shadow:none;
-background:transparent;
-}
-
-.day{
-min-height:84px;
-font-size:15px;
-}
-
-.sheet{
-width:min(620px, calc(100vw - 40px));
-padding:22px 24px 24px;
-}
-
-.drawer{
-width:380px;
-}
-}
-
-:root{
---primary:#176b4a;
---accent:#e67a5e;
---success:#26845e;
---warning:#f2c66d;
---danger:#c94e4e;
---bg:#edf1ed;
---card:#ffffff;
---text:#20312b;
---text-light:#65736d;
-}
-
-body{
-background-color:#e9efea;
-background-image:linear-gradient(rgba(23,107,74,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(23,107,74,.025) 1px,transparent 1px);
-background-size:28px 28px;
-}
-
-.container{
-background:#f8faf8;
-}
-
-.header{
-background:#173f32;
-box-shadow:0 8px 24px rgba(20,52,41,.14);
-}
-
-.header-title{font-size:17px;}
-.header-subtitle{color:#c8d9d0;}
-.menu-item{border-radius:6px;}
-.header-title,.calendar-heading-title,.sheet-title{font-family:'Manrope','DM Sans',sans-serif;}
-.brand-mark{
-width:40px;
-height:40px;
-display:grid;
-place-items:center;
-flex:none;
-border:1px solid rgba(255,255,255,.24);
-border-radius:9px;
-background:#28664f;
-color:#fff;
-font-size:13px;
-font-weight:800;
-}
-
-.calendar-area{
-padding:20px 16px 18px;
-background:#f8faf8;
-}
-
-.calendar-heading{
-display:flex;
-align-items:flex-end;
-justify-content:space-between;
-gap:12px;
-margin:0 0 18px;
-}
-
-.calendar-heading-label{
-color:#65736d;
-font-size:11px;
-font-weight:700;
-text-transform:uppercase;
-}
-
-.calendar-heading-title{
-margin-top:4px;
-color:#20312b;
-font-size:21px;
-font-weight:700;
-}
-
-.calendar-area .nav-controls{margin-bottom:12px;}
-.calendar-area .nav-btn{
-background:#e4eee8;
-color:#176b4a;
-border:1px solid #d1e0d7;
-}
-.calendar-area .nav-btn:hover{background:#d7e8dd;box-shadow:none;}
-.month-title{color:#20312b;}
-.weekdays{color:#78867f;font-size:11px;text-transform:uppercase;}
-.calendar{gap:6px;}
-.day{
-min-height:56px;
-border-color:#e1e8e3;
-border-radius:7px;
-color:#32443b;
-}
-.day.home{border-color:#d9dee3;color:#315b9d;background:#f8f9fa;}
-.day.weekend{border-color:#e0a800;background:#fbc02d;color:#493900;}
-.day.holiday{border-color:#e0a800;background:#fbc02d;color:#493900;}
-.day.leave{
-background:repeating-linear-gradient(-45deg,#fbc02d,#fbc02d 7px,#e53935 7px,#e53935 10px);
-color:#493900;
-}
-.day.noShowHome{background:#e53935;color:#fff;}
-.day.noShowOffice{background:#4caf50;color:#fff;}
-.day.today{outline:2px solid var(--accent);outline-offset:1px;}
-
-.summary{
-background:#f2f6f2;
-border-top:1px solid #dfe7e1;
-padding:16px;
-}
-.legend{gap:12px;color:#57675f;}
-.office-progress{
-background:#176b4a;
-border-radius:7px;
-padding:12px;
-text-align:left;
-box-shadow:none;
-}
-.stat-overview{
-display:grid;
-grid-template-columns:repeat(2,minmax(0,1fr));
-gap:6px;
-margin-bottom:4px;
-padding:0;
-background:transparent;
-border:0;
-}
-.stat-overview:hover{background:transparent;box-shadow:none;}
-.period-stat-tag{
-position:relative;
-display:flex;
-min-width:0;
-min-height:38px;
-align-items:center;
-justify-content:space-between;
-gap:4px;
-padding:6px 24px 6px 8px;
-border:1px solid #d7e3db;
-border-radius:7px;
-background:#e5eee8;
-color:#20312b;
-white-space:nowrap;
-}
-.period-stat-label{
-font-size:12px;
-font-weight:600;
-color:#65736d;
-}
-.period-stat-value{
-font-size:10px;
-font-weight:700;
-line-height:1.2;
-}
-.period-stat-detail{
-font-size:9px;
-line-height:1.2;
-}
-.period-stat-tag .inline-edit-btn{
-position:absolute;
-top:50%;
-right:5px;
-margin:0;
-font-size:11px;
-transform:translateY(-50%);
-}
-.stats{gap:8px;}
-.stat-card{
-min-height:42px;
-padding:7px 8px;
-background:#fff;
-border:1px solid #e0e8e2;
-border-left:3px solid #4b9876;
-border-radius:7px;
-color:#53635b;
-}
-.stat-card:hover{background:#fff;box-shadow:0 4px 12px rgba(25,60,43,.07);}
-.stat-card b{color:#176b4a;}
-
-#backdrop{background:rgba(15,31,24,.62);backdrop-filter:blur(3px);}
-
-@media(min-width:768px){
-  .container{grid-template-columns:minmax(0,1.08fr) minmax(340px,.92fr);}
-  .calendar-area{padding:24px 28px 26px;}
-  .summary{padding:26px 28px;}
-  .day{min-height:66px;}
-}
-
-@media(max-width:767px){
-  .calendar-heading-title{font-size:19px;}
-  .calendar-area{padding:18px 12px 14px;}
-  .day{min-height:46px;}
-}
-
-</style>
+<link rel="stylesheet" href="index.css">
 
 </head>
 <body>
@@ -1709,6 +80,45 @@ color:#53635b;
         <button class="action-button btn-primary" id="connectPersonalSheetFromProfileBtn" onclick="openPersonalSheetSetup()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Connect personal sheet</button>
         <button class="action-button btn-secondary" id="reconnectSheetBtn" onclick="reconnectPersonalSheet()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Reconnect Google Drive</button>
       </div>
+
+      <!-- Location view cards -->
+      <div class="profile-view-card" id="locationViewCard">
+        <div class="location-section-header"><span>📍</span> Smart Location</div>
+        <!-- Office -->
+        <div class="location-card" id="officeLocViewCard">
+          <div class="location-card-header">
+            <div class="location-pin office-pin">🏢</div>
+            <div>
+              <div class="location-card-title">Office Location</div>
+              <div class="location-card-subtitle" id="officeLocViewSub">Not set — tap Edit to configure</div>
+            </div>
+          </div>
+          <div class="location-set-display" id="officeLocSetDisplay" style="display:none;">
+            <span style="font-size:20px;">📍</span>
+            <div>
+              <div class="loc-name" id="officeLocViewName">—</div>
+              <div class="loc-coords" id="officeLocViewCoords"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Home -->
+        <div class="location-card home-card" id="homeLocViewCard">
+          <div class="location-card-header">
+            <div class="location-pin home-pin">🏠</div>
+            <div>
+              <div class="location-card-title">Home Location</div>
+              <div class="location-card-subtitle" id="homeLocViewSub">Not set — tap Edit to configure</div>
+            </div>
+          </div>
+          <div class="location-set-display" id="homeLocSetDisplay" style="display:none;">
+            <span style="font-size:20px;">📍</span>
+            <div>
+              <div class="loc-name" id="homeLocViewName">—</div>
+              <div class="loc-coords" id="homeLocViewCoords"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="profilePageEditSection" class="profile-edit-grid" style="display:none;">
@@ -1762,7 +172,179 @@ color:#53635b;
         </div>
       </div>
       <button class="action-button btn-success" onclick="saveProfilePage()">Save Changes</button>
+
+      <!-- Location edit section -->
+      <div style="margin-top:4px;">
+        <div class="location-section-header"><span>📍</span> Smart Location</div>
+
+        <!-- OFFICE -->
+        <div class="location-card" id="officeLocEditCard">
+          <div class="location-card-header">
+            <div class="location-pin office-pin">🏢</div>
+            <div>
+              <div class="location-card-title">Office Location</div>
+              <div class="location-card-subtitle">Used to auto-detect when you arrive at work</div>
+            </div>
+          </div>
+          <div class="location-set-display" id="officeLocEditDisplay" style="display:none;">
+            <span style="font-size:18px;">✅</span>
+            <div style="flex:1;">
+              <div class="loc-name" id="officeLocEditName">—</div>
+              <div class="loc-coords" id="officeLocEditCoords"></div>
+            </div>
+          </div>
+          <div class="location-not-set" id="officeLocNotSet">No office location saved yet.</div>
+          <div class="location-search-wrap">
+            <input class="location-search-input" id="officeLocSearch" type="text" placeholder="Search office address or name…" oninput="onLocSearch(event,'office')" autocomplete="off" />
+            <div class="location-search-spinner" id="officeLocSpinner"></div>
+            <div class="location-autocomplete" id="officeLocDrop"></div>
+          </div>
+          <div class="loc-actions">
+            <button class="loc-btn loc-btn-current" onclick="useCurrentLocation('office')">📡 Use Current Location</button>
+            <button class="loc-btn loc-btn-clear" id="officeLocClearBtn" onclick="clearLocation('office')" style="display:none;">✕ Clear</button>
+          </div>
+          <div class="radius-wrap">
+            <div class="radius-label">Detection radius: <span id="officeRadiusLabel">200 m</span></div>
+            <input class="radius-slider" id="officeRadiusSlider" type="range" min="50" max="1000" step="50" value="200" oninput="onRadiusChange(this,'office')" />
+          </div>
+        </div>
+
+        <!-- HOME -->
+        <div class="location-card home-card" id="homeLocEditCard">
+          <div class="location-card-header">
+            <div class="location-pin home-pin">🏠</div>
+            <div>
+              <div class="location-card-title">Home Location</div>
+              <div class="location-card-subtitle">Used to auto-detect when you're working from home</div>
+            </div>
+          </div>
+          <div class="location-set-display" id="homeLocEditDisplay" style="display:none;">
+            <span style="font-size:18px;">✅</span>
+            <div style="flex:1;">
+              <div class="loc-name" id="homeLocEditName">—</div>
+              <div class="loc-coords" id="homeLocEditCoords"></div>
+            </div>
+          </div>
+          <div class="location-not-set" id="homeLocNotSet">No home location saved yet.</div>
+          <div class="location-search-wrap">
+            <input class="location-search-input" id="homeLocSearch" type="text" placeholder="Search home address…" oninput="onLocSearch(event,'home')" autocomplete="off" />
+            <div class="location-search-spinner" id="homeLocSpinner"></div>
+            <div class="location-autocomplete" id="homeLocDrop"></div>
+          </div>
+          <div class="loc-actions">
+            <button class="loc-btn loc-btn-current home-card" onclick="useCurrentLocation('home')">📡 Use Current Location</button>
+            <button class="loc-btn loc-btn-clear" id="homeLocClearBtn" onclick="clearLocation('home')" style="display:none;">✕ Clear</button>
+          </div>
+          <div class="radius-wrap">
+            <div class="radius-label">Detection radius: <span id="homeRadiusLabel">200 m</span></div>
+            <input class="radius-slider home-card" id="homeRadiusSlider" type="range" min="50" max="1000" step="50" value="200" oninput="onRadiusChange(this,'home')" />
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- SETUP WIZARD -->
+<div class="setup-wizard-overlay" id="setupWizard">
+  <div class="setup-wizard-sheet">
+    <!-- Step progress dots -->
+    <div class="wizard-steps-track">
+      <div class="wizard-step-dot active" id="wdot0"></div>
+      <div class="wizard-step-dot" id="wdot1"></div>
+      <div class="wizard-step-dot" id="wdot2"></div>
+      <div class="wizard-step-dot" id="wdot3"></div>
+    </div>
+
+    <!-- Step 0: Notifications permission -->
+    <div class="wizard-slide active" id="wslide0">
+      <div class="wizard-icon">🔔</div>
+      <div class="wizard-title">Stay on top of attendance</div>
+      <div class="wizard-sub">Get a smart reminder exactly when your workday starts — right in your notification tray, even when the app is closed.</div>
+      <div class="wizard-perm-box">
+        <div class="wizard-perm-icon">💡</div>
+        <div class="wizard-perm-text">
+          <strong>Why we need this</strong>
+          We'll send one notification per workday at your office start time. No spam, no tracking.
+        </div>
+      </div>
+      <div class="wizard-notif-status" id="wizardNotifStatus">
+        <span>⏳</span> Notification permission not yet requested
+      </div>
+      <div class="wizard-actions">
+        <button class="wizard-btn-primary" id="wizardNotifBtn" onclick="wizardRequestNotifPermission()">🔔 Allow Notifications</button>
+        <button class="wizard-btn-skip" onclick="wizardNextStep()">Skip</button>
+      </div>
+    </div>
+
+    <!-- Step 1: Office start time -->
+    <div class="wizard-slide" id="wslide1">
+      <div class="wizard-icon">🕐</div>
+      <div class="wizard-title">When does your workday start?</div>
+      <div class="wizard-sub">We'll send your attendance reminder at this exact time, Monday to Friday.</div>
+      <div class="wizard-field-label">Office Start Time</div>
+      <select class="wizard-input wizard-select" id="wizardInTime">
+        <option value="">Select time…</option>
+      </select>
+      <div class="wizard-field-label" style="margin-top:14px;">Office End Time (optional)</div>
+      <select class="wizard-input wizard-select" id="wizardOutTime">
+        <option value="">Select time…</option>
+      </select>
+      <div class="wizard-actions">
+        <button class="wizard-btn-primary" id="wizardTimeContinueBtn" onclick="wizardSaveTime()" disabled>Continue →</button>
+        <button class="wizard-btn-skip" onclick="wizardNextStep()">Skip</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Office location -->
+    <div class="wizard-slide" id="wslide2">
+      <div class="wizard-icon">🏢</div>
+      <div class="wizard-title">Where's your office?</div>
+      <div class="wizard-sub">Search by name or use your current GPS location. We'll notify you automatically when you arrive.</div>
+      <div class="wizard-field-label">Search or detect office location</div>
+      <div class="wizard-loc-row">
+        <input class="wizard-input wizard-loc-search" id="wizardOfficeSearch" type="text"
+          placeholder="e.g. ANZ Bank, Tower 1…" oninput="wizardLocSearch(event,'office')" autocomplete="off" />
+        <button class="wizard-loc-btn" onclick="wizardUseGPS('office')" title="Use current location">📡</button>
+      </div>
+      <div class="wizard-autocomplete" id="wizardOfficeDrop"></div>
+      <div class="wizard-loc-status" id="wizardOfficeStatus">📍 No location set yet</div>
+      <div class="wizard-actions">
+        <button class="wizard-btn-primary" id="wizardOfficeContinueBtn" onclick="wizardNextStep()">Continue →</button>
+        <button class="wizard-btn-skip" onclick="wizardNextStep()">Skip</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Home location -->
+    <div class="wizard-slide" id="wslide3">
+      <div class="wizard-icon">🏠</div>
+      <div class="wizard-title">Work from home sometimes?</div>
+      <div class="wizard-sub">Set your home location and we'll auto-suggest "Work from Home" when you open the app from there. Totally optional.</div>
+      <div class="wizard-field-label">Search or detect home location</div>
+      <div class="wizard-loc-row">
+        <input class="wizard-input wizard-loc-search" id="wizardHomeSearch" type="text"
+          placeholder="Your home address…" oninput="wizardLocSearch(event,'home')" autocomplete="off" />
+        <button class="wizard-loc-btn" onclick="wizardUseGPS('home')" title="Use current location">📡</button>
+      </div>
+      <div class="wizard-autocomplete" id="wizardHomeDrop"></div>
+      <div class="wizard-loc-status" id="wizardHomeStatus">📍 No location set yet</div>
+      <div class="wizard-actions">
+        <button class="wizard-btn-primary" onclick="wizardFinish()">✅ All Done!</button>
+        <button class="wizard-btn-skip" onclick="wizardFinish()">Skip</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- GEOFENCE BANNER -->
+<div class="geofence-banner" id="geofenceBanner">
+  <div class="geofence-banner-icon" id="geofenceBannerIcon">🏢</div>
+  <div class="geofence-banner-title" id="geofenceBannerTitle">You're at the office!</div>
+  <div class="geofence-banner-sub" id="geofenceBannerSub">Mark your attendance for today?</div>
+  <div class="geofence-banner-actions">
+    <button class="geofence-confirm-btn" id="geofenceConfirmBtn" onclick="geofenceMarkAttendance()">✅ Mark Office</button>
+    <button class="geofence-dismiss-btn" onclick="dismissGeofenceBanner(false)">⏰ Later</button>
   </div>
 </div>
 
@@ -2107,6 +689,28 @@ let manualPeriodOverrides = { quarter: null, year: null };
 let auth = { signOut: signOutGoogle };
 
 // ===== GOOGLE AUTH =====
+
+/**
+ * Save the user's identity (non-sensitive) separately from the short-lived token.
+ * This lets us attempt a silent re-auth on next open without showing the login UI.
+ */
+function saveGoogleUserInfo(claims) {
+  const info = {
+    sub: claims.sub,
+    email: claims.email,
+    name: claims.name || '',
+    picture: claims.picture || ''
+  };
+  localStorage.setItem('googleUserInfo', JSON.stringify(info));
+}
+
+function getGoogleUserInfo() {
+  try {
+    const raw = localStorage.getItem('googleUserInfo');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 function initializeAuth() {
   hideApp();
   showLoginSheet();
@@ -2128,6 +732,8 @@ function initializeAuth() {
     google.accounts.id.initialize({
       client_id: GOOGLE_OAUTH_CLIENT_ID,
       callback: handleGoogleCredentialResponse,
+      // auto_select: silently re-issues a fresh token when the Google browser
+      // session (cookies) is still alive — no user interaction needed.
       auto_select: true
     });
     google.accounts.id.renderButton(document.getElementById('googleSignInButton'), {
@@ -2141,11 +747,28 @@ function initializeAuth() {
 
     const restoredClaims = restoreGoogleSession();
     if (restoredClaims) {
+      // Token is still valid — restore immediately.
       document.getElementById('loginSheet').classList.remove('show');
       checkAndShowRegistration(restoredClaims.sub);
       scheduleGoogleTokenRefresh(restoredClaims);
     } else {
-      google.accounts.id.prompt();
+      // Token missing or expired. Check whether we have a remembered identity.
+      // If yes, show a "resuming" hint and let One Tap silently refresh the token.
+      // If no, show the regular login sheet so the user can sign in manually.
+      const remembered = getGoogleUserInfo();
+      if (remembered) {
+        setLoginStatus(`Resuming session for ${remembered.email}…`);
+      }
+      // prompt() will fire handleGoogleCredentialResponse silently when
+      // auto_select is true and the Google browser session is still active.
+      // If the browser session has also expired, the One Tap UI will appear.
+      google.accounts.id.prompt((notification) => {
+        // If One Tap was suppressed (e.g. user previously dismissed it or
+        // the browser blocks it), fall back to showing the manual login sheet.
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          setLoginStatus('');
+        }
+      });
     }
   };
 
@@ -2161,11 +784,13 @@ function decodeGoogleCredential(credential) {
 
 function restoreGoogleSession() {
   try {
-    const credential = sessionStorage.getItem('googleIdToken');
+    const credential = localStorage.getItem('googleIdToken');
     if (!credential) return null;
     const claims = decodeGoogleCredential(credential);
-    if (!claims.sub || !claims.email || claims.aud !== GOOGLE_OAUTH_CLIENT_ID || claims.exp * 1000 <= Date.now() + 30000) {
-      sessionStorage.removeItem('googleIdToken');
+    // Reject if token is expired (allow 60 s buffer for clock skew).
+    // Even if rejected here, initializeAuth() will attempt a silent re-auth.
+    if (!claims.sub || !claims.email || claims.aud !== GOOGLE_OAUTH_CLIENT_ID || claims.exp * 1000 <= Date.now() + 60000) {
+      localStorage.removeItem('googleIdToken');
       return null;
     }
 
@@ -2179,19 +804,29 @@ function restoreGoogleSession() {
     localStorage.setItem('lastUserId', claims.sub);
     return claims;
   } catch (error) {
-    sessionStorage.removeItem('googleIdToken');
+    localStorage.removeItem('googleIdToken');
     return null;
   }
 }
 
 function scheduleGoogleTokenRefresh(claims) {
   if (googleTokenRefreshTimer) clearTimeout(googleTokenRefreshTimer);
-  const refreshDelay = claims.exp * 1000 - Date.now() - 60000;
+  // setTimeout max is ~24.8 days; cap the delay and re-schedule if needed.
+  const MS_MAX_TIMEOUT = 2147483647;
+  const refreshDelay = Math.min(claims.exp * 1000 - Date.now() - 60000, MS_MAX_TIMEOUT);
   if (refreshDelay <= 0) {
     google.accounts.id.prompt();
     return;
   }
-  googleTokenRefreshTimer = setTimeout(() => google.accounts.id.prompt(), refreshDelay);
+  // Re-schedule after the cap if the expiry is more than ~24 days away.
+  googleTokenRefreshTimer = setTimeout(() => {
+    const remaining = claims.exp * 1000 - Date.now() - 60000;
+    if (remaining > 0) {
+      scheduleGoogleTokenRefresh(claims); // still time left, re-schedule
+    } else {
+      google.accounts.id.prompt(); // time to refresh
+    }
+  }, refreshDelay);
 }
 
 async function handleGoogleCredentialResponse(response) {
@@ -2199,7 +834,10 @@ async function handleGoogleCredentialResponse(response) {
     const claims = decodeGoogleCredential(response.credential);
     if (!claims.sub || !claims.email) throw new Error('Google did not return a verified account.');
     googleIdToken = response.credential;
-    sessionStorage.setItem('googleIdToken', googleIdToken);
+    // Persist the token so the session survives browser restarts/tab closes.
+    localStorage.setItem('googleIdToken', googleIdToken);
+    // Also persist identity separately so silent re-auth works after token expiry.
+    saveGoogleUserInfo(claims);
     currentUser = {
       userId: claims.sub,
       email: claims.email,
@@ -2207,6 +845,7 @@ async function handleGoogleCredentialResponse(response) {
       picture: claims.picture || ''
     };
     localStorage.setItem('lastUserId', claims.sub);
+    // Schedule automatic silent refresh ~60 s before the token expires.
     scheduleGoogleTokenRefresh(claims);
     document.getElementById('loginSheet').classList.remove('show');
     await checkAndShowRegistration(claims.sub);
@@ -2226,7 +865,9 @@ function signOutGoogle() {
   googleIdToken = '';
   googleAccessToken = '';
   if (googleTokenRefreshTimer) clearTimeout(googleTokenRefreshTimer);
-  sessionStorage.removeItem('googleIdToken');
+  // Clear ALL persisted auth data on explicit logout so silent re-auth does not fire.
+  localStorage.removeItem('googleIdToken');
+  localStorage.removeItem('googleUserInfo');
   localStorage.removeItem('lastUserId');
   attendanceData = {};
   closeSheet();
@@ -2296,6 +937,8 @@ function buildScriptPayload(fields) {
 }
 
 function getLocalStorageUserProfile(userId) {
+  // User profile is only cached locally as a fallback (e.g. offline).
+  // The authoritative source is always the Google Sheet.
   try {
     const raw = localStorage.getItem(`userProfile_${userId}`);
     return raw ? JSON.parse(raw) : null;
@@ -2308,23 +951,21 @@ function setLocalStorageUserProfile(userId, userData) {
   localStorage.setItem(`userProfile_${userId}`, JSON.stringify(userData));
 }
 
+// Attendance is NOT cached in localStorage to avoid stale cross-device data.
+// Only pending (unsynced) writes are kept in localStorage via getPendingAttendance.
 function getLocalStorageAttendance(userId) {
-  try {
-    const raw = localStorage.getItem(`attendance_${userId}`);
-    return raw ? JSON.parse(raw) : {};
-  } catch (error) {
-    return {};
-  }
+  // Return only locally pending writes so they can be merged with fresh remote data.
+  return getPendingAttendance(userId);
 }
 
 function setLocalStorageAttendance(userId, data) {
-  localStorage.setItem(`attendance_${userId}`, JSON.stringify(data));
+  // No-op: we do not cache full attendance locally any more.
+  // Only pending writes are stored via setPendingAttendance.
 }
 
 function persistProfileLocally(userId, userData) {
   const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
   setLocalStorageUserProfile(uid, userData);
-  setLocalStorageAttendance(uid, attendanceData || {});
   localStorage.setItem('lastUserId', uid);
   userProfile = userData;
   return uid;
@@ -2514,6 +1155,16 @@ function finishProfileSetup() {
   showApp();
   loadAttendanceData(currentUser.userId);
   checkSaveLimit();
+  // Show setup wizard if user hasn't configured notifications/location yet
+  setTimeout(() => {
+    if (typeof shouldShowWizard === 'function' && shouldShowWizard()) {
+      showSetupWizard();
+    } else {
+      // Already set up — just re-schedule reminder (keeps SW timer alive across reloads)
+      scheduleAttendanceReminder();
+      setTimeout(runGeofenceCheck, 2000);
+    }
+  }, 1500);
 }
 
 function openPersonalSheetSetup() {
@@ -2749,11 +1400,13 @@ function clearPendingAttendanceDate(uid, date, status) {
 }
 
 async function syncAttendanceRecord(uid, date, status) {
+  // Personal sheet path: write directly, no DirtyDocs involvement.
   if (userProfile && userProfile.personalSpreadsheetId) {
     await writePersonalAttendance(date, status);
     return;
   }
 
+  // Central sheet path: saveAttendance also writes a DirtyDocs row (Synced=FALSE).
   const response = await fetch(googleScriptURL, {
     method: 'POST',
     body: buildScriptPayload({
@@ -2768,9 +1421,66 @@ async function syncAttendanceRecord(uid, date, status) {
   if (!response.ok || !result || !result.success) {
     throw new Error((result && result.data) || 'Google Sheets did not confirm the attendance save.');
   }
+
+  // Tell the sheet this entry is now confirmed on the client side (Synced=TRUE).
+  // Fire-and-forget: a failure here is non-critical (the Attendance data is already saved).
+  markSyncedOnServer(uid, date).catch(err =>
+    console.warn(`markSynced failed for ${date}:`, err)
+  );
+}
+
+/**
+ * Stamps Synced=TRUE / SyncedAt on the DirtyDocs row for this userId+date.
+ * Called after a successful saveAttendance so the sheet has a full audit trail.
+ */
+async function markSyncedOnServer(uid, date) {
+  if (!isGoogleScriptConfigured() || !googleIdToken) return;
+  await fetch(googleScriptURL, {
+    method: 'POST',
+    body: buildScriptPayload({ action: 'markSynced', userId: uid, date: date }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+  });
+}
+
+/**
+ * Fetches any DirtyDocs rows that are still Synced=FALSE on the server.
+ * This can happen if the app crashed after writing attendance but before markSynced.
+ * Merges those entries into the local pending queue so they get re-flushed.
+ */
+async function fetchServerDirtyDocs(uid) {
+  if (!isGoogleScriptConfigured() || !googleIdToken) return;
+  try {
+    const response = await fetch(googleScriptURL, {
+      method: 'POST',
+      body: buildScriptPayload({ action: 'getDirtyDocs', userId: uid }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+    const result = await response.json();
+    if (!result || !result.success || !Array.isArray(result.data)) return;
+
+    // Merge server-side unsynced entries into local pending queue.
+    const localPending = getPendingAttendance(uid);
+    let added = 0;
+    result.data.forEach(entry => {
+      if (entry.date && entry.status && !localPending[entry.date]) {
+        localPending[entry.date] = entry.status;
+        added++;
+      }
+    });
+    if (added > 0) {
+      setPendingAttendance(uid, localPending);
+      console.log(`Recovered ${added} unsynced entries from server DirtyDocs.`);
+    }
+  } catch (err) {
+    console.warn('Could not fetch server DirtyDocs:', err);
+  }
 }
 
 async function flushPendingAttendance(uid) {
+  // First, reconcile with the server's DirtyDocs — recover any entries the server
+  // recorded as unsynced (e.g. app crashed before markSynced was called).
+  await fetchServerDirtyDocs(uid);
+
   const pending = getPendingAttendance(uid);
   for (const [date, status] of Object.entries(pending)) {
     try {
@@ -2799,8 +1509,15 @@ async function retryAttendanceLoad() {
 
 async function loadAttendanceData(userId) {
   const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-  const localAttendance = getLocalStorageAttendance(uid);
+  // Only pending (unsynced) writes are kept locally — never a full attendance cache.
+  const pendingWrites = getPendingAttendance(uid);
   setCalendarLoading();
+
+  // Show any pending writes immediately so the calendar is not empty while loading.
+  if (Object.keys(pendingWrites).length > 0) {
+    attendanceData = { ...pendingWrites };
+    render();
+  }
 
   if (userProfile && userProfile.personalSpreadsheetId) {
     if (!googleAccessToken) {
@@ -2808,14 +1525,17 @@ async function loadAttendanceData(userId) {
         await requestPersonalSheetAccess('');
       } catch (error) {
         console.error('Google Drive access is required to load the personal attendance sheet:', error);
-        attendanceData = localAttendance;
+        // Show pending writes only as a fallback when offline.
+        attendanceData = { ...pendingWrites };
         render();
         setCalendarLoadError('Reconnect Google Drive on this device to load your saved attendance.', 'Reconnect Google Drive');
         return;
       }
     }
     try {
+      // Always flush pending writes before fetching so remote is up-to-date.
       const hasUnsyncedChanges = await flushPendingAttendance(uid);
+      // Fetch fresh data from the personal Google Sheet (source of truth).
       const result = await personalSheetRequest(
         `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(userProfile.personalSpreadsheetId)}/values/${encodeURIComponent('Attendance!A2:B')}`
       );
@@ -2823,8 +1543,8 @@ async function loadAttendanceData(userId) {
       (result.values || []).forEach(row => {
         if (row[0] && row[1]) remoteAttendance[row[0]] = row[1];
       });
-      attendanceData = { ...localAttendance, ...remoteAttendance, ...getPendingAttendance(uid) };
-      setLocalStorageAttendance(uid, attendanceData);
+      // Remote is authoritative; overlay any still-pending writes on top.
+      attendanceData = { ...remoteAttendance, ...getPendingAttendance(uid) };
       render();
       if (hasUnsyncedChanges) {
         setCalendarLoadError('Some attendance changes are still waiting to sync. Check your connection and retry.', 'Reconnect Google Drive');
@@ -2834,7 +1554,8 @@ async function loadAttendanceData(userId) {
       return;
     } catch (error) {
       console.error('Could not load personal attendance sheet:', error);
-      attendanceData = localAttendance;
+      // On error, show pending writes as best-effort display.
+      attendanceData = { ...pendingWrites };
       render();
       setCalendarLoadError('Could not load your Google Sheet. Check your connection and try again.', 'Reconnect Google Drive');
       return;
@@ -2842,14 +1563,17 @@ async function loadAttendanceData(userId) {
   }
 
   if (!isGoogleScriptConfigured()) {
-    attendanceData = localAttendance;
+    // No remote configured — show pending writes only.
+    attendanceData = { ...pendingWrites };
     render();
     clearCalendarLoading();
     return;
   }
 
   try {
+    // Always flush pending writes first so the sheet is up-to-date before we read.
     const hasUnsyncedChanges = await flushPendingAttendance(uid);
+    // Always fetch fresh data from Google Sheet — never rely on a local cache.
     const response = await fetch(googleScriptURL, {
       method: 'POST',
       body: buildScriptPayload({
@@ -2858,20 +1582,15 @@ async function loadAttendanceData(userId) {
       }),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
     });
-    
+
     const result = await response.json();
     if (!response.ok || !result || !result.success) {
       throw new Error((result && result.data) || 'The attendance sheet could not be loaded.');
     }
+    // Remote data is the single source of truth.
+    // Any still-pending writes are overlaid on top so they are reflected immediately.
     const remoteAttendance = result.data || {};
-
-    // Preserve local attendance edits when offline or before sync completes.
-    attendanceData = {
-      ...localAttendance,
-      ...remoteAttendance,
-      ...getPendingAttendance(uid)
-    };
-    setLocalStorageAttendance(uid, attendanceData);
+    attendanceData = { ...remoteAttendance, ...getPendingAttendance(uid) };
     render();
     if (hasUnsyncedChanges) {
       setCalendarLoadError('Some attendance changes are still waiting to sync. Check your connection and retry.');
@@ -2879,8 +1598,9 @@ async function loadAttendanceData(userId) {
       clearCalendarLoading();
     }
   } catch (error) {
-    console.error('Failed to load attendance:', error);
-    attendanceData = localAttendance;
+    console.error('Failed to load attendance from Google Sheets:', error);
+    // Network/server error — show only local pending writes as fallback.
+    attendanceData = { ...pendingWrites };
     render();
     setCalendarLoadError('Could not load attendance from Google Sheets. Check your connection and try again.');
   }
@@ -2915,11 +1635,12 @@ async function checkSaveLimit() {
 
 async function saveAttendance(date, status) {
   const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
+  // Optimistically update in-memory data and re-render immediately.
   attendanceData[date] = status;
-  setLocalStorageAttendance(uid, attendanceData);
   render();
 
   if (userProfile && userProfile.personalSpreadsheetId) {
+    // Mark as pending before attempting remote sync (survives page reload if sync fails).
     const pending = getPendingAttendance(uid);
     pending[date] = status;
     setPendingAttendance(uid, pending);
@@ -2929,11 +1650,12 @@ async function saveAttendance(date, status) {
       clearPendingAttendanceDate(uid, date, status);
     } catch (error) {
       console.error('Could not save attendance to the personal Google Sheet:', error);
-      alert('Your change is saved on this device but has not synced to your Google Sheet yet. It will be retried when attendance loads; do not clear this browser’s data until sync succeeds.');
+      alert('Your change is saved locally but has not synced to your Google Sheet yet. It will be retried on the next load.');
     }
     return;
   }
 
+  // Mark as pending before attempting remote sync.
   const pending = getPendingAttendance(uid);
   pending[date] = status;
   setPendingAttendance(uid, pending);
@@ -2943,7 +1665,7 @@ async function saveAttendance(date, status) {
     checkSaveLimit();
   } catch (error) {
     console.error('Could not sync attendance to Google Sheets:', error);
-    alert('Your change is saved on this device but has not synced to Google Sheets yet. It will be retried when attendance loads; do not clear this browser’s data until sync succeeds.');
+    alert('Your change is saved locally but has not synced to Google Sheets yet. It will be retried on the next load.');
   }
 }
 
@@ -3456,6 +2178,9 @@ function populateProfilePageView() {
     const previewEdit = document.getElementById('profilePagePhotoEdit');
     if (previewEdit) previewEdit.src = profile.profilePhoto;
   }
+  // Location view
+  renderLocViewCard('office', profile);
+  renderLocViewCard('home', profile);
 }
 
 function populateProfilePageForm() {
@@ -3482,6 +2207,9 @@ function populateProfilePageForm() {
   document.getElementById('profilePageOutTime').value = profile.outTime || '';
   const previewEdit = document.getElementById('profilePagePhotoEdit');
   if (previewEdit && profile.profilePhoto) previewEdit.src = profile.profilePhoto;
+  // Location edit state
+  renderLocEditCard('office', profile);
+  renderLocEditCard('home', profile);
 }
 
 function getStoredReminders() {
@@ -3752,7 +2480,16 @@ async function saveProfilePage() {
     outTime: document.getElementById('profilePageOutTime').value,
     profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
     personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
-    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
+    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false,
+    // Location fields — carry over from current profile (edit happens via loc buttons)
+    officeLat:    (userProfile && userProfile.officeLat)    || '',
+    officeLng:    (userProfile && userProfile.officeLng)    || '',
+    officeRadius: (userProfile && userProfile.officeRadius) || 200,
+    officeName:   (userProfile && userProfile.officeName)   || '',
+    homeLat:      (userProfile && userProfile.homeLat)      || '',
+    homeLng:      (userProfile && userProfile.homeLng)      || '',
+    homeRadius:   (userProfile && userProfile.homeRadius)   || 200,
+    homeName:     (userProfile && userProfile.homeName)     || ''
   };
 
   if (!userData.name || !userData.mobile || !currentUser) {
@@ -3986,6 +2723,497 @@ window.addEventListener('load', () => {
   loadReminders();
   initializeAuth();
 });
+
+// =====================================================================
+// SETUP WIZARD
+// =====================================================================
+
+const WIZARD_DONE_KEY = 'smart_setup_done';
+let _wizardStep = 0;
+let _wizardLocTimers = {};
+
+function shouldShowWizard() {
+  if (localStorage.getItem(WIZARD_DONE_KEY)) return false;
+  const p = userProfile || {};
+  return !p.inTime || !p.officeLat;
+}
+
+function showSetupWizard() {
+  _wizardStep = 0;
+  populateWizardTimeDropdowns();
+  prefillWizardFromProfile();
+  updateWizardDots(0);
+  document.querySelectorAll('.wizard-slide').forEach((s,i) => s.classList.toggle('active', i === 0));
+  updateWizardNotifStatus();
+  document.getElementById('setupWizard').classList.add('show');
+}
+
+function closeSetupWizard() {
+  document.getElementById('setupWizard').classList.remove('show');
+}
+
+function populateWizardTimeDropdowns() {
+  const times = [];
+  for (let h = 6; h <= 22; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const hh = String(h).padStart(2,'0');
+      const mm = String(m).padStart(2,'0');
+      const label = `${h > 12 ? h-12 : h}:${mm} ${h >= 12 ? 'PM' : 'AM'}`;
+      times.push(`<option value="${hh}:${mm}">${label}</option>`);
+    }
+  }
+  ['wizardInTime','wizardOutTime'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">Select time\u2026</option>' + times.join('');
+  });
+  const p = userProfile || {};
+  const inEl  = document.getElementById('wizardInTime');
+  const outEl = document.getElementById('wizardOutTime');
+  const conBtn = document.getElementById('wizardTimeContinueBtn');
+  if (p.inTime  && inEl)  inEl.value  = p.inTime;
+  if (p.outTime && outEl) outEl.value = p.outTime;
+  if (inEl) inEl.addEventListener('change', () => { if (conBtn) conBtn.disabled = !inEl.value; });
+  if (conBtn && p.inTime) conBtn.disabled = false;
+}
+
+function prefillWizardFromProfile() {
+  const p = userProfile || {};
+  if (p.officeLat && p.officeLng) {
+    const el = document.getElementById('wizardOfficeSearch');
+    if (el) el.value = p.officeName || '';
+    setWizardLocStatus('office', `\u2705 ${p.officeName||'Set'} (${parseFloat(p.officeLat).toFixed(4)}, ${parseFloat(p.officeLng).toFixed(4)})`, 'set');
+  }
+  if (p.homeLat && p.homeLng) {
+    const el = document.getElementById('wizardHomeSearch');
+    if (el) el.value = p.homeName || '';
+    setWizardLocStatus('home', `\u2705 ${p.homeName||'Set'} (${parseFloat(p.homeLat).toFixed(4)}, ${parseFloat(p.homeLng).toFixed(4)})`, 'set');
+  }
+}
+
+function updateWizardDots(step) {
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('wdot'+i);
+    if (!d) continue;
+    d.classList.remove('active','done');
+    if (i < step)  d.classList.add('done');
+    if (i === step) d.classList.add('active');
+  }
+}
+
+function wizardNextStep() {
+  _wizardStep = Math.min(_wizardStep + 1, 3);
+  document.querySelectorAll('.wizard-slide').forEach((s,i) => s.classList.toggle('active', i === _wizardStep));
+  updateWizardDots(_wizardStep);
+}
+
+function updateWizardNotifStatus() {
+  const status = document.getElementById('wizardNotifStatus');
+  const btn    = document.getElementById('wizardNotifBtn');
+  if (!status || !btn) return;
+  if (!('Notification' in window)) {
+    status.innerHTML = '<span>\u274c</span> Not supported in this browser';
+    status.className = 'wizard-notif-status denied'; btn.disabled = true; return;
+  }
+  if (Notification.permission === 'granted') {
+    status.innerHTML = '<span>\u2705</span> Notifications allowed!';
+    status.className = 'wizard-notif-status granted';
+    btn.textContent = '\u2705 Granted'; btn.disabled = true;
+  } else if (Notification.permission === 'denied') {
+    status.innerHTML = '<span>\ud83d\udeab</span> Denied \u2014 enable in device settings';
+    status.className = 'wizard-notif-status denied'; btn.disabled = true;
+  } else {
+    status.innerHTML = '<span>\u23f3</span> Not yet requested';
+    status.className = 'wizard-notif-status'; btn.disabled = false;
+  }
+}
+
+async function wizardRequestNotifPermission() {
+  const perm = await Notification.requestPermission();
+  updateWizardNotifStatus();
+  if (perm === 'granted') setTimeout(wizardNextStep, 800);
+}
+
+function wizardSaveTime() {
+  const inTime  = document.getElementById('wizardInTime').value;
+  const outTime = document.getElementById('wizardOutTime').value;
+  if (!inTime) return;
+  if (!userProfile) userProfile = {};
+  userProfile.inTime  = inTime;
+  userProfile.outTime = outTime;
+  if (currentUser) {
+    persistProfileLocally(currentUser.userId, userProfile);
+    syncProfileToRemote(currentUser.userId, userProfile).catch(() => {});
+  }
+  wizardNextStep();
+}
+
+function wizardLocSearch(event, type) {
+  const query  = event.target.value.trim();
+  const dropId = 'wizard' + (type === 'office' ? 'Office' : 'Home') + 'Drop';
+  const drop   = document.getElementById(dropId);
+  if (_wizardLocTimers[type]) clearTimeout(_wizardLocTimers[type]);
+  if (query.length < 3) { if (drop) drop.style.display = 'none'; return; }
+  _wizardLocTimers[type] = setTimeout(() => wizardSearchNominatim(query, type), 500);
+}
+
+async function wizardSearchNominatim(query, type) {
+  const dropId = 'wizard' + (type === 'office' ? 'Office' : 'Home') + 'Drop';
+  const drop   = document.getElementById(dropId);
+  if (!drop) return;
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`,
+      { headers: { 'Accept-Language': 'en' } });
+    const results = await res.json();
+    if (!results.length) {
+      drop.innerHTML = `<div class="wizard-autocomplete-item"><span>\ud83d\udd0d</span> No results</div>`;
+      drop.style.display = 'block'; return;
+    }
+    drop.innerHTML = results.map(r => {
+      const parts = r.display_name.split(', ');
+      const label = parts.slice(0,2).join(', ');
+      const sub   = parts.slice(2,4).join(', ');
+      return `<div class="wizard-autocomplete-item" onclick='wizardPickLoc(${r.lat},${r.lon},"${label.replace(/"/g,'&quot;')}","${type}")'>
+        <span>\ud83d\udccd</span><div><div style="font-weight:600">${label}</div><div style="font-size:11px;opacity:.6">${sub}</div></div></div>`;
+    }).join('');
+    drop.style.display = 'block';
+  } catch(e) { drop.style.display = 'none'; }
+}
+
+function wizardPickLoc(lat, lng, name, type) {
+  const drop = document.getElementById('wizard' + (type==='office'?'Office':'Home') + 'Drop');
+  if (drop) drop.style.display = 'none';
+  wizardSetLocation(type, parseFloat(lat), parseFloat(lng), name);
+}
+
+function wizardUseGPS(type) {
+  if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+  setWizardLocStatus(type, '\ud83d\udce1 Getting your location\u2026', 'loading');
+  navigator.geolocation.getCurrentPosition(
+    pos => wizardSetLocation(type, pos.coords.latitude, pos.coords.longitude, type==='office'?'My Office':'My Home'),
+    ()  => setWizardLocStatus(type, '\u274c Could not get location', ''),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function wizardSetLocation(type, lat, lng, name) {
+  if (!userProfile) userProfile = {};
+  userProfile[type+'Lat']  = lat;
+  userProfile[type+'Lng']  = lng;
+  userProfile[type+'Name'] = name;
+  if (!userProfile[type+'Radius']) userProfile[type+'Radius'] = 200;
+  setWizardLocStatus(type, `\u2705 ${name} (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'set');
+  const el = document.getElementById('wizard'+(type==='office'?'Office':'Home')+'Search');
+  if (el) el.value = name;
+  if (currentUser) {
+    persistProfileLocally(currentUser.userId, userProfile);
+    syncProfileToRemote(currentUser.userId, userProfile).catch(()=>{});
+  }
+  if (typeof renderLocViewCard === 'function') renderLocViewCard(type, userProfile);
+  if (typeof renderLocEditCard === 'function') renderLocEditCard(type, userProfile);
+}
+
+function setWizardLocStatus(type, msg, cls) {
+  const el = document.getElementById('wizard'+(type==='office'?'Office':'Home')+'Status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'wizard-loc-status ' + (cls||'');
+}
+
+function wizardFinish() {
+  localStorage.setItem(WIZARD_DONE_KEY, '1');
+  closeSetupWizard();
+  scheduleAttendanceReminder();
+  setTimeout(runGeofenceCheck, 1000);
+}
+
+// =====================================================================
+// SERVICE WORKER: push notification scheduling
+// =====================================================================
+
+function scheduleAttendanceReminder() {
+  if (!('serviceWorker' in navigator)) return;
+  const inTime = userProfile && userProfile.inTime;
+  if (!inTime || Notification.permission !== 'granted') return;
+  navigator.serviceWorker.ready.then(reg => {
+    if (reg.active) reg.active.postMessage({
+      type: 'SCHEDULE_ATTENDANCE_REMINDER',
+      inTime,
+      userId: currentUser && currentUser.userId
+    });
+  });
+}
+
+function cancelAttendanceReminder() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then(reg => {
+    if (reg.active) reg.active.postMessage({ type: 'CANCEL_ATTENDANCE_REMINDER' });
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data && event.data.type === 'RUN_GEOFENCE_CHECK') {
+      if (typeof runGeofenceCheck === 'function') runGeofenceCheck();
+    }
+  });
+}
+
+// =====================================================================
+// SMART LOCATION — geofence & location settings
+// =====================================================================
+
+const LOC_DEBOUNCE_MS = 600;
+let _locSearchTimers = {};
+let _geofencePending = null; // { type:'office'|'home' }
+
+// ── Render helpers ────────────────────────────────────────────────────
+function renderLocViewCard(type, profile) {
+  const lat  = profile[type + 'Lat'];
+  const lng  = profile[type + 'Lng'];
+  const name = profile[type + 'Name'] || '';
+  const rad  = profile[type + 'Radius'] || 200;
+  const displayEl = document.getElementById(type + 'LocSetDisplay');
+  const subEl     = document.getElementById(type + 'LocViewSub');
+  const nameEl    = document.getElementById(type + 'LocViewName');
+  const coordEl   = document.getElementById(type + 'LocViewCoords');
+  if (!displayEl) return;
+  if (lat && lng) {
+    displayEl.style.display = 'flex';
+    if (nameEl) nameEl.textContent = name || `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
+    if (coordEl) coordEl.textContent = `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)} · ${rad} m radius`;
+    if (subEl) subEl.textContent = `Within ${rad} m · auto-detect on`;
+  } else {
+    displayEl.style.display = 'none';
+    if (subEl) subEl.textContent = 'Not set — tap Edit to configure';
+  }
+}
+
+function renderLocEditCard(type, profile) {
+  const lat  = profile[type + 'Lat'];
+  const lng  = profile[type + 'Lng'];
+  const name = profile[type + 'Name'] || '';
+  const rad  = Number(profile[type + 'Radius']) || 200;
+  const displayEl = document.getElementById(type + 'LocEditDisplay');
+  const notSetEl  = document.getElementById(type + 'LocNotSet');
+  const nameEl    = document.getElementById(type + 'LocEditName');
+  const coordEl   = document.getElementById(type + 'LocEditCoords');
+  const clearBtn  = document.getElementById(type + 'LocClearBtn');
+  const radSlider = document.getElementById(type + 'RadiusSlider');
+  const radLabel  = document.getElementById(type + 'RadiusLabel');
+  const searchEl  = document.getElementById(type + 'LocSearch');
+  if (!displayEl) return;
+  if (lat && lng) {
+    displayEl.style.display = 'flex';
+    notSetEl.style.display  = 'none';
+    if (nameEl) nameEl.textContent  = name || `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
+    if (coordEl) coordEl.textContent = `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+    if (searchEl) searchEl.value = name || '';
+  } else {
+    displayEl.style.display = 'none';
+    notSetEl.style.display  = 'block';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (searchEl) searchEl.value = '';
+  }
+  if (radSlider) { radSlider.value = rad; updateSliderTrack(radSlider, type); }
+  if (radLabel)  radLabel.textContent = rad >= 1000 ? `${(rad/1000).toFixed(1)} km` : `${rad} m`;
+}
+
+// ── Radius slider ─────────────────────────────────────────────────────
+function onRadiusChange(slider, type) {
+  const val = Number(slider.value);
+  const label = document.getElementById(type + 'RadiusLabel');
+  if (label) label.textContent = val >= 1000 ? `${(val/1000).toFixed(1)} km` : `${val} m`;
+  updateSliderTrack(slider, type);
+  if (userProfile) {
+    userProfile[type + 'Radius'] = val;
+    saveLocationToProfile(type);
+  }
+}
+
+function updateSliderTrack(slider, type) {
+  const min = Number(slider.min), max = Number(slider.max), val = Number(slider.value);
+  const pct = Math.round((val - min) / (max - min) * 100);
+  slider.style.setProperty('--pct', pct + '%');
+}
+
+// ── Nominatim autocomplete ────────────────────────────────────────────
+function onLocSearch(event, type) {
+  const query = event.target.value.trim();
+  const drop = document.getElementById(type + 'LocDrop');
+  if (_locSearchTimers[type]) clearTimeout(_locSearchTimers[type]);
+  if (query.length < 3) { drop.style.display = 'none'; return; }
+  _locSearchTimers[type] = setTimeout(() => searchNominatim(query, type), LOC_DEBOUNCE_MS);
+}
+
+async function searchNominatim(query, type) {
+  const spinner = document.getElementById(type + 'LocSpinner');
+  const drop    = document.getElementById(type + 'LocDrop');
+  if (spinner) spinner.style.display = 'block';
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const results = await res.json();
+    if (!results.length) {
+      drop.innerHTML = `<div class="location-autocomplete-item"><div class="loc-icon">🔍</div><div><div class="loc-label">No results found</div></div></div>`;
+      drop.style.display = 'block'; return;
+    }
+    drop.innerHTML = results.map(r => {
+      const parts = r.display_name.split(', ');
+      const label = parts.slice(0, 2).join(', ');
+      const sub   = parts.slice(2, 5).join(', ');
+      return `<div class="location-autocomplete-item" onclick='pickLocResult(${r.lat},${r.lon},"${label.replace(/"/g,'&quot;')}","${type}")'>
+        <div class="loc-icon">📍</div>
+        <div><div class="loc-label">${label}</div><div class="loc-sublabel">${sub}</div></div>
+      </div>`;
+    }).join('');
+    drop.style.display = 'block';
+  } catch (e) {
+    drop.style.display = 'none';
+  } finally {
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+function pickLocResult(lat, lng, name, type) {
+  const drop = document.getElementById(type + 'LocDrop');
+  if (drop) drop.style.display = 'none';
+  setLocationForType(type, parseFloat(lat), parseFloat(lng), name);
+}
+
+// ── Current location button ───────────────────────────────────────────
+function useCurrentLocation(type) {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+  const btn = document.querySelector(`#${type}LocEditCard .loc-btn-current`);
+  if (btn) { btn.textContent = '📡 Getting location…'; btn.disabled = true; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      if (btn) { btn.textContent = '📡 Use Current Location'; btn.disabled = false; }
+      setLocationForType(type, pos.coords.latitude, pos.coords.longitude, `My ${type === 'office' ? 'Office' : 'Home'}`);
+    },
+    err => {
+      if (btn) { btn.textContent = '📡 Use Current Location'; btn.disabled = false; }
+      alert('Could not get your location. Please allow location access and try again.');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function setLocationForType(type, lat, lng, name) {
+  if (!userProfile) userProfile = {};
+  userProfile[type + 'Lat']  = lat;
+  userProfile[type + 'Lng']  = lng;
+  userProfile[type + 'Name'] = name;
+  const radSlider = document.getElementById(type + 'RadiusSlider');
+  if (radSlider && !userProfile[type + 'Radius']) userProfile[type + 'Radius'] = 200;
+  renderLocEditCard(type, userProfile);
+  saveLocationToProfile(type);
+}
+
+function clearLocation(type) {
+  if (!userProfile) return;
+  userProfile[type + 'Lat']  = '';
+  userProfile[type + 'Lng']  = '';
+  userProfile[type + 'Name'] = '';
+  renderLocEditCard(type, userProfile);
+  saveLocationToProfile(type);
+}
+
+// ── Persist location (localStorage + remote) ─────────────────────────
+async function saveLocationToProfile(type) {
+  if (!currentUser || !userProfile) return;
+  persistProfileLocally(currentUser.userId, userProfile);
+  // Fire-and-forget sync to sheet
+  syncProfileToRemote(currentUser.userId, userProfile).catch(() => {});
+  // Refresh view card
+  renderLocViewCard(type, userProfile);
+}
+
+// ── Geofence check on app open ────────────────────────────────────────
+const GF_COOLDOWN_KEY = 'geofence_last_shown';
+
+function runGeofenceCheck() {
+  if (!userProfile) return;
+  const officeLat = parseFloat(userProfile.officeLat);
+  const officeLng = parseFloat(userProfile.officeLng);
+  const homeLat   = parseFloat(userProfile.homeLat);
+  const homeLng   = parseFloat(userProfile.homeLng);
+  const hasOffice = !isNaN(officeLat) && !isNaN(officeLng);
+  const hasHome   = !isNaN(homeLat)   && !isNaN(homeLng);
+  if (!hasOffice && !hasHome) return;
+  if (!navigator.geolocation) return;
+
+  // Only once per day
+  const lastShown = localStorage.getItem(GF_COOLDOWN_KEY);
+  const today = new Date().toISOString().slice(0, 10);
+  if (lastShown === today) return;
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords;
+    if (hasOffice) {
+      const dist = haversineM(latitude, longitude, officeLat, officeLng);
+      const radius = Number(userProfile.officeRadius) || 200;
+      if (dist <= radius) {
+        showGeofenceBanner('office');
+        return;
+      }
+    }
+    if (hasHome) {
+      const dist = haversineM(latitude, longitude, homeLat, homeLng);
+      const radius = Number(userProfile.homeRadius) || 200;
+      if (dist <= radius) {
+        showGeofenceBanner('home');
+        return;
+      }
+    }
+  }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
+}
+
+function haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function showGeofenceBanner(type) {
+  _geofencePending = { type };
+  const isOffice = type === 'office';
+  document.getElementById('geofenceBannerIcon').textContent  = isOffice ? '🏢' : '🏠';
+  document.getElementById('geofenceBannerTitle').textContent = isOffice ? "You're at the office!" : "You're near home!";
+  document.getElementById('geofenceBannerSub').textContent   = `Mark attendance as ${isOffice ? 'Office' : 'Home'} for today?`;
+  const confirmBtn = document.getElementById('geofenceConfirmBtn');
+  confirmBtn.textContent = isOffice ? '✅ Mark Office' : '🏠 Mark Home';
+  confirmBtn.className   = 'geofence-confirm-btn' + (isOffice ? '' : ' home-confirm');
+  document.getElementById('geofenceBanner').classList.add('show');
+}
+
+function dismissGeofenceBanner(permanent) {
+  document.getElementById('geofenceBanner').classList.remove('show');
+  if (permanent) {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(GF_COOLDOWN_KEY, today);
+  }
+  _geofencePending = null;
+}
+
+async function geofenceMarkAttendance() {
+  if (!_geofencePending) return;
+  const status = _geofencePending.type === 'office' ? 'office' : 'home';
+  dismissGeofenceBanner(true);
+  // Reuse the existing mark-attendance flow
+  if (typeof markAttendance === 'function') {
+    await markAttendance(status);
+  } else {
+    // fallback
+    const today = new Date().toISOString().slice(0, 10);
+    if (currentUser) await saveAttendanceRecord(currentUser.userId, today, status);
+  }
+}
 
 </script>
 

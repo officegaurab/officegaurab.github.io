@@ -128,42 +128,21 @@ function saveAttendance(userId, date, status) {
     ensureSheets();
     const attendanceSheet = getSheet(SHEETS.attendance);
     const dirtySheet = getSheet(SHEETS.dirtyDocs);
-    
-    // Find and update existing entry or create new
-    const values = attendanceSheet.getDataRange().getValues();
-    let found = false;
-    
-    for (let i = 1; i < values.length; i++) {
-      if (values[i][0] === date && values[i][1] === userId) {
-        attendanceSheet.getRange(i + 1, 3).setValue(status);
-        found = true;
-        break;
-      }
-    }
-    
-    if (!found) {
-      attendanceSheet.appendRow([date, userId, status]);
-    }
-    
-    // Log to dirty docs for tracking
-    const dirtyValues = dirtySheet.getDataRange().getValues();
-    let dirtyFound = false;
-    
-    for (let i = 1; i < dirtyValues.length; i++) {
-      if (dirtyValues[i][0] === userId && dirtyValues[i][1] === date) {
-        dirtySheet.getRange(i + 1, 3).setValue(status);
-        dirtySheet.getRange(i + 1, 5).setValue(false);
-        dirtyFound = true;
-        break;
-      }
-    }
-    
-    if (!dirtyFound) {
-      dirtySheet.appendRow([userId, date, status, new Date().toISOString(), false, '']);
-    }
+
+    // ── 1. Upsert into Attendance sheet ──────────────────────────────────────────────
+    // Delete ALL existing rows for (date, userId) from bottom to top (avoids row-shift
+    // bugs), then append one fresh row. String() conversion prevents the Date-object
+    // vs string === false bug that caused historical duplicates.
+    upsertAttendanceRow(attendanceSheet, userId, date, status);
+
+    // ── 2. Upsert DirtyDocs: delete all existing rows for (userId,date) then append one ──
+    // This avoids the Date-object vs string === bug and prevents duplicate rows.
+    upsertDirtyDoc(dirtySheet, userId, date, status);
+
+    // ── 3. Auto-clean confirmed rows older than 7 days ────────────────────────────────
+    cleanOldSyncedRows(dirtySheet);
 
     logSave(userId);
-    
     Logger.log('Attendance saved: ' + userId + ' - ' + date + ' - ' + status);
     return formatResponse(true, 'Attendance saved');
   } catch (error) {
@@ -171,6 +150,95 @@ function saveAttendance(userId, date, status) {
   } finally {
     if (lock) lock.releaseLock();
   }
+}
+
+/**
+ * Deletes ALL existing DirtyDocs rows for (userId, date) then appends one
+ * fresh row with Synced=FALSE.  Deleting from the bottom avoids row-index
+ * shifting.  This replaces the broken find-and-update approach that failed
+ * because sheet date cells are Date objects, not strings.
+ */
+function upsertDirtyDoc(dirtySheet, userId, date, status) {
+  const values = dirtySheet.getDataRange().getValues();
+  // Collect row numbers (1-indexed) to delete, from bottom to top.
+  const toDelete = [];
+  for (let i = values.length - 1; i >= 1; i--) {
+    if (String(values[i][0]) === String(userId) && String(values[i][1]) === String(date)) {
+      toDelete.push(i + 1);
+    }
+  }
+  toDelete.forEach(function(rowNum) { dirtySheet.deleteRow(rowNum); });
+  dirtySheet.appendRow([userId, date, status, new Date().toISOString(), false, '']);
+}
+
+/**
+ * Removes DirtyDocs rows where Synced=TRUE and SyncedAt is older than 7 days.
+ * Keeps the sheet from growing unboundedly.
+ */
+function cleanOldSyncedRows(dirtySheet) {
+  var KEEP_DAYS = 7;
+  var cutoff = new Date(Date.now() - KEEP_DAYS * 86400000);
+  var values = dirtySheet.getDataRange().getValues();
+  var toDelete = [];
+  for (var i = values.length - 1; i >= 1; i--) {
+    var synced = values[i][4];
+    var syncedAt = values[i][5];
+    if ((synced === true || synced === 'TRUE') && syncedAt) {
+      var syncedDate = new Date(syncedAt);
+      if (!isNaN(syncedDate) && syncedDate < cutoff) toDelete.push(i + 1);
+    }
+  }
+  toDelete.forEach(function(rowNum) { dirtySheet.deleteRow(rowNum); });
+}
+
+/**
+ * Deletes ALL existing Attendance rows for (userId, date) then appends one
+ * fresh row with the latest status.  Mirrors upsertDirtyDoc to guarantee
+ * exactly one row per (date, userId) in the sheet.
+ */
+function upsertAttendanceRow(attendanceSheet, userId, date, status) {
+  const values = attendanceSheet.getDataRange().getValues();
+  const toDelete = [];
+  for (let i = values.length - 1; i >= 1; i--) {
+    if (String(values[i][0]) === String(date) && String(values[i][1]) === String(userId)) {
+      toDelete.push(i + 1); // 1-indexed
+    }
+  }
+  // Delete from bottom to top so row indices stay valid
+  toDelete.forEach(function(rowNum) { attendanceSheet.deleteRow(rowNum); });
+  attendanceSheet.appendRow([date, userId, status]);
+}
+
+/**
+ * ONE-TIME cleanup: deduplicate the Attendance sheet so each (date, userId)
+ * has exactly one row — the LAST recorded status.
+ * Call this once from the Apps Script editor: cleanupAttendanceSheet()
+ */
+function cleanupAttendanceSheet() {
+  ensureSheets();
+  const attendanceSheet = getSheet(SHEETS.attendance);
+  const values = attendanceSheet.getDataRange().getValues();
+
+  // Build a map: "date|userId" -> last row index (0-based)
+  const lastRowIndex = {};
+  for (let i = 1; i < values.length; i++) {
+    const key = String(values[i][0]) + '|' + String(values[i][1]);
+    lastRowIndex[key] = i; // later rows overwrite earlier ones
+  }
+
+  // Collect row numbers (1-indexed) that are NOT the last row for their key
+  const toDelete = [];
+  for (let i = values.length - 1; i >= 1; i--) {
+    const key = String(values[i][0]) + '|' + String(values[i][1]);
+    if (lastRowIndex[key] !== i) {
+      toDelete.push(i + 1); // 1-indexed sheet row
+    }
+  }
+
+  // Delete from bottom to top
+  toDelete.forEach(function(rowNum) { attendanceSheet.deleteRow(rowNum); });
+  Logger.log('cleanupAttendanceSheet: deleted ' + toDelete.length + ' duplicate rows.');
+  return 'Deleted ' + toDelete.length + ' duplicate attendance rows.';
 }
 
 function getAttendance(userId) {
@@ -228,17 +296,25 @@ function saveUser(userId, userData, verifiedEmail) {
     }
 
     const profileRow = [
-        userId,
-        userData.mobile || '',
-        userData.name || '',
-        userData.email || '',
-        userData.company || '',
-        userData.inTime || '',
-        userData.outTime || '',
-        userData.profilePhoto || '',
-        targetRow > 0 ? (values[targetRow - 1][8] || new Date().toISOString()) : new Date().toISOString(),
-        userData.personalSpreadsheetId || '',
-        userData.personalSheetSkipped === true
+        userId,                                                                          // col 0
+        userData.mobile || '',                                                           // col 1
+        userData.name || '',                                                             // col 2
+        userData.email || '',                                                            // col 3
+        userData.company || '',                                                          // col 4
+        userData.inTime || '',                                                           // col 5
+        userData.outTime || '',                                                          // col 6
+        userData.profilePhoto || '',                                                     // col 7
+        targetRow > 0 ? (values[targetRow - 1][8] || new Date().toISOString()) : new Date().toISOString(), // col 8 createdAt
+        userData.personalSpreadsheetId || '',                                            // col 9
+        userData.personalSheetSkipped === true,                                          // col 10
+        userData.officeLat    || '',                                                     // col 11
+        userData.officeLng    || '',                                                     // col 12
+        userData.officeRadius || 200,                                                    // col 13
+        userData.officeName   || '',                                                     // col 14
+        userData.homeLat      || '',                                                     // col 15
+        userData.homeLng      || '',                                                     // col 16
+        userData.homeRadius   || 200,                                                    // col 17
+        userData.homeName     || ''                                                      // col 18
       ];
 
     if (targetRow > 0) {
@@ -287,16 +363,24 @@ function getUser(userId, verifiedEmail) {
 
     if (userRow >= 0) {
       return formatResponse(true, {
-        userId: userId,
-        mobile: values[userRow][1],
-        name: values[userRow][2],
-        email: values[userRow][3],
-        company: values[userRow][4],
-        inTime: values[userRow][5],
-        outTime: values[userRow][6],
-        profilePhoto: values[userRow][7],
-        personalSpreadsheetId: values[userRow][9] || '',
-        personalSheetSkipped: values[userRow][10] === true || values[userRow][10] === 'TRUE'
+        userId:               userId,
+        mobile:               values[userRow][1],
+        name:                 values[userRow][2],
+        email:                values[userRow][3],
+        company:              values[userRow][4],
+        inTime:               values[userRow][5],
+        outTime:              values[userRow][6],
+        profilePhoto:         values[userRow][7],
+        personalSpreadsheetId: values[userRow][9]  || '',
+        personalSheetSkipped:  values[userRow][10] === true || values[userRow][10] === 'TRUE',
+        officeLat:            values[userRow][11] || '',
+        officeLng:            values[userRow][12] || '',
+        officeRadius:         values[userRow][13] || 200,
+        officeName:           values[userRow][14] || '',
+        homeLat:              values[userRow][15] || '',
+        homeLng:              values[userRow][16] || '',
+        homeRadius:           values[userRow][17] || 200,
+        homeName:             values[userRow][18] || ''
       });
     }
     
@@ -310,24 +394,102 @@ function getUser(userId, verifiedEmail) {
 
 // ===== SAVE LIMIT FUNCTIONS =====
 
+/**
+ * Rewrites all sheet references from oldUserId (legacy mobile) to newUserId (Google ID),
+ * then deduplicates Attendance so there's at most 1 row per (date, newUserId).
+ */
 function migrateLegacyUserData(oldUserId, newUserId) {
+  // ── Attendance ────────────────────────────────────────────────────────────
   const attendanceSheet = getSheet(SHEETS.attendance);
   const attendanceValues = attendanceSheet.getDataRange().getValues();
   for (let i = 1; i < attendanceValues.length; i++) {
-    if (attendanceValues[i][1] === oldUserId) attendanceSheet.getRange(i + 1, 2).setValue(newUserId);
+    if (String(attendanceValues[i][1]) === String(oldUserId)) {
+      attendanceSheet.getRange(i + 1, 2).setValue(newUserId);
+    }
   }
+  // After rewriting IDs a user may now have both old-mobile rows and Google-ID rows
+  // for the same date → deduplicate to keep only the last status per date.
+  cleanupAttendanceSheet();
 
+  // ── DirtyDocs ─────────────────────────────────────────────────────────────
   const dirtySheet = getSheet(SHEETS.dirtyDocs);
   const dirtyValues = dirtySheet.getDataRange().getValues();
   for (let i = 1; i < dirtyValues.length; i++) {
-    if (dirtyValues[i][0] === oldUserId) dirtySheet.getRange(i + 1, 1).setValue(newUserId);
+    if (String(dirtyValues[i][0]) === String(oldUserId)) {
+      dirtySheet.getRange(i + 1, 1).setValue(newUserId);
+    }
   }
 
+  // ── SaveLogs ──────────────────────────────────────────────────────────────
   const saveLogsSheet = getSheet(SHEETS.saveLogs);
   const saveLogValues = saveLogsSheet.getDataRange().getValues();
   for (let i = 1; i < saveLogValues.length; i++) {
-    if (saveLogValues[i][0] === oldUserId) saveLogsSheet.getRange(i + 1, 1).setValue(newUserId);
+    if (String(saveLogValues[i][0]) === String(oldUserId)) {
+      saveLogsSheet.getRange(i + 1, 1).setValue(newUserId);
+    }
   }
+
+  Logger.log('migrateLegacyUserData: ' + oldUserId + ' → ' + newUserId);
+}
+
+/**
+ * Returns true if the id looks like a legacy mobile number
+ * (all digits, length ≤ 15) rather than a Google account ID (≥ 18 digits).
+ */
+function isMobileId(id) {
+  // Strips optional leading '+' then checks: all digits, length ≤ 15.
+  // Covers both 918904201135 and +918904201135.
+  // Google IDs are ≥ 18 digits so they will never match.
+  return /^\+?\d{1,15}$/.test(String(id).trim());
+}
+
+/**
+ * ONE-TIME bulk migration: for every user row whose userId is still a mobile
+ * number, find their matching Google-ID row (matched by email) and rewrite
+ * all Attendance / DirtyDocs / SaveLogs references.
+ *
+ * Run once from the Apps Script editor: migrateAllLegacyUsers()
+ * Safe to run multiple times — skips rows that are already Google IDs.
+ */
+function migrateAllLegacyUsers() {
+  ensureSheets();
+  const usersSheet = getSheet(SHEETS.users);
+  const values = usersSheet.getDataRange().getValues();
+
+  // Build email → Google ID map from rows that already have a Google ID
+  const emailToGoogleId = {};
+  for (let i = 1; i < values.length; i++) {
+    const uid = String(values[i][0] || '').trim();
+    const email = String(values[i][3] || '').trim().toLowerCase();
+    if (!isMobileId(uid) && email) {
+      emailToGoogleId[email] = uid;
+    }
+  }
+
+  let migrated = 0;
+  let skipped = 0;
+
+  for (let i = 1; i < values.length; i++) {
+    const uid = String(values[i][0] || '').trim();
+    const email = String(values[i][3] || '').trim().toLowerCase();
+
+    if (!isMobileId(uid)) { skipped++; continue; }   // already a Google ID
+    if (!email) { skipped++; continue; }              // no email → can't map
+
+    const googleId = emailToGoogleId[email];
+    if (!googleId || googleId === uid) { skipped++; continue; } // no Google login yet
+
+    // Update the Users sheet row userId column
+    usersSheet.getRange(i + 1, 1).setValue(googleId);
+
+    // Migrate all other sheets
+    migrateLegacyUserData(uid, googleId);
+    migrated++;
+  }
+
+  const msg = 'migrateAllLegacyUsers: migrated=' + migrated + ', skipped=' + skipped;
+  Logger.log(msg);
+  return msg;
 }
 
 function checkSaveLimit(userId) {
@@ -444,50 +606,133 @@ function formatResponse(success, data) {
 
 // ===== DIRTY DOCUMENT FUNCTIONS =====
 
+/**
+ * Returns the latest unsynced (Synced=FALSE) entry per date for this user.
+ * Deduplicates in case old rows with the same date exist — only the most
+ * recently marked entry per date is returned to the client.
+ */
 function getDirtyDocs(userId) {
   try {
     ensureSheets();
     const dirtySheet = getSheet(SHEETS.dirtyDocs);
     const values = dirtySheet.getDataRange().getValues();
-    
-    const dirtyDocs = [];
-    
+
+    // Build a map: date → latest entry (by MarkedAt timestamp)
+    const latestByDate = {};
     for (let i = 1; i < values.length; i++) {
       const row = values[i];
-      if (row[0] === userId && row[4] === false) {
-        dirtyDocs.push({
-          date: row[1],
-          status: row[2],
-          markedAt: row[3],
-          synced: row[4]
-        });
+      if (String(row[0]) !== String(userId)) continue;
+      const synced = row[4];
+      if (synced === true || synced === 'TRUE') continue; // already confirmed
+
+      const date = String(row[1]);
+      const markedAt = row[3] ? new Date(row[3]).getTime() : 0;
+      if (!latestByDate[date] || markedAt > latestByDate[date].markedAt) {
+        latestByDate[date] = {
+          date: date,
+          status: String(row[2]),
+          markedAt: markedAt,
+          markedAtIso: row[3]
+        };
       }
     }
-    
-    return formatResponse(true, dirtyDocs);
+
+    return formatResponse(true, Object.values(latestByDate));
   } catch (error) {
     return formatResponse(false, error.toString());
   }
 }
 
+/**
+ * Marks ALL DirtyDocs rows for this (userId, date) as Synced=TRUE.
+ * Handles duplicates that existed before the upsertDirtyDoc fix.
+ */
 function markSynced(userId, date) {
   try {
     ensureSheets();
     const dirtySheet = getSheet(SHEETS.dirtyDocs);
     const values = dirtySheet.getDataRange().getValues();
-    
+    const syncedAt = new Date().toISOString();
+    let markedCount = 0;
+
     for (let i = 1; i < values.length; i++) {
-      if (values[i][0] === userId && values[i][1] === date) {
+      if (String(values[i][0]) === String(userId) && String(values[i][1]) === String(date)) {
         dirtySheet.getRange(i + 1, 5).setValue(true);
-        dirtySheet.getRange(i + 1, 6).setValue(new Date().toISOString());
-        return formatResponse(true, 'Marked as synced');
+        dirtySheet.getRange(i + 1, 6).setValue(syncedAt);
+        markedCount++;
       }
     }
-    
-    return formatResponse(false, 'Document not found');
+
+    if (markedCount === 0) {
+      return formatResponse(false, 'No DirtyDocs entry found for that date');
+    }
+    return formatResponse(true, 'Marked ' + markedCount + ' row(s) as synced');
   } catch (error) {
     return formatResponse(false, error.toString());
   }
+}
+
+/**
+ * ONE-TIME CLEANUP — Run manually from the Apps Script editor (not via the web app).
+ *
+ * The DirtyDocs sheet accumulated:
+ *   • Duplicate rows (same userId+date) because of the === comparison bug
+ *   • Synced=FALSE rows that are actually already in the Attendance sheet
+ *     (markSynced was never called from the frontend before the fix)
+ *
+ * This function:
+ *   1. Cross-checks every Synced=FALSE DirtyDocs row against the Attendance
+ *      sheet.  If a matching (userId, date) row exists in Attendance → mark
+ *      the DirtyDocs row as Synced=TRUE (the data is safe).
+ *   2. For each (userId, date) with multiple DirtyDocs rows, deletes all but
+ *      the latest one.
+ *
+ * Run once after deploying this updated script.
+ */
+function cleanupAndReconcileDirtyDocs() {
+  ensureSheets();
+  const attendanceSheet = getSheet(SHEETS.attendance);
+  const dirtySheet = getSheet(SHEETS.dirtyDocs);
+
+  // Build confirmed attendance set: "userId|date" keys
+  const confirmed = {};
+  const attValues = attendanceSheet.getDataRange().getValues();
+  for (let i = 1; i < attValues.length; i++) {
+    const key = String(attValues[i][1]) + '|' + String(attValues[i][0]);
+    confirmed[key] = true;
+  }
+
+  const dirtyValues = dirtySheet.getDataRange().getValues();
+  const syncedAt = new Date().toISOString();
+
+  // Group rows by "userId|date"
+  const grouped = {};
+  for (let i = 1; i < dirtyValues.length; i++) {
+    const key = String(dirtyValues[i][0]) + '|' + String(dirtyValues[i][1]);
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push({ rowIndex: i, markedAt: new Date(dirtyValues[i][3] || 0).getTime() });
+  }
+
+  const rowsToDelete = [];
+  Object.keys(grouped).forEach(function(key) {
+    const rows = grouped[key].sort(function(a, b) { return b.markedAt - a.markedAt; });
+    // Mark duplicates (all but latest) for deletion
+    for (let j = 1; j < rows.length; j++) rowsToDelete.push(rows[j].rowIndex + 1);
+    // For the latest row: if data already in Attendance, mark as synced
+    const latestIdx = rows[0].rowIndex;
+    if (confirmed[key]) {
+      dirtySheet.getRange(latestIdx + 1, 5).setValue(true);
+      dirtySheet.getRange(latestIdx + 1, 6).setValue(syncedAt);
+    }
+  });
+
+  // Delete from bottom to top so indices stay valid
+  rowsToDelete.sort(function(a, b) { return b - a; });
+  rowsToDelete.forEach(function(rowNum) { dirtySheet.deleteRow(rowNum); });
+
+  const msg = 'cleanupAndReconcileDirtyDocs done. Deleted ' + rowsToDelete.length + ' duplicate rows.';
+  Logger.log(msg);
+  return msg;
 }
 
 function doGet(e) {
