@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Office Attendance Tracker</title>
+<meta name="description" content="Privacy Policy for Office Attendance Tracker PWA. Learn how we collect, use, and protect your data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #176b4a; --text: #1a2e25; --text-light: #56706a;
+    --bg: #f4f7f5; --card: #ffffff; --border: #dde8e2; --accent: #e67a5e;
+  }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; }
+
+  .pp-header { background: linear-gradient(135deg, #173f32, #1e5c42); color: white; padding: 56px 24px 48px; text-align: center; position: relative; overflow: hidden; }
+  .pp-header::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(to bottom, transparent, black 40%); }
+  .pp-header-inner { position: relative; max-width: 720px; margin: 0 auto; }
+  .pp-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 20px; }
+  .pp-brand-mark { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+  .pp-header h1 { font-family: 'Manrope', sans-serif; font-size: clamp(26px, 5vw, 40px); font-weight: 800; line-height: 1.15; margin-bottom: 14px; }
+  .pp-header p { font-size: 15px; color: rgba(255,255,255,.7); margin-bottom: 20px; }
+  .pp-updated { display: inline-block; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 5px 14px; font-size: 12px; color: rgba(255,255,255,.8); }
+
+  .pp-body { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  .pp-toc { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin-bottom: 36px; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+  .pp-toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-light); margin-bottom: 12px; }
+  .pp-toc ol { padding-left: 18px; }
+  .pp-toc li { margin-bottom: 6px; }
+  .pp-toc a { color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; }
+  .pp-toc a:hover { text-decoration: underline; }
+
+  .pp-section { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.04); scroll-margin-top: 24px; }
+  .pp-section-num { display: inline-block; background: var(--primary); color: white; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 3px 8px; margin-bottom: 10px; }
+  .pp-section h2 { font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 14px; line-height: 1.3; }
+  .pp-section p { font-size: 14px; color: var(--text-light); margin-bottom: 12px; }
+  .pp-section p:last-child { margin-bottom: 0; }
+  .pp-section ul, .pp-section ol { padding-left: 20px; margin-bottom: 12px; }
+  .pp-section li { font-size: 14px; color: var(--text-light); margin-bottom: 6px; }
+  .pp-section strong { color: var(--text); font-weight: 600; }
+  .pp-section code { background: #f0f4f1; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+  .pp-highlight { background: linear-gradient(135deg, #f0fdf4, #f8fbff); border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 14px 16px; margin: 14px 0; font-size: 13px; color: #166534; }
+  .pp-highlight-warn { background: linear-gradient(135deg, #fef9f0, #fff8f1); border-color: #fed7aa; color: #92400e; }
+  .pp-highlight a { color: #166534; }
+
+  .pp-contact { background: linear-gradient(135deg, #173f32, #1e5c42); border-radius: 16px; padding: 28px; color: white; margin-top: 8px; }
+  .pp-contact h2 { font-family: 'Manrope', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .pp-contact p { font-size: 14px; color: rgba(255,255,255,.75); margin-bottom: 14px; }
+  .pp-contact a { display: inline-block; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 10px 18px; color: white; font-size: 14px; font-weight: 600; text-decoration: none; }
+  .pp-contact a:hover { background: rgba(255,255,255,.25); }
+
+  .pp-back { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 28px; padding: 8px 14px; border-radius: 10px; background: white; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(0,0,0,.04); }
+  .pp-back:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+
+  .pp-footer { text-align: center; padding: 24px 20px; font-size: 12px; color: var(--text-light); border-top: 1px solid var(--border); background: white; margin-top: 40px; }
+  .pp-footer a { color: var(--primary); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header class="pp-header">
+  <div class="pp-header-inner">
+    <div class="pp-brand">
+      <div class="pp-brand-mark">OA</div>
+      Office Attendance Tracker
+    </div>
+    <h1>Privacy Policy</h1>
+    <p>We are committed to protecting your privacy and being transparent about how your data is used.</p>
+    <span class="pp-updated">Last updated: October 27, 2025</span>
+  </div>
+</header>
+
+<main class="pp-body">
+
+  <a href="/" class="pp-back">&#8592; Back to App</a>
+
+  <div class="pp-toc">
+    <div class="pp-toc-title">Table of Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#data-collected">Information We Collect</a></li>
+      <li><a href="#google-signin">Google Sign-In &amp; OAuth</a></li>
+      <li><a href="#google-drive">Google Drive Access</a></li>
+      <li><a href="#how-we-use">How We Use Your Information</a></li>
+      <li><a href="#data-storage">Data Storage &amp; Security</a></li>
+      <li><a href="#data-sharing">Data Sharing</a></li>
+      <li><a href="#user-rights">Your Rights &amp; Controls</a></li>
+      <li><a href="#children">Children's Privacy</a></li>
+      <li><a href="#changes">Changes to This Policy</a></li>
+      <li><a href="#contact">Contact Us</a></li>
+    </ol>
+  </div>
+
+  <section class="pp-section" id="overview">
+    <span class="pp-section-num">01</span>
+    <h2>Overview</h2>
+    <p>Office Attendance Tracker ("the App", "we", "us", "our") is a Progressive Web App (PWA) that helps individuals and teams track daily work attendance — office, work from home, holiday, and leave statuses.</p>
+    <p>This Privacy Policy explains what information we collect, how we use it, and your rights regarding your personal data. By using the App you agree to the practices described in this policy.</p>
+    <div class="pp-highlight">
+      &#10003; <strong>Short version:</strong> Your attendance data belongs to you. We never sell it, never share it with third parties for advertising, and you can delete it at any time.
+    </div>
+  </section>
+
+  <section class="pp-section" id="data-collected">
+    <span class="pp-section-num">02</span>
+    <h2>Information We Collect</h2>
+    <p>We collect only the minimum data necessary to operate the App:</p>
+    <ul>
+      <li><strong>Google Account Identity:</strong> Your name, email address, profile picture URL, and Google account ID — provided when you sign in with Google.</li>
+      <li><strong>Profile Information:</strong> Mobile number, company name, and office working hours that you voluntarily enter in the App.</li>
+      <li><strong>Attendance Records:</strong> Daily attendance status entries (Office, Work From Home, Holiday, Leave) that you mark in the calendar.</li>
+      <li><strong>Location Data (optional):</strong> If you opt in to Smart Location features, your office and home GPS coordinates and geofence radius. Stored only in your own Google Sheet, never transmitted to any third-party server.</li>
+      <li><strong>Device Data:</strong> We do not collect device identifiers, IP addresses, or analytics data.</li>
+    </ul>
+    <div class="pp-highlight pp-highlight-warn">
+      &#9888; <strong>Location is always optional.</strong> The App never requests location in the background. Location is only read on-demand when you tap "Use current location" or when the App is open and you tap a notification.
+    </div>
+  </section>
+
+  <section class="pp-section" id="google-signin">
+    <span class="pp-section-num">03</span>
+    <h2>Google Sign-In &amp; OAuth</h2>
+    <p>The App uses <strong>Google Identity Services (GIS)</strong> for authentication. When you sign in:</p>
+    <ul>
+      <li>Google provides a signed ID token containing your name, email, profile picture, and unique Google account ID.</li>
+      <li>We use the ID token solely to identify you within the App and to securely authenticate requests to our backend (Google Apps Script).</li>
+      <li>We do <strong>not</strong> access your Gmail, Contacts, Calendar, or any other Google service beyond what is listed below.</li>
+      <li>Your Google credentials (password) are never seen or stored by the App.</li>
+    </ul>
+    <p>The App requests the following OAuth scopes:</p>
+    <ul>
+      <li><code>openid</code> — Confirms your identity via Google.</li>
+      <li><code>email</code> — Reads your Google email address for account identification.</li>
+      <li><code>profile</code> — Reads your display name and profile picture URL.</li>
+      <li><code>https://www.googleapis.com/auth/drive.file</code> — Creates and manages only the specific spreadsheet created by the App in your Google Drive (optional personal sheet feature — see Section 4).</li>
+    </ul>
+  </section>
+
+  <section class="pp-section" id="google-drive">
+    <span class="pp-section-num">04</span>
+    <h2>Google Drive Access (drive.file scope)</h2>
+    <p>The <code>drive.file</code> scope is requested <strong>only if</strong> you choose to connect a personal attendance spreadsheet to your own Google Drive. This is an <strong>optional feature</strong>.</p>
+    <p>With this scope, the App <strong>can</strong>:</p>
+    <ul>
+      <li>Create a single Google Spreadsheet in your Drive named "Attendance - [Your Name]".</li>
+      <li>Read and write attendance rows to that specific file only.</li>
+    </ul>
+    <p>With this scope, the App <strong>cannot</strong>:</p>
+    <ul>
+      <li>Access any other files in your Google Drive.</li>
+      <li>Delete files outside the App-created spreadsheet.</li>
+      <li>Share your files with anyone else.</li>
+    </ul>
+    <div class="pp-highlight">
+      &#10003; You can revoke Drive access at any time from <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>. Revoking access does not delete your spreadsheet — it only disconnects the App from it.
+    </div>
+  </section>
+
+  <section class="pp-section" id="how-we-use">
+    <span class="pp-section-num">05</span>
+    <h2>How We Use Your Information</h2>
+    <p>We use the information collected exclusively to provide App functionality:</p>
+    <ul>
+      <li>Authenticating your identity and maintaining your session across devices.</li>
+      <li>Saving and retrieving your attendance records from a shared Google Sheet (accessible only to you and the App administrator).</li>
+      <li>Displaying your profile information, name, and photo within the App.</li>
+      <li>Sending attendance reminder push notifications at your configured office start and end times (only when you grant notification permission).</li>
+      <li>Checking proximity to your configured office or home location to prompt attendance marking (only when the App is open or a notification is tapped).</li>
+    </ul>
+    <p>We do <strong>not</strong> use your data for advertising, profiling, machine learning training, or any purpose other than operating the App.</p>
+  </section>
+
+  <section class="pp-section" id="data-storage">
+    <span class="pp-section-num">06</span>
+    <h2>Data Storage &amp; Security</h2>
+    <p><strong>Where is data stored?</strong></p>
+    <ul>
+      <li><strong>Attendance &amp; Profile data</strong> is stored in a Google Spreadsheet managed via Google Apps Script, hosted entirely within Google's infrastructure.</li>
+      <li><strong>Optional personal sheet</strong> data is stored in a Google Spreadsheet in your own Google Drive account.</li>
+      <li><strong>Session tokens</strong> (Google ID tokens) are stored in your browser's <code>localStorage</code> and are never transmitted to any server other than Google.</li>
+      <li><strong>Location coordinates</strong> (if set) are stored only in your profile row in Google Sheets and never on a third-party server.</li>
+    </ul>
+    <p><strong>Security measures:</strong></p>
+    <ul>
+      <li>All communication between the App and Google APIs is encrypted via HTTPS/TLS.</li>
+      <li>Every request to the App's backend (Google Apps Script) includes a Google ID token that is verified server-side.</li>
+      <li>No passwords or sensitive credentials are stored anywhere in the App.</li>
+    </ul>
+    <div class="pp-highlight pp-highlight-warn">
+      &#9888; The App uses a shared Google Sheet as its main data store. The app administrator (the person who deployed this App) has owner access to that sheet. For fully private storage, use the optional personal Google Drive sheet feature.
+    </div>
+  </section>
+
+  <section class="pp-section" id="data-sharing">
+    <span class="pp-section-num">07</span>
+    <h2>Data Sharing</h2>
+    <p>We do <strong>not</strong> sell, rent, or share your personal data with any third parties for commercial purposes.</p>
+    <p>Data may be accessible to:</p>
+    <ul>
+      <li><strong>Google LLC</strong> — as the underlying platform providing authentication (Google Identity Services), data storage (Google Sheets and Drive), and hosting infrastructure.</li>
+      <li><strong>The App Administrator</strong> — the individual who deployed and maintains this App instance has access to the main Google Sheet containing attendance records.</li>
+    </ul>
+    <p>No other parties have access to your data. We do not integrate with advertising networks, analytics platforms, or any other external services.</p>
+  </section>
+
+  <section class="pp-section" id="user-rights">
+    <span class="pp-section-num">08</span>
+    <h2>Your Rights &amp; Controls</h2>
+    <p>You have full control over your data:</p>
+    <ul>
+      <li><strong>Access:</strong> All your attendance data is visible to you in the App calendar at any time.</li>
+      <li><strong>Edit:</strong> You can update or reset any attendance entry at any time.</li>
+      <li><strong>Delete:</strong> Contact the App administrator to request deletion of your profile and attendance records from the main sheet. Your personal Drive sheet can be deleted directly from Google Drive.</li>
+      <li><strong>Revoke Google access:</strong> Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a> to revoke the App's access to your Google account at any time.</li>
+      <li><strong>Notification opt-out:</strong> Revoke notification permission from your browser or device settings at any time.</li>
+      <li><strong>Location opt-out:</strong> Location settings are entirely optional and can be cleared from My Profile at any time.</li>
+    </ul>
+  </section>
+
+  <section class="pp-section" id="children">
+    <span class="pp-section-num">09</span>
+    <h2>Children's Privacy</h2>
+    <p>The App is designed for working professionals and is not directed at children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided personal information, we will take steps to delete such information promptly.</p>
+  </section>
+
+  <section class="pp-section" id="changes">
+    <span class="pp-section-num">10</span>
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date at the top of this page. Continued use of the App after changes are posted constitutes your acceptance of the updated policy.</p>
+    <p>For significant changes, we will make reasonable efforts to notify users through the App's Help or notification features.</p>
+  </section>
+
+  <div class="pp-contact" id="contact">
+    <h2>&#128235; Contact Us</h2>
+    <p>If you have any questions about this Privacy Policy, how your data is used, or to request data deletion, please contact the App administrator:</p>
+    <a href="mailto:gaurab.pur@gmail.com">gaurab.pur@gmail.com</a>
+  </div>
+
+</main>
+
+<footer class="pp-footer">
+  <p>&#169; 2025 Office Attendance Tracker &nbsp;&middot;&nbsp; <a href="/">Back to App</a> &nbsp;&middot;&nbsp; <a href="/privacy.html">Privacy Policy</a></p>
+</footer>
+
+</body>
+</html>

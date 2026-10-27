@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Attendance Tracker — Smart Attendance for Teams</title>
+<meta name="description" content="Office Attendance Tracker is a free Progressive Web App (PWA) that helps employees and teams track daily attendance — office, work from home, holiday, and leave — with smart location reminders and Google Drive sync.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #176b4a;
+    --accent: #e67a5e;
+    --text: #1a2e25;
+    --text-light: #56706a;
+    --bg: #f4f7f5;
+    --border: #dde8e2;
+  }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+  /* NAV */
+  nav {
+    background: #173f32;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px; position: sticky; top: 0; z-index: 99;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; color: white; font-weight: 800; font-size: 15px; text-decoration: none; }
+  .nav-mark { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: white; }
+  .nav-links { display: flex; gap: 10px; }
+  .nav-links a { color: rgba(255,255,255,.8); text-decoration: none; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; transition: background .2s; }
+  .nav-links a:hover { background: rgba(255,255,255,.12); color: white; }
+  .nav-links .nav-cta { background: var(--accent); color: white; border-radius: 8px; }
+  .nav-links .nav-cta:hover { background: #d4694f; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #173f32 0%, #1d5c42 60%, #164535 100%);
+    color: white; padding: 80px 24px 90px; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  }
+  .hero-inner { position: relative; max-width: 700px; margin: 0 auto; }
+  .hero-badge { display: inline-block; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 5px 16px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.85); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 24px; }
+  .hero h1 { font-family: 'Manrope', sans-serif; font-size: clamp(30px, 6vw, 52px); font-weight: 800; line-height: 1.12; margin-bottom: 20px; }
+  .hero h1 span { color: #f2c66d; }
+  .hero p { font-size: 17px; color: rgba(255,255,255,.75); margin-bottom: 36px; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 20px rgba(230,122,94,.4); }
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(230,122,94,.55); transform: translateY(-1px); }
+  .btn-outline { background: rgba(255,255,255,.1); color: white; border: 1.5px solid rgba(255,255,255,.3); }
+  .btn-outline:hover { background: rgba(255,255,255,.18); }
+
+  /* FEATURES */
+  .section { max-width: 960px; margin: 0 auto; padding: 64px 24px; }
+  .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: 10px; }
+  .section h2 { font-family: 'Manrope', sans-serif; font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: var(--text); margin-bottom: 14px; }
+  .section-sub { font-size: 15px; color: var(--text-light); max-width: 540px; margin-bottom: 48px; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .feature-card { background: white; border: 1px solid var(--border); border-radius: 18px; padding: 26px; box-shadow: 0 2px 14px rgba(0,0,0,.05); transition: box-shadow .2s, transform .2s; }
+  .feature-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.1); transform: translateY(-2px); }
+  .feature-icon { font-size: 32px; margin-bottom: 14px; }
+  .feature-card h3 { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .feature-card p { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .how-bg { background: white; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-top: 8px; }
+  .step { text-align: center; }
+  .step-num { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #176b4a, #1e9468); color: white; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .step h3 { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .step p { font-size: 13px; color: var(--text-light); }
+
+  /* DATA / PRIVACY HIGHLIGHT */
+  .privacy-strip { background: linear-gradient(135deg, #f0fdf4, #f8fbff); border: 1.5px solid #bbf7d0; border-radius: 20px; padding: 36px 32px; display: flex; gap: 20px; align-items: flex-start; margin-top: 32px; }
+  .privacy-strip-icon { font-size: 40px; flex-shrink: 0; }
+  .privacy-strip h3 { font-family: 'Manrope', sans-serif; font-size: 18px; font-weight: 800; color: #166534; margin-bottom: 8px; }
+  .privacy-strip p { font-size: 14px; color: #386641; line-height: 1.6; }
+  .privacy-strip a { color: #176b4a; font-weight: 600; }
+
+  /* STATUSES */
+  .statuses { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .status-pill { padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+  .s-office { background: #4caf50; color: white; }
+  .s-home { background: #e3f2fd; color: #1565c0; border: 2px solid #1976d2; }
+  .s-holiday { background: #fbc02d; color: #4a3800; }
+  .s-leave { background: repeating-linear-gradient(-45deg, #fbc02d, #fbc02d 6px, #e53935 6px, #e53935 10px); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .s-nso { background: #4caf50; color: white; outline: 2px dashed #e53935; outline-offset: 2px; }
+  .s-nsh { background: #e53935; color: white; }
+
+  /* CTA */
+  .cta-section { background: linear-gradient(135deg, #173f32, #1e5c42); color: white; text-align: center; padding: 72px 24px; }
+  .cta-section h2 { font-family: 'Manrope', sans-serif; font-size: clamp(24px, 4vw, 38px); font-weight: 800; margin-bottom: 16px; }
+  .cta-section p { font-size: 16px; color: rgba(255,255,255,.75); margin-bottom: 36px; }
+
+  /* FOOTER */
+  footer { background: #0f2b1f; color: rgba(255,255,255,.5); text-align: center; padding: 24px; font-size: 13px; }
+  footer a { color: rgba(255,255,255,.7); text-decoration: none; margin: 0 8px; }
+  footer a:hover { color: white; }
+
+  @media (max-width: 600px) {
+    nav { padding: 12px 16px; }
+    .privacy-strip { flex-direction: column; }
+    .hero { padding: 56px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-brand">
+    <div class="nav-mark">OA</div>
+    Office Attendance
+  </a>
+  <div class="nav-links">
+    <a href="/privacy.html">Privacy</a>
+    <a href="/" class="nav-cta">Open App →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Free Progressive Web App</div>
+    <h1>Track attendance.<br><span>Stay organised.</span></h1>
+    <p>A simple, private attendance tracker for individuals and small teams. Mark your daily work status in seconds — office, home, holiday, or leave — and get smart reminders when you arrive.</p>
+    <div class="hero-btns">
+      <a href="/" class="btn btn-primary">Open App</a>
+      <a href="#features" class="btn btn-outline">See Features</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IT IS -->
+<div class="section" id="about">
+  <div class="section-label">What is this app?</div>
+  <h2>Attendance tracking, without the complexity</h2>
+  <p class="section-sub">Office Attendance Tracker is a free PWA (installable on Android &amp; iOS) that lets you keep a private calendar of where you worked each day. No spreadsheet skills required.</p>
+
+  <div style="margin-bottom:24px;">
+    <p style="font-size:14px;color:var(--text-light);margin-bottom:12px;">Mark any day with one of these statuses:</p>
+    <div class="statuses">
+      <span class="status-pill s-office">✓ Office</span>
+      <span class="status-pill s-home">✓ Work From Home</span>
+      <span class="status-pill s-holiday">Holiday</span>
+      <span class="status-pill s-leave">Leave</span>
+      <span class="status-pill s-nso">No Show + Office</span>
+      <span class="status-pill s-nsh">No Show + Home</span>
+    </div>
+  </div>
+
+  <div class="privacy-strip">
+    <div class="privacy-strip-icon">🔒</div>
+    <div>
+      <h3>Your data stays yours</h3>
+      <p>Sign in with Google — your attendance is stored in Google Sheets that only you and the app admin can access. Optionally connect your own private Google Drive spreadsheet for fully personal storage. We never sell or share your data. <a href="/privacy.html">Read our full Privacy Policy →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div id="features" style="background:white;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="section">
+    <div class="section-label">Features</div>
+    <h2>Everything you need, nothing you don't</h2>
+    <p class="section-sub">Built for individuals who need a simple, reliable way to track and recall their work location each day.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Visual Calendar</h3>
+        <p>Colour-coded monthly calendar makes it instant to see your attendance pattern at a glance. Navigate across months freely.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Smart Reminders</h3>
+        <p>Get a push notification at your office start time reminding you to mark attendance. A second reminder fires in the afternoon if you still haven't marked.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3>Location Aware</h3>
+        <p>Optionally set your office and home locations. When you arrive, the app prompts you to mark attendance automatically — no manual tapping needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Attendance Stats</h3>
+        <p>Monthly and quarterly summaries show your office days, WFH days, leaves, and office target percentage at a glance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">☁️</div>
+        <h3>Cross-Device Sync</h3>
+        <p>Sign in with the same Google account on any phone, tablet, or computer and all your data syncs instantly via Google Sheets.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📤</div>
+        <h3>CSV Export</h3>
+        <p>Download your full attendance history as a CSV file at any time for your own records or to share with HR.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Installable PWA</h3>
+        <p>Install directly to your Android or iOS home screen. Works offline. No app store required. Free forever.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔑</div>
+        <h3>Google Sign-In Only</h3>
+        <p>No passwords to remember. Sign in securely with your existing Google account. Your credentials are never seen by this app.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-bg">
+  <div class="section">
+    <div class="section-label">How it works</div>
+    <h2>Up and running in under a minute</h2>
+    <p class="section-sub">No setup, no configuration needed to get started.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Sign in with Google</h3>
+        <p>Tap "Open App" and sign in with your Google account. No password needed.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Complete your profile</h3>
+        <p>Add your name, mobile, company, and set your office start/end times.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Mark your first day</h3>
+        <p>Tap any day on the calendar and choose your work status. Changes are saved instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Get reminders</h3>
+        <p>Allow notifications and optionally set your office location for smart attendance prompts.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Start tracking today</h2>
+  <p>Free, private, and works on any device. No download from an app store needed.</p>
+  <a href="/" class="btn btn-primary" style="font-size:16px;padding:16px 36px;">Open Office Attendance Tracker →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    &copy; 2025 Office Attendance Tracker &nbsp;|&nbsp;
+    <a href="/">App</a>
+    <a href="/privacy.html">Privacy Policy</a>
+    <a href="mailto:gaurab.pur@gmail.com">Contact</a>
+  </p>
+</footer>
+
+</body>
+</html>
