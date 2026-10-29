@@ -2,14 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1e3a8a">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#173f32">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Attendance">
-<title>Office Attendance Tracker</title>
-<!-- Google Search Console ownership verification — replace content value with your actual code from search.google.com/search-console -->
-<meta name="google-site-verification" content="Q1EwaWsi6IHL9Jn13R4XSSOJeMNGhmA--5ZrB5bQQao" />
+<title>Office Attendance Tracker — Smart Attendance for Teams</title>
+<meta name="description" content="Office Attendance Tracker is a free Progressive Web App (PWA) that helps employees and teams track daily attendance — office, work from home, holiday, and leave — with smart location reminders and Google Drive sync.">
+
+<!-- Fast redirect if already logged in: immediately route to calander.html -->
+<script>
+  (function() {
+    try {
+      var isLogged = localStorage.getItem('isLoggedIn') === 'true' ||
+                     Boolean(localStorage.getItem('currentUser')) ||
+                     Boolean(localStorage.getItem('googleUserInfo')) ||
+                     Boolean(localStorage.getItem('lastUserId'));
+      if (isLogged) {
+        window.location.replace('calander.html');
+      }
+    } catch (e) {}
+  })();
+</script>
+
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,3348 +33,410 @@
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #176b4a;
+    --primary-dark: #173f32;
+    --accent: #e67a5e;
+    --text: #1a2e25;
+    --text-light: #56706a;
+    --bg: #f4f7f5;
+    --border: #dde8e2;
+  }
+  body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 
-<link rel="stylesheet" href="index.css">
+  /* NAV */
+  nav {
+    background: var(--primary-dark);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: max(14px, env(safe-area-inset-top, 14px)) max(24px, env(safe-area-inset-right, 24px)) 14px max(24px, env(safe-area-inset-left, 24px));
+    position: sticky; top: 0; z-index: 99;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; color: white; font-weight: 800; font-size: 15px; text-decoration: none; }
+  .nav-mark { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: white; border: 1px solid rgba(255,255,255,0.2); }
+  .nav-links { display: flex; gap: 10px; align-items: center; }
+  .nav-links a { color: rgba(255,255,255,.8); text-decoration: none; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; transition: background .2s; }
+  .nav-links a:hover { background: rgba(255,255,255,.12); color: white; }
+  .nav-links .nav-cta { background: var(--accent); color: white; border-radius: 8px; }
+  .nav-links .nav-cta:hover { background: #d4694f; }
 
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #173f32 0%, #1d5c42 60%, #164535 100%);
+    color: white; padding: 70px 24px 80px; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; }
+  .hero-badge { display: inline-block; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 5px 16px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.9); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 24px; }
+  .hero h1 { font-family: 'Manrope', sans-serif; font-size: clamp(30px, 6vw, 52px); font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
+  .hero h1 span { color: #f2c66d; }
+  .hero p { font-size: 17px; color: rgba(255,255,255,.8); margin-bottom: 32px; max-width: 540px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+  /* GOOGLE SIGN IN BOX */
+  .hero-auth-box {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    padding: 24px;
+    max-width: 380px;
+    margin: 0 auto 28px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+  }
+  .hero-auth-box h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+  .hero-auth-box p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 16px;
+  }
+  .g-btn-wrap {
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 13px 26px; border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 20px rgba(230,122,94,.4); border: none; cursor: pointer; }
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(230,122,94,.55); transform: translateY(-1px); }
+  .btn-outline { background: rgba(255,255,255,.1); color: white; border: 1.5px solid rgba(255,255,255,.3); }
+  .btn-outline:hover { background: rgba(255,255,255,.18); }
+
+  /* SECTIONS */
+  .section { max-width: 960px; margin: 0 auto; padding: 64px 24px; }
+  .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: 10px; }
+  .section h2 { font-family: 'Manrope', sans-serif; font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: var(--text); margin-bottom: 14px; }
+  .section-sub { font-size: 15px; color: var(--text-light); max-width: 540px; margin-bottom: 40px; }
+
+  /* FEATURES */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .feature-card { background: white; border: 1px solid var(--border); border-radius: 18px; padding: 26px; box-shadow: 0 2px 14px rgba(0,0,0,.04); transition: box-shadow .2s, transform .2s; }
+  .feature-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.08); transform: translateY(-2px); }
+  .feature-icon { font-size: 32px; margin-bottom: 14px; }
+  .feature-card h3 { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .feature-card p { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .how-bg { background: white; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px; margin-top: 8px; }
+  .step { text-align: center; }
+  .step-num { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #176b4a, #1e9468); color: white; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .step h3 { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .step p { font-size: 13px; color: var(--text-light); }
+
+  /* PRIVACY STRIP */
+  .privacy-strip { background: linear-gradient(135deg, #f0fdf4, #f8fbff); border: 1.5px solid #bbf7d0; border-radius: 20px; padding: 32px; display: flex; gap: 20px; align-items: flex-start; margin-top: 32px; }
+  .privacy-strip-icon { font-size: 38px; flex-shrink: 0; }
+  .privacy-strip h3 { font-family: 'Manrope', sans-serif; font-size: 18px; font-weight: 800; color: #166534; margin-bottom: 8px; }
+  .privacy-strip p { font-size: 14px; color: #386641; line-height: 1.6; }
+  .privacy-strip a { color: #176b4a; font-weight: 600; text-decoration: underline; }
+
+  /* STATUSES */
+  .statuses { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .status-pill { padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+  .s-office { background: #4caf50; color: white; }
+  .s-home { background: #e3f2fd; color: #1565c0; border: 2px solid #1976d2; }
+  .s-holiday { background: #fbc02d; color: #4a3800; }
+  .s-leave { background: repeating-linear-gradient(-45deg, #fbc02d, #fbc02d 6px, #e53935 6px, #e53935 10px); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .s-nso { background: #4caf50; color: white; outline: 2px dashed #e53935; outline-offset: 2px; }
+  .s-nsh { background: #e53935; color: white; }
+
+  /* CTA */
+  .cta-section { background: linear-gradient(135deg, #173f32, #1e5c42); color: white; text-align: center; padding: 68px 24px; }
+  .cta-section h2 { font-family: 'Manrope', sans-serif; font-size: clamp(24px, 4vw, 38px); font-weight: 800; margin-bottom: 14px; }
+  .cta-section p { font-size: 16px; color: rgba(255,255,255,.8); margin-bottom: 28px; }
+
+  /* FOOTER */
+  footer { background: #0f2b1f; color: rgba(255,255,255,.6); text-align: center; padding: 24px; font-size: 13px; }
+  footer a { color: rgba(255,255,255,.8); text-decoration: none; margin: 0 8px; }
+  footer a:hover { color: white; }
+
+  @media (max-width: 600px) {
+    nav { padding: max(12px, env(safe-area-inset-top, 12px)) 16px 12px; }
+    .privacy-strip { flex-direction: column; gap: 12px; padding: 22px 18px; }
+    .hero { padding: 48px 16px 56px; }
+    .hero-auth-box { padding: 20px 16px; width: 100%; }
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-brand">
+    <div class="nav-mark">OA</div>
+    Office Attendance
+  </a>
+  <div class="nav-links">
+    <a href="privacy.html">Privacy</a>
+    <a href="calander.html" class="nav-cta">Open Calendar →</a>
+  </div>
+</nav>
 
-<!-- HEADER -->
-<div class="header">
-<div class="header-left">
-<div id="headerAvatarWrap" style="cursor:pointer;flex-shrink:0;" onclick="showProfilePage()" title="My Profile">
-  <img id="headerAvatar" class="header-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23fff'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23fff'/%3E%3C/svg%3E" alt="Profile" />
-</div>
-<div>
-<div class="header-title" id="headerTitle">Attendance Tracker</div>
-<div class="header-subtitle" id="headerSubtitle">Unknown User (Please login to save the data)</div>
-</div>
-</div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Free Progressive Web App</div>
+    <h1>Track attendance.<br><span>Stay organised.</span></h1>
+    <p>A simple, private attendance tracker for individuals and teams. Mark your daily work status in seconds — office, work from home, holiday, or leave — with smart location reminders and cross-device sync.</p>
 
-<!-- DESKTOP MENU -->
-<div class="header-menu">
-<button class="menu-item" onclick="showDashboardView()">Dashboard</button>
-<button class="menu-item" onclick="showProfilePage()">My Profile</button>
-<button class="menu-item" onclick="showReminderPage()">Reminder</button>
-<button class="menu-item" onclick="downloadCSV()">Export Data</button>
-<button class="menu-item" onclick="showLogoutConfirm()">Logout</button>
-<button class="menu-item" onclick="showSupportInfo()">Help</button>
-</div>
-
-<div class="header-buttons">
-<button class="icon-btn" id="drawerBtn" title="Menu">☰</button>
-</div>
-</div>
-
-<!-- PROFILE PAGE -->
-<div class="profile-page" id="profilePage" style="display:none;">
-  <div class="profile-page-card">
-    <div class="profile-page-actions">
-      <div>
-        <div class="profile-page-title">My Profile</div>
-        <div class="profile-page-subtitle">Manage your details and save changes instantly.</div>
+    <!-- SIGN IN COMPONENT -->
+    <div class="hero-auth-box" id="authBox">
+      <h3>Get started with Google</h3>
+      <p>Sign in with your Google account. No password needed.</p>
+      <div class="g-btn-wrap">
+        <div id="landingGoogleSignIn"></div>
       </div>
-      <button class="action-button btn-success" id="profilePageEditBtn" onclick="toggleProfilePageEditMode()" style="width:auto; margin:0; padding:10px 14px;">Edit</button>
+      <div id="authStatusText" style="display:none;font-size:12px;margin-top:10px;color:#f2c66d;"></div>
     </div>
 
-    <div id="profilePageViewSection" class="profile-view-grid">
-      <div class="profile-view-card">
-        <img id="profilePagePhoto" class="profile-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
-        <div class="profile-label">Full Name</div>
-        <div class="profile-value" id="profilePageViewName">Add your name</div>
-        <div class="profile-label">Mobile</div>
-        <div class="profile-value" id="profilePageViewMobile">Not provided</div>
-        <div class="profile-label">Email</div>
-        <div class="profile-value" id="profilePageViewEmail">Not provided</div>
-        <div class="profile-label">Company</div>
-        <div class="profile-value" id="profilePageViewCompany">Not provided</div>
-        <div class="profile-label">Office Hours</div>
-        <div class="profile-value" id="profilePageViewHours">Not set</div>
-      </div>
-      <div class="profile-view-card" id="personalSheetCard">
-        <div class="profile-label">Attendance storage</div>
-        <div class="profile-value" id="personalSheetStatus">Using the app's main attendance sheet</div>
-        <button class="action-button btn-primary" id="connectPersonalSheetFromProfileBtn" onclick="openPersonalSheetSetup()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Connect personal sheet</button>
-        <button class="action-button btn-secondary" id="reconnectSheetBtn" onclick="reconnectPersonalSheet()" style="width:auto;margin-top:12px;padding:9px 12px;display:none;">Reconnect Google Drive</button>
-      </div>
-
-      <!-- Test Notification Card -->
-      <div class="profile-view-card" id="notifTestCard">
-        <div class="profile-label">🔔 Notifications</div>
-        <div class="profile-value" id="notifPermStatus" style="font-size:13px;">—</div>
-        <button class="action-button btn-primary" id="testNotifBtn" onclick="sendTestNotification()" style="width:auto;margin-top:12px;padding:9px 14px;font-size:13px;">📲 Send Test Notification</button>
-        <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Sends an immediate test notification so you can verify it works on this device.</div>
-      </div>
-
-      <!-- Location view cards -->
-      <div class="profile-view-card" id="locationViewCard">
-        <div class="location-section-header"><span>📍</span> Smart Location</div>
-        <!-- Office -->
-        <div class="location-card" id="officeLocViewCard">
-          <div class="location-card-header">
-            <div class="location-pin office-pin">🏢</div>
-            <div>
-              <div class="location-card-title">Office Location</div>
-              <div class="location-card-subtitle" id="officeLocViewSub">Not set — tap Edit to configure</div>
-            </div>
-          </div>
-          <div class="location-set-display" id="officeLocSetDisplay" style="display:none;">
-            <span style="font-size:20px;">📍</span>
-            <div>
-              <div class="loc-name" id="officeLocViewName">—</div>
-              <div class="loc-coords" id="officeLocViewCoords"></div>
-            </div>
-          </div>
-        </div>
-        <!-- Home -->
-        <div class="location-card home-card" id="homeLocViewCard">
-          <div class="location-card-header">
-            <div class="location-pin home-pin">🏠</div>
-            <div>
-              <div class="location-card-title">Home Location</div>
-              <div class="location-card-subtitle" id="homeLocViewSub">Not set — tap Edit to configure</div>
-            </div>
-          </div>
-          <div class="location-set-display" id="homeLocSetDisplay" style="display:none;">
-            <span style="font-size:20px;">📍</span>
-            <div>
-              <div class="loc-name" id="homeLocViewName">—</div>
-              <div class="loc-coords" id="homeLocViewCoords"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="profilePageEditSection" class="profile-edit-grid" style="display:none;">
-      <div class="profile-photo-container" style="margin-bottom:8px;">
-        <img id="profilePagePhotoEdit" class="profile-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
-        <button class="profile-photo-button" onclick="triggerProfilePhotoUpload()">Upload Photo</button>
-        <input type="file" id="profilePagePhotoInput" accept="image/*" onchange="uploadProfilePagePhoto(event)" />
-      </div>
-      <div class="form-group">
-        <label>Name:</label>
-        <input type="text" id="profilePageName" placeholder="Your name" />
-      </div>
-      <div class="form-group">
-        <label>Country Code:</label>
-        <select id="profilePageCountryCode">
-          <option value="+91">+91 India</option>
-          <option value="+1">+1 USA/Canada</option>
-          <option value="+44">+44 UK</option>
-          <option value="+61">+61 Australia</option>
-          <option value="+81">+81 Japan</option>
-          <option value="+49">+49 Germany</option>
-          <option value="+33">+33 France</option>
-          <option value="+7">+7 Russia</option>
-          <option value="+39">+39 Italy</option>
-          <option value="+34">+34 Spain</option>
-          <option value="+27">+27 South Africa</option>
-          <option value="+86">+86 China</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Mobile:</label>
-        <input type="tel" id="profilePageMobile" placeholder="12345 67890" />
-      </div>
-      <div class="form-group">
-        <label>Email:</label>
-        <input type="email" id="profilePageEmail" placeholder="your@email.com" />
-      </div>
-      <div class="form-group">
-        <label>Company:</label>
-        <input type="text" id="profilePageCompany" placeholder="Company name" />
-      </div>
-      <label style="font-weight:600;color:var(--text-light);margin-bottom:10px;display:block;">Office Hours:</label>
-      <div class="form-row">
-        <div class="form-group">
-          <label>In Time:</label>
-          <select id="profilePageInTime"></select>
-        </div>
-        <div class="form-group">
-          <label>Out Time:</label>
-          <select id="profilePageOutTime"></select>
-        </div>
-      </div>
-      <button class="action-button btn-success" onclick="saveProfilePage()">Save Changes</button>
-
-      <!-- Location edit section -->
-      <div style="margin-top:4px;">
-        <div class="location-section-header"><span>📍</span> Smart Location</div>
-
-        <!-- OFFICE -->
-        <div class="location-card" id="officeLocEditCard">
-          <div class="location-card-header">
-            <div class="location-pin office-pin">🏢</div>
-            <div>
-              <div class="location-card-title">Office Location</div>
-              <div class="location-card-subtitle">Used to auto-detect when you arrive at work</div>
-            </div>
-          </div>
-          <div class="location-set-display" id="officeLocEditDisplay" style="display:none;">
-            <span style="font-size:18px;">✅</span>
-            <div style="flex:1;">
-              <div class="loc-name" id="officeLocEditName">—</div>
-              <div class="loc-coords" id="officeLocEditCoords"></div>
-            </div>
-          </div>
-          <div class="location-not-set" id="officeLocNotSet">No office location saved yet.</div>
-          <div class="location-search-wrap">
-            <input class="location-search-input" id="officeLocSearch" type="text" placeholder="Search office address or name…" oninput="onLocSearch(event,'office')" autocomplete="off" />
-            <div class="location-search-spinner" id="officeLocSpinner"></div>
-            <div class="location-autocomplete" id="officeLocDrop"></div>
-          </div>
-          <div class="loc-actions">
-            <button class="loc-btn loc-btn-current" onclick="useCurrentLocation('office')">📡 Use Current Location</button>
-            <button class="loc-btn loc-btn-clear" id="officeLocClearBtn" onclick="clearLocation('office')" style="display:none;">✕ Clear</button>
-          </div>
-          <div class="radius-wrap">
-            <div class="radius-label">Detection radius: <span id="officeRadiusLabel">200 m</span></div>
-            <input class="radius-slider" id="officeRadiusSlider" type="range" min="50" max="1000" step="50" value="200" oninput="onRadiusChange(this,'office')" />
-          </div>
-        </div>
-
-        <!-- HOME -->
-        <div class="location-card home-card" id="homeLocEditCard">
-          <div class="location-card-header">
-            <div class="location-pin home-pin">🏠</div>
-            <div>
-              <div class="location-card-title">Home Location</div>
-              <div class="location-card-subtitle">Used to auto-detect when you're working from home</div>
-            </div>
-          </div>
-          <div class="location-set-display" id="homeLocEditDisplay" style="display:none;">
-            <span style="font-size:18px;">✅</span>
-            <div style="flex:1;">
-              <div class="loc-name" id="homeLocEditName">—</div>
-              <div class="loc-coords" id="homeLocEditCoords"></div>
-            </div>
-          </div>
-          <div class="location-not-set" id="homeLocNotSet">No home location saved yet.</div>
-          <div class="location-search-wrap">
-            <input class="location-search-input" id="homeLocSearch" type="text" placeholder="Search home address…" oninput="onLocSearch(event,'home')" autocomplete="off" />
-            <div class="location-search-spinner" id="homeLocSpinner"></div>
-            <div class="location-autocomplete" id="homeLocDrop"></div>
-          </div>
-          <div class="loc-actions">
-            <button class="loc-btn loc-btn-current home-card" onclick="useCurrentLocation('home')">📡 Use Current Location</button>
-            <button class="loc-btn loc-btn-clear" id="homeLocClearBtn" onclick="clearLocation('home')" style="display:none;">✕ Clear</button>
-          </div>
-          <div class="radius-wrap">
-            <div class="radius-label">Detection radius: <span id="homeRadiusLabel">200 m</span></div>
-            <input class="radius-slider home-card" id="homeRadiusSlider" type="range" min="50" max="1000" step="50" value="200" oninput="onRadiusChange(this,'home')" />
-          </div>
-        </div>
-      </div>
+    <div class="hero-btns">
+      <a href="calander.html" class="btn btn-outline">Go to Calendar</a>
+      <a href="#features" class="btn btn-outline">See Features</a>
     </div>
   </div>
-</div>
+</section>
 
-<!-- SETUP WIZARD -->
-<div class="setup-wizard-overlay" id="setupWizard">
-  <div class="setup-wizard-sheet">
-    <!-- Step progress dots -->
-    <div class="wizard-steps-track">
-      <div class="wizard-step-dot active" id="wdot0"></div>
-      <div class="wizard-step-dot" id="wdot1"></div>
-      <div class="wizard-step-dot" id="wdot2"></div>
-      <div class="wizard-step-dot" id="wdot3"></div>
-    </div>
+<!-- WHAT IT IS -->
+<div class="section" id="about">
+  <div class="section-label">What is this app?</div>
+  <h2>Attendance tracking, without the complexity</h2>
+  <p class="section-sub">Office Attendance Tracker is a free PWA (installable on Android &amp; iOS) that lets you keep a private calendar of where you worked each day. No spreadsheet expertise required.</p>
 
-    <!-- Step 0: Notifications permission -->
-    <div class="wizard-slide active" id="wslide0">
-      <div class="wizard-icon">🔔</div>
-      <div class="wizard-title">Stay on top of attendance</div>
-      <div class="wizard-sub">Get a smart reminder exactly when your workday starts — right in your notification tray, even when the app is closed.</div>
-      <div class="wizard-perm-box">
-        <div class="wizard-perm-icon">💡</div>
-        <div class="wizard-perm-text">
-          <strong>Why we need this</strong>
-          We'll send one notification per workday at your office start time. No spam, no tracking.
-        </div>
-      </div>
-      <div class="wizard-notif-status" id="wizardNotifStatus">
-        <span>⏳</span> Notification permission not yet requested
-      </div>
-      <div class="wizard-actions">
-        <button class="wizard-btn-primary" id="wizardNotifBtn" onclick="wizardRequestNotifPermission()">🔔 Allow Notifications</button>
-        <button class="wizard-btn-skip" onclick="wizardNextStep()">Skip</button>
-      </div>
-    </div>
-
-    <!-- Step 1: Office start time -->
-    <div class="wizard-slide" id="wslide1">
-      <div class="wizard-icon">🕐</div>
-      <div class="wizard-title">When does your workday start?</div>
-      <div class="wizard-sub">We'll send your attendance reminder at this exact time, Monday to Friday.</div>
-      <div class="wizard-field-label">Office Start Time</div>
-      <select class="wizard-input wizard-select" id="wizardInTime">
-        <option value="">Select time…</option>
-      </select>
-      <div class="wizard-field-label" style="margin-top:14px;">Office End Time (optional)</div>
-      <select class="wizard-input wizard-select" id="wizardOutTime">
-        <option value="">Select time…</option>
-      </select>
-      <div class="wizard-actions">
-        <button class="wizard-btn-primary" id="wizardTimeContinueBtn" onclick="wizardSaveTime()" disabled>Continue →</button>
-        <button class="wizard-btn-skip" onclick="wizardNextStep()">Skip</button>
-      </div>
-    </div>
-
-    <!-- Step 2: Office location -->
-    <div class="wizard-slide" id="wslide2">
-      <div class="wizard-icon">🏢</div>
-      <div class="wizard-title">Where's your office?</div>
-      <div class="wizard-sub">Search by name or use your current GPS location. We'll notify you automatically when you arrive.</div>
-      <div class="wizard-field-label">Search or detect office location</div>
-      <div class="wizard-loc-row">
-        <input class="wizard-input wizard-loc-search" id="wizardOfficeSearch" type="text"
-          placeholder="e.g. ANZ Bank, Tower 1…" oninput="wizardLocSearch(event,'office')" autocomplete="off" />
-        <button class="wizard-loc-btn" onclick="wizardUseGPS('office')" title="Use current location">📡</button>
-      </div>
-      <div class="wizard-autocomplete" id="wizardOfficeDrop"></div>
-      <div class="wizard-loc-status" id="wizardOfficeStatus">📍 No location set yet</div>
-      <div class="wizard-actions">
-        <button class="wizard-btn-primary" id="wizardOfficeContinueBtn" onclick="wizardNextStep()">Continue →</button>
-        <button class="wizard-btn-skip" onclick="wizardNextStep()">Skip</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Home location -->
-    <div class="wizard-slide" id="wslide3">
-      <div class="wizard-icon">🏠</div>
-      <div class="wizard-title">Work from home sometimes?</div>
-      <div class="wizard-sub">Set your home location and we'll auto-suggest "Work from Home" when you open the app from there. Totally optional.</div>
-      <div class="wizard-field-label">Search or detect home location</div>
-      <div class="wizard-loc-row">
-        <input class="wizard-input wizard-loc-search" id="wizardHomeSearch" type="text"
-          placeholder="Your home address…" oninput="wizardLocSearch(event,'home')" autocomplete="off" />
-        <button class="wizard-loc-btn" onclick="wizardUseGPS('home')" title="Use current location">📡</button>
-      </div>
-      <div class="wizard-autocomplete" id="wizardHomeDrop"></div>
-      <div class="wizard-loc-status" id="wizardHomeStatus">📍 No location set yet</div>
-      <div class="wizard-actions">
-        <button class="wizard-btn-primary" onclick="wizardFinish()">✅ All Done!</button>
-        <button class="wizard-btn-skip" onclick="wizardFinish()">Skip</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- GEOFENCE BANNER -->
-<div class="geofence-banner" id="geofenceBanner">
-  <div class="geofence-banner-icon" id="geofenceBannerIcon">🏢</div>
-  <div class="geofence-banner-title" id="geofenceBannerTitle">You're at the office!</div>
-  <div class="geofence-banner-sub" id="geofenceBannerSub">Mark your attendance for today?</div>
-  <div class="geofence-banner-actions">
-    <button class="geofence-confirm-btn" id="geofenceConfirmBtn" onclick="geofenceMarkAttendance()">✅ Mark Office</button>
-    <button class="geofence-dismiss-btn" onclick="dismissGeofenceBanner(false)">⏰ Later</button>
-  </div>
-</div>
-
-<!-- REMINDER PAGE -->
-<div class="reminder-page" id="reminderPage" style="display:none;">
-  <div class="reminder-page-card">
-    <div class="reminder-page-header">
-      <div>
-        <div class="reminder-page-title">Reminders</div>
-        <div class="reminder-page-subtitle">Set reminders for meetings and receive local notifications before the event.</div>
-      </div>
-      <button class="action-button btn-success" id="reminderPageBackBtn" onclick="showDashboardView()" style="width:auto; margin:0; padding:10px 14px;">← Back</button>
-    </div>
-
-    <div class="reminder-form-section">
-      <div class="form-group">
-        <label>Reminder Title:</label>
-        <input type="text" id="reminderTitle" placeholder="e.g. Team meeting" />
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Date:</label>
-          <input type="date" id="reminderDate" />
-        </div>
-        <div class="form-group">
-          <label>Time:</label>
-          <input type="time" id="reminderTime" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Notify before:</label>
-        <select id="reminderOffset">
-          <option value="0">At time</option>
-          <option value="5">5 minutes before</option>
-          <option value="10">10 minutes before</option>
-          <option value="15" selected>15 minutes before</option>
-          <option value="30">30 minutes before</option>
-          <option value="60">1 hour before</option>
-        </select>
-      </div>
-      <button class="action-button btn-primary" onclick="saveReminder()">Save Reminder</button>
-    </div>
- 
-    <div class="reminder-list-section">
-      <div class="reminder-page-subtitle">Your Reminders:</div>
-      <div class="reminder-list" id="reminderList"></div>
+  <div style="margin-bottom:28px;">
+    <p style="font-size:14px;color:var(--text-light);margin-bottom:12px;">Mark any day with one of these statuses:</p>
+    <div class="statuses">
+      <span class="status-pill s-office">✓ Office</span>
+      <span class="status-pill s-home">✓ Work From Home</span>
+      <span class="status-pill s-holiday">Holiday</span>
+      <span class="status-pill s-leave">Leave</span>
+      <span class="status-pill s-nso">No Show + Office</span>
+      <span class="status-pill s-nsh">No Show + Home</span>
     </div>
   </div>
-</div>
 
-<!-- CALENDAR AREA -->
-<div class="calendar-area">
-<div class="calendar-heading">
-  <div style="flex:1;">
-    <div class="calendar-heading-label">Attendance overview</div>
-  </div>
-  <button id="batchSaveBtn" onclick="flushBatchChanges()" style="display:none;padding:7px 13px;border:none;border-radius:10px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(22,163,74,.4);transition:transform .15s;" title="Save all pending changes">💾 Save changes (<span id="batchCount">0</span>)</button>
-</div>
-<div class="nav-controls">
-<button class="nav-btn" id="prev">◀ Prev</button>
-<div class="month-title" id="monthTitle"></div>
-<button class="nav-btn" id="next">Next ▶</button>
-</div>
-
-<div class="weekdays">
-<div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
-<div>Thu</div><div>Fri</div><div>Sat</div>
-</div>
-
-<div class="calendar" id="calendar"></div>
-<div class="calendar-loading" id="calendarLoading" role="status" aria-live="polite" hidden>
-  <div class="calendar-loading-card">
-    <span class="calendar-spinner" id="calendarSpinner" aria-hidden="true"></span>
-    <span id="calendarLoadingMessage">Loading attendance…</span>
-    <button class="action-button btn-secondary" id="calendarLoadActionBtn" onclick="retryAttendanceLoad()" hidden>Retry</button>
-  </div>
-</div>
-</div>
-
-<!-- SUMMARY -->
-<div class="summary">
-
-<div class="legend">
-<div class="legend-item"><span class="dot" style="background:#4caf50"></span>Office</div>
-<div class="legend-item"><span class="dot" style="background:#f8f9fa;border:1px solid #d9dee3"></span>WFH</div>
-<div class="legend-item"><span class="dot" style="background:#fbc02d;border:1px solid #e0a800"></span>Holiday</div>
-<div class="legend-item"><span class="dot" style="background:repeating-linear-gradient(-45deg,#fbc02d,#fbc02d 4px,#e53935 4px,#e53935 6px);border:1px solid #e0a800"></span>Leave</div>
-<div class="legend-item"><span class="dot" style="background:#e53935"></span>No Show</div>
-</div>
-
-<div class="office-progress" id="officeProgress" title="Office attendance this month"></div>
-<div class="stat-overview" id="statsOverview" title="Click to view fiscal year breakdown"></div>
-<div class="stats" id="stats"></div>
-
-</div>
-
-</div>
-
-<!-- DRAWER OVERLAY -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-
-<!-- NOTIFICATION MODAL -->
-<div class="notification-modal-backdrop" id="notificationModalBackdrop"></div>
-<div class="notification-modal" id="notificationModal">
-  <div class="notification-modal-icon">🔔</div>
-  <div class="notification-modal-title" id="notificationModalTitle">Reminder Alert</div>
-  <div class="notification-modal-time" id="notificationModalTime">Event at 2:30 PM</div>
-  <div class="notification-modal-buttons">
-    <button class="notification-modal-btn-close" onclick="closeNotificationModal()">Close</button>
-    <button class="notification-modal-btn-ok" onclick="closeNotificationModal()">OK</button>
-  </div>
-</div>
-
-<!-- DRAWER -->
-<div class="drawer" id="drawer">
-<div class="drawer-header">
-<div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
-<span>Menu</span>
-<button onclick="closeDrawer()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;padding:0;">✕</button>
-</div>
-</div>
-<div class="drawer-menu">
-<div class="drawer-item" onclick="showDashboardView();closeDrawer();">
-<span class="drawer-item-icon">🏠</span>
-<span>Dashboard</span>
-</div>
-<div class="drawer-item" onclick="showProfilePage();closeDrawer();">
-<span class="drawer-item-icon">👤</span>
-<span>My Profile</span>
-</div>
-<div class="drawer-item" onclick="showReminderPage();closeDrawer();">
-<span class="drawer-item-icon">🔔</span>
-<span>Reminder</span>
-</div>
-<div class="drawer-item" onclick="downloadCSV();closeDrawer();">
-<span class="drawer-item-icon">⬇️</span>
-<span>Export Data</span>
-</div>
-<div class="drawer-item" onclick="showLogoutConfirm();closeDrawer();">
-<span class="drawer-item-icon">🚪</span>
-<span>Logout</span>
-</div>
-<div class="drawer-item" onclick="showSupportInfo();closeDrawer();">
-<span class="drawer-item-icon">❓</span>
-<span>Help</span>
-</div>
-</div>
-
-<!-- Drawer version footer -->
-<div style="padding:16px 20px 24px;margin-top:auto;border-top:1px solid rgba(255,255,255,.08);">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:rgba(255,255,255,.6);">OA</div>
+  <div class="privacy-strip">
+    <div class="privacy-strip-icon">🔒</div>
     <div>
-      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">Office Attendance</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">v<span id="drawerVersionBadge">4.0</span></div>
+      <h3>Your data stays yours</h3>
+      <p>Sign in with Google — your attendance is stored in Google Sheets that only you and the app admin can access. Optionally connect your own private Google Drive spreadsheet for fully personal storage. We never sell or share your data. <a href="privacy.html">Read our full Privacy Policy →</a></p>
     </div>
   </div>
 </div>
-</div>
 
-<!-- BACKDROP -->
-<div class="backdrop" id="backdrop"></div>
+<!-- FEATURES -->
+<div id="features" style="background:white;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="section">
+    <div class="section-label">Features</div>
+    <h2>Everything you need, nothing you don't</h2>
+    <p class="section-sub">Built for individuals who need a simple, reliable way to track and recall their work location each day.</p>
 
-<!-- GOOGLE SIGN-IN -->
-<div class="login-screen" id="loginSheet" aria-labelledby="loginTitle">
-  <section class="login-brand-panel">
-    <div class="login-brand-content">
-      <div class="login-brand-kicker">OFFICE ATTENDANCE</div>
-      <h1 class="login-brand-title">Work, accounted for.</h1>
-      <div class="login-brand-rule"></div>
-      <div class="login-brand-foot">A clear view of where your work happens.</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Visual Calendar</h3>
+        <p>Colour-coded monthly calendar makes it instant to see your attendance pattern at a glance. Navigate across months freely.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Smart Reminders</h3>
+        <p>Get a push notification at your office start time reminding you to mark attendance. A second reminder fires in the afternoon if you still haven't marked.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3>Location Aware</h3>
+        <p>Optionally set your office and home locations. When you arrive, the app prompts you to mark attendance automatically — no manual tapping needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Attendance Stats</h3>
+        <p>Monthly, quarterly, and annual summaries show your office days, WFH days, leaves, and office target percentage at a glance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">☁️</div>
+        <h3>Cross-Device Sync</h3>
+        <p>Sign in with the same Google account on any phone, tablet, or computer and all your data syncs instantly via Google Sheets.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📤</div>
+        <h3>CSV &amp; Excel Export</h3>
+        <p>Download your full attendance history as a clean CSV file at any time for your own records or to submit to HR.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Installable PWA</h3>
+        <p>Install directly to your Android or iOS home screen. Works offline. No app store required. Free forever.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔑</div>
+        <h3>Google Sign-In Only</h3>
+        <p>No passwords to remember. Sign in securely with your existing Google account. Your credentials are never seen by this app.</p>
+      </div>
     </div>
-  </section>
-  <section class="login-panel">
-    <div class="login-panel-inner">
-      <div class="login-panel-brand"><span class="brand-mark" aria-hidden="true">OA</span><span>OFFICE ATTENDANCE</span></div>
-      <div class="login-kicker">ACCOUNT ACCESS</div>
-      <h2 class="login-panel-title" id="loginTitle">Sign in</h2>
-      <p class="login-panel-copy">Continue with your Google account.</p>
-      <div id="googleSignInButton"></div>
-      <button class="google-login-fallback" id="googleSignInFallback" type="button" disabled>Google sign-in unavailable</button>
-      <div class="auth-status" id="loginStatus" role="status" aria-live="polite">Checking sign-in setup…</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-bg">
+  <div class="section">
+    <div class="section-label">How it works</div>
+    <h2>Up and running in under a minute</h2>
+    <p class="section-sub">No complex setup or configuration needed to get started.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Sign in with Google</h3>
+        <p>Tap "Sign in with Google" to access your secure personal attendance records.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Complete your profile</h3>
+        <p>Add your name, mobile, company, and set your standard office start/end times.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Mark your days</h3>
+        <p>Tap any day on the calendar and choose your work status. Changes are saved instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Stay on target</h3>
+        <p>Track your quarterly and yearly office attendance quotas effortlessly.</p>
+      </div>
     </div>
-  </section>
+  </div>
 </div>
 
-<!-- REGISTRATION SHEET -->
-<div class="sheet" id="registrationSheet" role="dialog" aria-modal="true" aria-labelledby="registrationTitle">
-<div class="sheet-title" id="registrationTitle">Complete your profile</div>
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Start tracking today</h2>
+  <p>Free, private, and works on any device. Ready to view your calendar?</p>
+  <div style="display:flex;justify-content:center;margin-bottom:20px;">
+    <div id="landingGoogleSignInFooter"></div>
+  </div>
+  <a href="calander.html" class="btn btn-primary" style="font-size:16px;padding:15px 36px;">Open Calendar App →</a>
+</section>
 
-<div class="form-group">
-<label for="regMobile">Mobile number <span aria-hidden="true">*</span></label>
-<div class="form-row">
-<select id="regCountryCode" aria-label="Mobile country code" onchange="validateRegistrationForm()">
-<option value="+91">+91 India</option>
-<option value="+1">+1 USA/Canada</option>
-<option value="+44">+44 UK</option>
-<option value="+61">+61 Australia</option>
-<option value="+81">+81 Japan</option>
-<option value="+49">+49 Germany</option>
-<option value="+33">+33 France</option>
-<option value="+7">+7 Russia</option>
-<option value="+39">+39 Italy</option>
-<option value="+34">+34 Spain</option>
-<option value="+27">+27 South Africa</option>
-<option value="+86">+86 China</option>
-</select>
-<input type="tel" id="regMobile" placeholder="98765 43210" autocomplete="tel-national" oninput="validateRegistrationForm()" required />
-</div>
-</div>
-
-<div class="form-group">
-<label for="regName">Full name <span aria-hidden="true">*</span></label>
-<input type="text" id="regName" placeholder="Your name" autocomplete="name" oninput="validateRegistrationForm()" required />
-</div>
-
-<div class="form-group">
-<label for="regEmail">Email</label>
-<input type="email" id="regEmail" placeholder="name@example.com" readonly />
-</div>
-
-<div class="form-group">
-<label>Company:</label>
-<input type="text" id="regCompany" placeholder="Company name" />
-</div>
-
-<label style="font-weight:600;color:var(--text-light);margin-bottom:10px;display:block;">Office Hours:</label>
-<div class="form-row">
-<div class="form-group">
-<label>In Time (Hour):</label>
-<select id="regInTime">
-<option value="">Select hour</option>
-</select>
-</div>
-<div class="form-group">
-<label>Out Time (Hour):</label>
-<select id="regOutTime">
-<option value="">Select hour</option>
-</select>
-</div>
-</div>
-
-<div class="auth-status" id="registrationStatus" role="status" aria-live="polite"></div>
-<button class="action-button btn-success" id="saveProfileContinueBtn" onclick="completeRegistration()" aria-describedby="registrationStatus" disabled>Save profile</button>
-</div>
-
-<div class="sheet" id="connectSheetModal" role="dialog" aria-modal="true" aria-labelledby="connectSheetTitle">
-  <div class="auth-mark" aria-hidden="true">Drive</div>
-  <div class="sheet-title" id="connectSheetTitle">Connect your attendance sheet</div>
-  <p class="profile-connect-copy">Create a private attendance spreadsheet in your Google Drive. Your profile remains saved in the app's main sheet.</p>
-  <button class="action-button btn-primary" id="connectSheetBtn" onclick="connectPersonalSheet()">Allow and create my sheet</button>
-  <button class="action-button btn-secondary" id="continueWithoutSheetBtn" onclick="continueWithoutSheet()">Continue without connecting</button>
-  <div class="auth-status" id="profileConnectStatus" role="status" aria-live="polite"></div>
-</div>
-
-<!-- PROFILE SHEET -->
-<div class="sheet" id="profileSheet">
-<div class="sheet-title">My Profile</div>
-
-<div class="profile-photo-container">
-<img id="displayPhoto" class="profile-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23bbb'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23bbb'/%3E%3C/svg%3E" />
-<button class="photo-upload-btn" onclick="triggerPhotoUpload()">Upload Photo</button>
-<input type="file" id="profilePhotoInput" accept="image/*" onchange="uploadPhoto(event)" />
-</div>
-
-<div class="form-group">
-<label>Name:</label>
-<input type="text" id="profileName" placeholder="Your name" onchange="autoSaveProfile()" />
-</div>
-
-  <div class="form-group">
-<label>Country Code:</label>
-<select id="profileCountryCode" onchange="autoSaveProfile()">
-<option value="+91">+91 India</option>
-<option value="+1">+1 USA/Canada</option>
-<option value="+44">+44 UK</option>
-<option value="+61">+61 Australia</option>
-<option value="+81">+81 Japan</option>
-<option value="+49">+49 Germany</option>
-<option value="+33">+33 France</option>
-<option value="+7">+7 Russia</option>
-<option value="+39">+39 Italy</option>
-<option value="+34">+34 Spain</option>
-<option value="+27">+27 South Africa</option>
-<option value="+86">+86 China</option>
-</select>
-</div>
-
-<div class="form-group">
-<label>Mobile:</label>
-<input type="tel" id="profileMobile" placeholder="12345 67890" onchange="autoSaveProfile()" />
-</div>
-
-<div class="form-group">
-<label>Email:</label>
-<input type="email" id="profileEmail" placeholder="your@email.com" onchange="autoSaveProfile()" />
-</div>
-
-<div class="form-group">
-<label>Company:</label>
-<input type="text" id="profileCompany" placeholder="Company name" onchange="autoSaveProfile()" />
-</div>
-
-<label style="font-weight:600;color:var(--text-light);margin-bottom:10px;display:block;">Office Hours:</label>
-<div class="form-row">
-<div class="form-group">
-<label>In Time:</label>
-<select id="profileInTime" onchange="autoSaveProfile()"></select>
-</div>
-<div class="form-group">
-<label>Out Time:</label>
-<select id="profileOutTime" onchange="autoSaveProfile()"></select>
-</div>
-</div>
-
-<button class="action-button btn-success" onclick="saveProfile()">Save Changes</button>
-<button class="action-button btn-secondary" onclick="closeProfileSheet()">Close</button>
-</div>
-
-<!-- ATTENDANCE MARK SHEET -->
-<div class="sheet" id="attendanceSheet">
-<div class="sheet-title" id="attendanceDateTitle"></div>
-
-<button class="action-button btn-office" onclick="setStatus('office')">✓ Work From Office</button>
-<button class="action-button btn-home" onclick="setStatus('home')">✓ Work From Home</button>
-<button class="action-button btn-holiday" onclick="setStatus('holiday')">Holiday</button>
-<button class="action-button btn-leave" onclick="setStatus('leave')">Leave</button>
-<button class="action-button btn-danger" onclick="setStatus('noShowOffice')">✗ No Show + Office</button>
-<button class="action-button btn-danger" onclick="setStatus('noShowHome')">✗ No Show + Home</button>
-<button class="action-button btn-secondary" onclick="setStatus('reset')">Reset</button>
-</div>
-
+<!-- FOOTER -->
+<footer>
+  <p>
+    &copy; 2026 Office Attendance Tracker &nbsp;|&nbsp;
+    <a href="calander.html">Calendar</a> &nbsp;|&nbsp;
+    <a href="privacy.html">Privacy Policy</a> &nbsp;|&nbsp;
+    <a href="mailto:gaurab.pur@gmail.com">Contact</a>
+  </p>
+</footer>
 
 <script>
+  const GOOGLE_OAUTH_CLIENT_ID = '83272451338-s55v870hpabod4lkr0bvkbgouulrnuso.apps.googleusercontent.com';
 
-// ===== GLOBALS =====
-const APP_VERSION = '4.0'; // bump this alongside CACHE_NAME in sw.js
-let currentUser = null;
-let currentDate = new Date();
-let selectedKey = null;
-let googleIdToken = '';
-let googleAccessToken = '';
-let googleTokenClient = null;
-let googleTokenRefreshTimer = null;
-const GOOGLE_OAUTH_CLIENT_ID = '83272451338-s55v870hpabod4lkr0bvkbgouulrnuso.apps.googleusercontent.com';
-const PERSONAL_SHEET_SCOPE = 'openid email profile https://www.googleapis.com/auth/drive.file';
-// Deployed Google Apps Script Web App URL
-let googleScriptURL = 'https://script.google.com/macros/s/AKfycbyHdXTO6WUcjt_I0Nr0h1VEy6OkOVGdjefnLXWVdJ7DCkbPmz0_EV5Z6D94MauVwG8QPQ/exec';
-let attendanceData = {};
-let userProfile = null;
-let saveCount = 0;
-let reminders = [];
-let reminderWatchInterval = null;
-let manualPeriodOverrides = { quarter: null, year: null };
-let auth = { signOut: signOutGoogle };
-
-// ===== GOOGLE AUTH =====
-
-/**
- * Save the user's identity (non-sensitive) separately from the short-lived token.
- * This lets us attempt a silent re-auth on next open without showing the login UI.
- */
-function saveGoogleUserInfo(claims) {
-  const info = {
-    sub: claims.sub,
-    email: claims.email,
-    name: claims.name || '',
-    picture: claims.picture || ''
-  };
-  localStorage.setItem('googleUserInfo', JSON.stringify(info));
-}
-
-function getGoogleUserInfo() {
-  try {
-    const raw = localStorage.getItem('googleUserInfo');
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-function initializeAuth() {
-  hideApp();
-  showLoginSheet();
-  if (GOOGLE_OAUTH_CLIENT_ID.startsWith('YOUR_')) {
-    document.getElementById('googleSignInButton').style.display = 'none';
-    document.getElementById('googleSignInFallback').style.display = 'block';
-    setLoginStatus('Sign-in setup is incomplete. Contact the app administrator.', true);
-    return;
+  function decodeGoogleCredential(credential) {
+    const encodedPayload = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const binaryPayload = atob(encodedPayload);
+    const bytes = Uint8Array.from(binaryPayload, character => character.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
   }
 
-  const initializeGoogle = () => {
+  function handleLandingCredentialResponse(response) {
+    try {
+      const claims = decodeGoogleCredential(response.credential);
+      if (!claims.sub || !claims.email) throw new Error('Could not verify account.');
+
+      const statusEl = document.getElementById('authStatusText');
+      if (statusEl) {
+        statusEl.textContent = 'Signed in successfully! Loading your calendar…';
+        statusEl.style.display = 'block';
+      }
+
+      localStorage.setItem('googleIdToken', response.credential);
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('lastUserId', claims.sub);
+      
+      const userInfo = {
+        userId: claims.sub,
+        sub: claims.sub,
+        email: claims.email,
+        name: claims.name || '',
+        picture: claims.picture || ''
+      };
+      localStorage.setItem('currentUser', JSON.stringify(userInfo));
+      localStorage.setItem('googleUserInfo', JSON.stringify(userInfo));
+
+      // Redirect immediately to calander.html
+      window.location.replace('calander.html');
+    } catch (err) {
+      console.error('Sign-in processing error:', err);
+      alert('Sign-in failed. Please try again.');
+    }
+  }
+
+  function initLandingGoogle() {
     if (!window.google || !google.accounts || !google.accounts.id) {
-      setTimeout(initializeGoogle, 200);
+      setTimeout(initLandingGoogle, 200);
       return;
     }
 
-    document.getElementById('googleSignInFallback').style.display = 'none';
-    document.getElementById('googleSignInButton').style.display = 'block';
     google.accounts.id.initialize({
       client_id: GOOGLE_OAUTH_CLIENT_ID,
-      callback: handleGoogleCredentialResponse,
-      // auto_select: silently re-issues a fresh token when the Google browser
-      // session (cookies) is still alive — no user interaction needed.
+      callback: handleLandingCredentialResponse,
       auto_select: true
     });
-    google.accounts.id.renderButton(document.getElementById('googleSignInButton'), {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      shape: 'rectangular',
-      text: 'signin_with',
-      width: Math.max(120, Math.min(360, window.innerWidth - 80))
-    });
 
-    const restoredClaims = restoreGoogleSession();
-    if (restoredClaims) {
-      // Token is still valid — restore immediately.
-      document.getElementById('loginSheet').classList.remove('show');
-      checkAndShowRegistration(restoredClaims.sub);
-      scheduleGoogleTokenRefresh(restoredClaims);
-    } else {
-      // Token missing or expired. Check whether we have a remembered identity.
-      // If yes, show a "resuming" hint and let One Tap silently refresh the token.
-      // If no, show the regular login sheet so the user can sign in manually.
-      const remembered = getGoogleUserInfo();
-      if (remembered) {
-        setLoginStatus(`Resuming session for ${remembered.email}…`);
-      }
-      // prompt() will fire handleGoogleCredentialResponse silently when
-      // auto_select is true and the Google browser session is still active.
-      // If the browser session has also expired, the One Tap UI will appear.
-      google.accounts.id.prompt((notification) => {
-        // If One Tap was suppressed (e.g. user previously dismissed it or
-        // the browser blocks it), fall back to showing the manual login sheet.
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          setLoginStatus('');
-        }
+    const heroBtn = document.getElementById('landingGoogleSignIn');
+    if (heroBtn) {
+      google.accounts.id.renderButton(heroBtn, {
+        type: 'standard',
+        theme: 'filled_blue',
+        size: 'large',
+        shape: 'rectangular',
+        text: 'signin_with',
+        width: Math.min(320, window.innerWidth - 64)
       });
     }
-  };
 
-  initializeGoogle();
-}
-
-function decodeGoogleCredential(credential) {
-  const encodedPayload = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-  const binaryPayload = atob(encodedPayload);
-  const bytes = Uint8Array.from(binaryPayload, character => character.charCodeAt(0));
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
-
-function restoreGoogleSession() {
-  try {
-    const credential = localStorage.getItem('googleIdToken');
-    if (!credential) return null;
-    const claims = decodeGoogleCredential(credential);
-    // Reject if token is expired (allow 60 s buffer for clock skew).
-    // Even if rejected here, initializeAuth() will attempt a silent re-auth.
-    if (!claims.sub || !claims.email || claims.aud !== GOOGLE_OAUTH_CLIENT_ID || claims.exp * 1000 <= Date.now() + 60000) {
-      localStorage.removeItem('googleIdToken');
-      return null;
+    const footBtn = document.getElementById('landingGoogleSignInFooter');
+    if (footBtn) {
+      google.accounts.id.renderButton(footBtn, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        shape: 'rectangular',
+        text: 'signin_with',
+        width: Math.min(320, window.innerWidth - 64)
+      });
     }
 
-    googleIdToken = credential;
-    currentUser = {
-      userId: claims.sub,
-      email: claims.email,
-      name: claims.name || '',
-      picture: claims.picture || ''
-    };
-    localStorage.setItem('lastUserId', claims.sub);
-    return claims;
-  } catch (error) {
-    localStorage.removeItem('googleIdToken');
-    return null;
-  }
-}
-
-function scheduleGoogleTokenRefresh(claims) {
-  if (googleTokenRefreshTimer) clearTimeout(googleTokenRefreshTimer);
-  // setTimeout max is ~24.8 days; cap the delay and re-schedule if needed.
-  const MS_MAX_TIMEOUT = 2147483647;
-  const refreshDelay = Math.min(claims.exp * 1000 - Date.now() - 60000, MS_MAX_TIMEOUT);
-  if (refreshDelay <= 0) {
+    // Try silent One Tap prompt
     google.accounts.id.prompt();
-    return;
-  }
-  // Re-schedule after the cap if the expiry is more than ~24 days away.
-  googleTokenRefreshTimer = setTimeout(() => {
-    const remaining = claims.exp * 1000 - Date.now() - 60000;
-    if (remaining > 0) {
-      scheduleGoogleTokenRefresh(claims); // still time left, re-schedule
-    } else {
-      google.accounts.id.prompt(); // time to refresh
-    }
-  }, refreshDelay);
-}
-
-async function handleGoogleCredentialResponse(response) {
-  try {
-    const claims = decodeGoogleCredential(response.credential);
-    if (!claims.sub || !claims.email) throw new Error('Google did not return a verified account.');
-    googleIdToken = response.credential;
-    // Persist the token so the session survives browser restarts/tab closes.
-    localStorage.setItem('googleIdToken', googleIdToken);
-    // Also persist identity separately so silent re-auth works after token expiry.
-    saveGoogleUserInfo(claims);
-    currentUser = {
-      userId: claims.sub,
-      email: claims.email,
-      name: claims.name || '',
-      picture: claims.picture || ''
-    };
-    localStorage.setItem('lastUserId', claims.sub);
-    // Schedule automatic silent refresh ~60 s before the token expires.
-    scheduleGoogleTokenRefresh(claims);
-    document.getElementById('loginSheet').classList.remove('show');
-    await checkAndShowRegistration(claims.sub);
-  } catch (error) {
-    console.error('Google sign-in failed:', error);
-    showLoginSheet();
-    setLoginStatus('Google sign-in could not be completed. Please try again.', true);
-  }
-}
-
-function signOutGoogle() {
-  if (window.google && google.accounts && google.accounts.id) {
-    google.accounts.id.disableAutoSelect();
-  }
-  currentUser = null;
-  userProfile = null;
-  googleIdToken = '';
-  googleAccessToken = '';
-  if (googleTokenRefreshTimer) clearTimeout(googleTokenRefreshTimer);
-  // Clear ALL persisted auth data on explicit logout so silent re-auth does not fire.
-  localStorage.removeItem('googleIdToken');
-  localStorage.removeItem('googleUserInfo');
-  localStorage.removeItem('lastUserId');
-  attendanceData = {};
-  closeSheet();
-  hideApp();
-  showLoginSheet();
-}
-
-function updateHeaderProfile() {
-  const titleEl    = document.getElementById('headerTitle');
-  const subtitleEl = document.getElementById('headerSubtitle');
-  const avatarEl   = document.getElementById('headerAvatar');
-  if (!titleEl || !subtitleEl) return;
-
-  // Profile picture — prefer Google picture from token, fallback to stored photo
-  const picUrl = (currentUser && currentUser.picture) ||
-                 (userProfile && userProfile.profilePhoto) || '';
-  if (avatarEl && picUrl) {
-    avatarEl.src = picUrl;
-    avatarEl.onerror = () => { avatarEl.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%23fff'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='25' fill='%23fff'/%3E%3C/svg%3E`; };
   }
 
-  // Also update notification permission status on profile card
-  const notifStatusEl = document.getElementById('notifPermStatus');
-  if (notifStatusEl && 'Notification' in window) {
-    const p = Notification.permission;
-    notifStatusEl.textContent = p === 'granted' ? '✅ Notifications enabled' : p === 'denied' ? '🚫 Blocked — enable in device settings' : '⏳ Permission not yet granted';
-    notifStatusEl.style.color  = p === 'granted' ? '#16a34a' : p === 'denied' ? '#dc2626' : 'var(--text-light)';
-  }
-
-  if (userProfile && userProfile.name) {
-    titleEl.textContent = `Welcome, ${userProfile.name}`;
-    subtitleEl.textContent = currentUser ? currentUser.email : 'Signed in with Google';
-    return;
-  }
-  if (currentUser) {
-    titleEl.textContent = 'Attendance Tracker';
-    subtitleEl.textContent = `Signed in as ${currentUser.email}`;
-    return;
-  }
-  titleEl.textContent = 'Attendance Tracker';
-  subtitleEl.textContent = 'Unknown User (Please login to save the data)';
-}
-
-function setLoginStatus(message, isError = false) {
-  const statusEl = document.getElementById('loginStatus');
-  if (!statusEl) return;
-  statusEl.textContent = message;
-  statusEl.style.display = 'block';
-  statusEl.style.color = isError ? '#c62828' : '#4caf50';
-}
-
-function normalizeMobileNumber(phoneNumber, countryCode) {
-  const input = (phoneNumber || '').trim();
-  const digits = input.replace(/\D/g, '');
-  const countryDigits = (countryCode || '').replace(/\D/g, '');
-  if (!digits) return '';
-  if (input.startsWith('+') || (countryDigits && digits.startsWith(countryDigits))) {
-    return `+${digits}`;
-  }
-  return `${countryCode}${digits}`;
-}
-
-// ===== USER PROFILE =====
-function isGoogleScriptConfigured() {
-  return googleScriptURL && googleScriptURL.trim() !== '';
-}
-
-function buildScriptPayload(fields) {
-  const params = new URLSearchParams();
-  Object.keys(fields).forEach(key => {
-    const value = fields[key];
-    if (value === undefined || value === null) {
-      params.append(key, '');
-    } else if (typeof value === 'object') {
-      params.append(key, JSON.stringify(value));
-    } else {
-      params.append(key, String(value));
+  window.addEventListener('load', () => {
+    initLandingGoogle();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
   });
-  if (googleIdToken) params.set('idToken', googleIdToken);
-  return params;
-}
-
-function getLocalStorageUserProfile(userId) {
-  // User profile is only cached locally as a fallback (e.g. offline).
-  // The authoritative source is always the Google Sheet.
-  try {
-    const raw = localStorage.getItem(`userProfile_${userId}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch (error) {
-    return null;
-  }
-}
-
-function setLocalStorageUserProfile(userId, userData) {
-  localStorage.setItem(`userProfile_${userId}`, JSON.stringify(userData));
-}
-
-// Attendance is NOT cached in localStorage to avoid stale cross-device data.
-// Only pending (unsynced) writes are kept in localStorage via getPendingAttendance.
-function getLocalStorageAttendance(userId) {
-  // Return only locally pending writes so they can be merged with fresh remote data.
-  return getPendingAttendance(userId);
-}
-
-function setLocalStorageAttendance(userId, data) {
-  // No-op: we do not cache full attendance locally any more.
-  // Only pending writes are stored via setPendingAttendance.
-}
-
-function persistProfileLocally(userId, userData) {
-  const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-  setLocalStorageUserProfile(uid, userData);
-  localStorage.setItem('lastUserId', uid);
-  userProfile = userData;
-  return uid;
-}
-
-async function syncProfileToRemote(userId, userData) {
-  if (!isGoogleScriptConfigured() || !googleIdToken) {
-    return { success: false, localOnly: true };
-  }
-
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'saveUser',
-        userId: userId,
-        userData: userData
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    const result = await response.json();
-    return { success: !!(result && result.success), result };
-  } catch (error) {
-    console.error('Remote profile sync failed', error);
-    return { success: false, localOnly: true, error };
-  }
-}
-
-async function checkAndShowRegistration(userId = null) {
-  const activeUserId = userId || (currentUser && currentUser.userId);
-  if (!activeUserId || !googleIdToken) {
-    showLoginSheet();
-    return;
-  }
-
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({ action: 'getUser', userId: activeUserId }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-
-    const text = await response.text();
-    const result = text ? JSON.parse(text) : null;
-    if (!result || (!result.success && result.data !== 'User not found')) {
-      throw new Error((result && result.data) || 'Could not load the central profile.');
-    }
-
-    userProfile = result.success ? (result.data || {}) : {};
-    userProfile.mobile = String(userProfile.mobile ?? '');
-    userProfile.email = currentUser.email;
-
-    // Backfill profile photo from Google token if not yet stored in the sheet
-    if (!userProfile.profilePhoto && currentUser && currentUser.picture) {
-      userProfile.profilePhoto = currentUser.picture;
-      // Save silently in background so future logins on new devices get the picture
-      syncProfileToRemote(activeUserId, userProfile).catch(() => {});
-    }
-
-    const profileIsComplete = Boolean(userProfile.name && userProfile.mobile);
-    const regName = document.getElementById('regName');
-    const regEmail = document.getElementById('regEmail');
-    const regMobile = document.getElementById('regMobile');
-    const regCountryCode = document.getElementById('regCountryCode');
-
-    regName.value = userProfile.name || currentUser.name || '';
-    regEmail.value = currentUser.email;
-    if (userProfile.mobile) {
-      const mobileDigits = userProfile.mobile.replace(/\D/g, '');
-      const country = Array.from(regCountryCode.options).find(option => mobileDigits.startsWith(option.value.replace(/\D/g, '')));
-      if (country) {
-        regCountryCode.value = country.value;
-        regMobile.value = mobileDigits.slice(country.value.replace(/\D/g, '').length);
-      } else {
-        regMobile.value = mobileDigits;
-      }
-    }
-
-    populateHourSelects('reg');
-    validateRegistrationForm();
-    if (profileIsComplete) {
-      updateHeaderProfile();
-      if (userProfile.personalSpreadsheetId || userProfile.personalSheetSkipped) {
-        showApp();
-        closeSheet();
-        loadAttendanceData(activeUserId);
-        checkSaveLimit();
-        return;
-      }
-      showApp();
-      showConnectSheetModal();
-      document.getElementById('profileConnectStatus').textContent = 'Your profile record is ready.';
-      return;
-    }
-    document.getElementById('saveProfileContinueBtn').style.display = 'block';
-    showApp();
-    showRegistrationSheet();
-  } catch (error) {
-    console.error('Error checking Google profile:', error);
-    showLoginSheet();
-    setLoginStatus(error.message || 'Could not load your profile. Please try again.', true);
-  }
-}
-
-async function completeRegistration() {
-  if (!currentUser || !currentUser.userId || !googleIdToken) {
-    setRegistrationStatus('Sign in with Google before saving your profile.', true);
-    return;
-  }
-
-  const mobile = normalizeMobileNumber(
-    document.getElementById('regMobile').value,
-    document.getElementById('regCountryCode').value
-  );
-  const name = document.getElementById('regName').value.trim();
-  if (!name || !mobile) {
-    setRegistrationStatus('Enter your name and mobile number to continue.', true);
-    return;
-  }
-
-  const userData = {
-    mobile: mobile,
-    name: name,
-    email: currentUser.email,
-    company: document.getElementById('regCompany').value,
-    inTime: document.getElementById('regInTime').value,
-    outTime: document.getElementById('regOutTime').value,
-    // Store Google profile picture URL so it appears on other devices
-    profilePhoto: (currentUser && currentUser.picture) ||
-                  (userProfile && userProfile.profilePhoto) || '',
-    personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
-    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
-  };
-
-  const saveButton = document.getElementById('saveProfileContinueBtn');
-  saveButton.disabled = true;
-  saveButton.textContent = 'Saving profile…';
-  setRegistrationStatus('Saving your profile to the main Google Sheet…');
-  try {
-    const result = await syncProfileToRemote(currentUser.userId, userData);
-    if (!result.success) throw new Error('The main profile sheet could not be reached. Please try again.');
-    userProfile = userData;
-    persistProfileLocally(currentUser.userId, userData);
-    updateHeaderProfile();
-    closeRegistrationSheet();
-    showConnectSheetModal('Profile saved successfully.');
-  } catch (error) {
-    setRegistrationStatus(error.message, true);
-  } finally {
-    saveButton.disabled = false;
-    saveButton.textContent = 'Save profile';
-  }
-}
-
-function setRegistrationStatus(message, isError = false) {
-  const status = document.getElementById('registrationStatus');
-  status.textContent = message;
-  status.style.color = isError ? '#c62828' : '#176b4a';
-}
-
-function validateRegistrationForm() {
-  const name = document.getElementById('regName').value.trim();
-  const mobile = normalizeMobileNumber(
-    document.getElementById('regMobile').value,
-    document.getElementById('regCountryCode').value
-  );
-  const saveButton = document.getElementById('saveProfileContinueBtn');
-  const isValid = Boolean(name && mobile);
-  saveButton.disabled = !isValid;
-  saveButton.classList.toggle('is-ready', isValid);
-  if (isValid) document.getElementById('registrationStatus').textContent = '';
-  return isValid;
-}
-
-async function continueWithoutSheet() {
-  if (userProfile && userProfile.personalSpreadsheetId) {
-    finishProfileSetup();
-    return;
-  }
-  const continueButton = document.getElementById('continueWithoutSheetBtn');
-  continueButton.disabled = true;
-  try {
-    userProfile.personalSheetSkipped = true;
-    const result = await syncProfileToRemote(currentUser.userId, userProfile);
-    if (!result.success) throw new Error('Could not save your preference. Try again.');
-    persistProfileLocally(currentUser.userId, userProfile);
-    finishProfileSetup();
-  } catch (error) {
-    document.getElementById('profileConnectStatus').textContent = error.message;
-  } finally {
-    continueButton.disabled = false;
-  }
-}
-
-function finishProfileSetup() {
-  closeConnectSheetModal();
-  showApp();
-  loadAttendanceData(currentUser.userId);
-  checkSaveLimit();
-  // Show setup wizard if user hasn't configured notifications/location yet
-  setTimeout(() => {
-    if (typeof shouldShowWizard === 'function' && shouldShowWizard()) {
-      showSetupWizard();
-    } else {
-      // Already set up — just re-schedule reminder (keeps SW timer alive across reloads)
-      scheduleAttendanceReminder();
-      setTimeout(runGeofenceCheck, 2000);
-    }
-  }, 1500);
-}
-
-function openPersonalSheetSetup() {
-  showConnectSheetModal();
-  document.getElementById('profileConnectStatus').textContent = '';
-  document.getElementById('connectSheetBtn').textContent = 'Allow and create my sheet';
-  document.getElementById('continueWithoutSheetBtn').textContent = 'Continue without connecting';
-}
-
-function showConnectSheetModal(statusMessage = '') {
-  closeRegistrationSheet();
-  document.getElementById('profileConnectStatus').textContent = statusMessage;
-  document.getElementById('connectSheetModal').classList.add('show');
-  document.getElementById('backdrop').classList.add('show');
-}
-
-function closeConnectSheetModal() {
-  document.getElementById('connectSheetModal').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function requestPersonalSheetAccess(prompt = '') {
-  return new Promise((resolve, reject) => {
-    if (!window.google || !google.accounts || !google.accounts.oauth2) {
-      reject(new Error('Google Drive authorization is unavailable. Reload the page and try again.'));
-      return;
-    }
-
-    const tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_OAUTH_CLIENT_ID,
-      scope: PERSONAL_SHEET_SCOPE,
-      callback: response => {
-        if (response.error || !response.access_token) {
-          reject(new Error(response.error_description || 'Google Drive permission was not granted.'));
-          return;
-        }
-        googleAccessToken = response.access_token;
-        personalSheetRequest('https://www.googleapis.com/oauth2/v3/userinfo')
-          .then(profile => {
-            if (!currentUser || profile.sub !== currentUser.userId) {
-              reject(new Error('Authorize Drive with the same Google account you used to sign in.'));
-              return;
-            }
-            resolve(googleAccessToken);
-          })
-          .catch(reject);
-      },
-      error_callback: error => reject(new Error(error.message || 'Google authorization was closed.'))
-    });
-    tokenClient.requestAccessToken({ prompt: prompt });
-  });
-}
-
-async function personalSheetRequest(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${googleAccessToken}`
-    }
-  });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error?.message || 'Google Sheets request failed.');
-  return result;
-}
-
-async function connectPersonalSheet() {
-  const button = document.getElementById('connectSheetBtn');
-  const status = document.getElementById('profileConnectStatus');
-  button.disabled = true;
-  button.textContent = 'Connecting…';
-  status.textContent = 'Requesting permission to create a spreadsheet in your Drive…';
-  try {
-    await requestPersonalSheetAccess('consent');
-    const created = await personalSheetRequest('https://sheets.googleapis.com/v4/spreadsheets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        properties: { title: 'Office Attendance - ' + userProfile.name },
-        sheets: [{ properties: { title: 'Attendance', gridProperties: { frozenRowCount: 1 } } }]
-      })
-    });
-    const centralResponse = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({ action: 'getAttendance', userId: currentUser.userId }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    const centralResult = await centralResponse.json();
-    if (!centralResult.success) throw new Error('Could not migrate your existing attendance records.');
-
-    const values = [['Date', 'Status']];
-    Object.keys(centralResult.data || {}).sort().forEach(date => {
-      const statusValue = centralResult.data[date];
-      if (statusValue !== null && statusValue !== undefined && statusValue !== '') {
-        values.push([date, statusValue]);
-      }
-    });
-    await personalSheetRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(created.spreadsheetId)}/values/${encodeURIComponent('Attendance!A1:B' + values.length)}?valueInputOption=RAW`,
-      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: values }) }
-    );
-
-    userProfile.personalSpreadsheetId = created.spreadsheetId;
-    userProfile.personalSheetSkipped = false;
-    const profileResult = await syncProfileToRemote(currentUser.userId, userProfile);
-    if (!profileResult.success) {
-      persistProfileLocally(currentUser.userId, userProfile);
-      throw new Error('The sheet was created, but the app could not save its link to your profile. Retry after checking your connection.');
-    }
-    persistProfileLocally(currentUser.userId, userProfile);
-    status.textContent = 'Your attendance sheet is connected and ready.';
-    button.textContent = 'Connected';
-    document.getElementById('continueWithoutSheetBtn').textContent = 'Continue to calendar';
-    loadAttendanceData(currentUser.userId);
-  } catch (error) {
-    status.textContent = error.message;
-    button.textContent = 'Allow and create my sheet';
-    console.error('Personal spreadsheet connection failed:', error);
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function reconnectPersonalSheet() {
-  const button = document.getElementById('reconnectSheetBtn');
-  const status = document.getElementById('personalSheetStatus');
-  button.disabled = true;
-  status.textContent = 'Reconnecting to Google Drive…';
-  try {
-    await requestPersonalSheetAccess('');
-    await loadAttendanceData(currentUser.userId);
-    status.textContent = 'Connected to your personal attendance sheet.';
-  } catch (error) {
-    status.textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
-}
-
-// ===== PROFILE PHOTO =====
-function triggerPhotoUpload() {
-  document.getElementById('profilePhotoInput')?.click();
-}
-
-function triggerProfilePhotoUpload() {
-  document.getElementById('profilePagePhotoInput')?.click();
-}
-
-function uploadPhoto(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const base64 = e.target.result;
-    const preview = document.getElementById('displayPhoto') || document.getElementById('profilePagePhotoEdit');
-    if (preview) preview.src = base64;
-    if (!userProfile) {
-      userProfile = {};
-    }
-    userProfile.profilePhoto = base64;
-  };
-  reader.readAsDataURL(file);
-}
-
-function uploadProfilePagePhoto(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const base64 = e.target.result;
-    const preview = document.getElementById('profilePagePhoto') || document.getElementById('profilePagePhotoEdit');
-    if (preview) preview.src = base64;
-    if (!userProfile) {
-      userProfile = {};
-    }
-    userProfile.profilePhoto = base64;
-  };
-  reader.readAsDataURL(file);
-}
-
-// ===== SAVE/LOAD FUNCTIONS =====
-function setCalendarLoading(message = 'Loading attendance…') {
-  const overlay = document.getElementById('calendarLoading');
-  const spinner = document.getElementById('calendarSpinner');
-  const actionButton = document.getElementById('calendarLoadActionBtn');
-  overlay.hidden = false;
-  spinner.hidden = false;
-  actionButton.hidden = true;
-  document.getElementById('calendarLoadingMessage').textContent = message;
-}
-
-function setCalendarLoadError(message, actionLabel = 'Retry') {
-  const overlay = document.getElementById('calendarLoading');
-  const spinner = document.getElementById('calendarSpinner');
-  const actionButton = document.getElementById('calendarLoadActionBtn');
-  overlay.hidden = false;
-  spinner.hidden = true;
-  actionButton.textContent = actionLabel;
-  actionButton.hidden = false;
-  document.getElementById('calendarLoadingMessage').textContent = message;
-}
-
-function clearCalendarLoading() {
-  document.getElementById('calendarLoading').hidden = true;
-}
-
-function getPendingAttendance(uid) {
-  try {
-    return JSON.parse(localStorage.getItem(`attendancePending_${uid}`) || '{}');
-  } catch (error) {
-    console.error('Could not read pending attendance changes:', error);
-    return {};
-  }
-}
-
-function setPendingAttendance(uid, pending) {
-  const key = `attendancePending_${uid}`;
-  if (Object.keys(pending).length) {
-    localStorage.setItem(key, JSON.stringify(pending));
-  } else {
-    localStorage.removeItem(key);
-  }
-}
-
-function clearPendingAttendanceDate(uid, date, status) {
-  const latestPending = getPendingAttendance(uid);
-  if (Object.prototype.hasOwnProperty.call(latestPending, date) && latestPending[date] === status) {
-    delete latestPending[date];
-    setPendingAttendance(uid, latestPending);
-  }
-}
-
-async function syncAttendanceRecord(uid, date, status) {
-  // Personal sheet path: write directly, no DirtyDocs involvement.
-  if (userProfile && userProfile.personalSpreadsheetId) {
-    await writePersonalAttendance(date, status);
-    return;
-  }
-
-  // Central sheet path: saveAttendance also writes a DirtyDocs row (Synced=FALSE).
-  const response = await fetch(googleScriptURL, {
-    method: 'POST',
-    body: buildScriptPayload({
-      action: 'saveAttendance',
-      userId: uid,
-      date: date,
-      status: status
-    }),
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-  });
-  const result = await response.json();
-  if (!response.ok || !result || !result.success) {
-    throw new Error((result && result.data) || 'Google Sheets did not confirm the attendance save.');
-  }
-
-  // Tell the sheet this entry is now confirmed on the client side (Synced=TRUE).
-  // Fire-and-forget: a failure here is non-critical (the Attendance data is already saved).
-  markSyncedOnServer(uid, date).catch(err =>
-    console.warn(`markSynced failed for ${date}:`, err)
-  );
-}
-
-/**
- * Stamps Synced=TRUE / SyncedAt on the DirtyDocs row for this userId+date.
- * Called after a successful saveAttendance so the sheet has a full audit trail.
- */
-async function markSyncedOnServer(uid, date) {
-  if (!isGoogleScriptConfigured() || !googleIdToken) return;
-  await fetch(googleScriptURL, {
-    method: 'POST',
-    body: buildScriptPayload({ action: 'markSynced', userId: uid, date: date }),
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-  });
-}
-
-/**
- * Fetches any DirtyDocs rows that are still Synced=FALSE on the server.
- * This can happen if the app crashed after writing attendance but before markSynced.
- * Merges those entries into the local pending queue so they get re-flushed.
- */
-async function fetchServerDirtyDocs(uid) {
-  if (!isGoogleScriptConfigured() || !googleIdToken) return;
-  try {
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({ action: 'getDirtyDocs', userId: uid }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    const result = await response.json();
-    if (!result || !result.success || !Array.isArray(result.data)) return;
-
-    // Merge server-side unsynced entries into local pending queue.
-    const localPending = getPendingAttendance(uid);
-    let added = 0;
-    result.data.forEach(entry => {
-      if (entry.date && entry.status && !localPending[entry.date]) {
-        localPending[entry.date] = entry.status;
-        added++;
-      }
-    });
-    if (added > 0) {
-      setPendingAttendance(uid, localPending);
-      console.log(`Recovered ${added} unsynced entries from server DirtyDocs.`);
-    }
-  } catch (err) {
-    console.warn('Could not fetch server DirtyDocs:', err);
-  }
-}
-
-async function flushPendingAttendance(uid) {
-  // First, reconcile with the server's DirtyDocs — recover any entries the server
-  // recorded as unsynced (e.g. app crashed before markSynced was called).
-  await fetchServerDirtyDocs(uid);
-
-  const pending = getPendingAttendance(uid);
-  for (const [date, status] of Object.entries(pending)) {
-    try {
-      await syncAttendanceRecord(uid, date, status);
-      clearPendingAttendanceDate(uid, date, status);
-    } catch (error) {
-      console.error(`Could not sync pending attendance for ${date}:`, error);
-    }
-  }
-  return Object.keys(getPendingAttendance(uid)).length > 0;
-}
-
-async function retryAttendanceLoad() {
-  if (userProfile && userProfile.personalSpreadsheetId) {
-    setCalendarLoading('Requesting Google Drive access…');
-    try {
-      await requestPersonalSheetAccess('');
-    } catch (error) {
-      console.error('Could not authorize the personal attendance sheet:', error);
-      setCalendarLoadError(error.message || 'Could not connect to your Google Sheet.', 'Reconnect Google Drive');
-      return;
-    }
-  }
-  await loadAttendanceData(currentUser && currentUser.userId);
-}
-
-async function loadAttendanceData(userId) {
-  const uid = userId || (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-  // Only pending (unsynced) writes are kept locally — never a full attendance cache.
-  const pendingWrites = getPendingAttendance(uid);
-  setCalendarLoading();
-
-  // Show any pending writes immediately so the calendar is not empty while loading.
-  if (Object.keys(pendingWrites).length > 0) {
-    attendanceData = { ...pendingWrites };
-    render();
-  }
-
-  if (userProfile && userProfile.personalSpreadsheetId) {
-    if (!googleAccessToken) {
-      try {
-        await requestPersonalSheetAccess('');
-      } catch (error) {
-        console.error('Google Drive access is required to load the personal attendance sheet:', error);
-        // Show pending writes only as a fallback when offline.
-        attendanceData = { ...pendingWrites };
-        render();
-        setCalendarLoadError('Reconnect Google Drive on this device to load your saved attendance.', 'Reconnect Google Drive');
-        return;
-      }
-    }
-    try {
-      // Always flush pending writes before fetching so remote is up-to-date.
-      const hasUnsyncedChanges = await flushPendingAttendance(uid);
-      // Fetch fresh data from the personal Google Sheet (source of truth).
-      const result = await personalSheetRequest(
-        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(userProfile.personalSpreadsheetId)}/values/${encodeURIComponent('Attendance!A2:B')}`
-      );
-      const remoteAttendance = {};
-      (result.values || []).forEach(row => {
-        if (row[0] && row[1]) remoteAttendance[row[0]] = row[1];
-      });
-      // Remote is authoritative; overlay any still-pending writes on top.
-      attendanceData = { ...remoteAttendance, ...getPendingAttendance(uid) };
-      render();
-      if (hasUnsyncedChanges) {
-        setCalendarLoadError('Some attendance changes are still waiting to sync. Check your connection and retry.', 'Reconnect Google Drive');
-      } else {
-        clearCalendarLoading();
-      }
-      return;
-    } catch (error) {
-      console.error('Could not load personal attendance sheet:', error);
-      // On error, show pending writes as best-effort display.
-      attendanceData = { ...pendingWrites };
-      render();
-      setCalendarLoadError('Could not load your Google Sheet. Check your connection and try again.', 'Reconnect Google Drive');
-      return;
-    }
-  }
-
-  if (!isGoogleScriptConfigured()) {
-    // No remote configured — show pending writes only.
-    attendanceData = { ...pendingWrites };
-    render();
-    clearCalendarLoading();
-    return;
-  }
-
-  try {
-    // Always flush pending writes first so the sheet is up-to-date before we read.
-    const hasUnsyncedChanges = await flushPendingAttendance(uid);
-    // Always fetch fresh data from Google Sheet — never rely on a local cache.
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'getAttendance',
-        userId: uid
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-
-    const result = await response.json();
-    if (!response.ok || !result || !result.success) {
-      throw new Error((result && result.data) || 'The attendance sheet could not be loaded.');
-    }
-    // Remote data is the single source of truth.
-    // Any still-pending writes are overlaid on top so they are reflected immediately.
-    const remoteAttendance = result.data || {};
-    attendanceData = { ...remoteAttendance, ...getPendingAttendance(uid) };
-    render();
-    if (hasUnsyncedChanges) {
-      setCalendarLoadError('Some attendance changes are still waiting to sync. Check your connection and retry.');
-    } else {
-      clearCalendarLoading();
-    }
-  } catch (error) {
-    console.error('Failed to load attendance from Google Sheets:', error);
-    // Network/server error — show only local pending writes as fallback.
-    attendanceData = { ...pendingWrites };
-    render();
-    setCalendarLoadError('Could not load attendance from Google Sheets. Check your connection and try again.');
-  }
-}
-
-async function checkSaveLimit() {
-  if (!isGoogleScriptConfigured()) {
-    saveCount = 0;
-    return;
-  }
-
-  try {
-    const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-    const response = await fetch(googleScriptURL, {
-      method: 'POST',
-      body: buildScriptPayload({
-        action: 'checkSaveLimit',
-        userId: uid
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      saveCount = result.data.count;
-    }
-  } catch (error) {
-    console.error('Failed to check save limit:', error);
-  }
-}
-
-async function saveAttendance(date, status) {
-  const uid = (currentUser && currentUser.userId) || localStorage.getItem('lastUserId') || 'local_user';
-  // Optimistically update in-memory data and re-render immediately.
-  attendanceData[date] = status;
-  render();
-
-  if (userProfile && userProfile.personalSpreadsheetId) {
-    // Mark as pending before attempting remote sync (survives page reload if sync fails).
-    const pending = getPendingAttendance(uid);
-    pending[date] = status;
-    setPendingAttendance(uid, pending);
-    try {
-      await requestPersonalSheetAccess('');
-      await writePersonalAttendance(date, status);
-      clearPendingAttendanceDate(uid, date, status);
-    } catch (error) {
-      console.error('Could not save attendance to the personal Google Sheet:', error);
-      alert('Your change is saved locally but has not synced to your Google Sheet yet. It will be retried on the next load.');
-    }
-    return;
-  }
-
-  // Mark as pending before attempting remote sync.
-  const pending = getPendingAttendance(uid);
-  pending[date] = status;
-  setPendingAttendance(uid, pending);
-  try {
-    await syncAttendanceRecord(uid, date, status);
-    clearPendingAttendanceDate(uid, date, status);
-    checkSaveLimit();
-  } catch (error) {
-    console.error('Could not sync attendance to Google Sheets:', error);
-    alert('Your change is saved locally but has not synced to Google Sheets yet. It will be retried on the next load.');
-  }
-}
-
-async function writePersonalAttendance(date, status) {
-  const spreadsheetId = userProfile.personalSpreadsheetId;
-  const current = await personalSheetRequest(
-    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent('Attendance!A2:B')}`
-  );
-  const rows = current.values || [];
-  const rowIndex = rows.findIndex(row => row[0] === date);
-  if (rowIndex >= 0) {
-    const range = `Attendance!A${rowIndex + 2}:B${rowIndex + 2}`;
-    await personalSheetRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
-      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: [[date, status || '']] }) }
-    );
-    return;
-  }
-  if (status === null) return;
-  await personalSheetRequest(
-    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent('Attendance!A:B')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: [[date, status]] }) }
-  );
-}
-
-async function saveProfile(syncRemote = true) {
-  const profileCountryCode = document.getElementById('profileCountryCode').value;
-  const profileMobileValue = document.getElementById('profileMobile').value.trim();
-  const mobileValue = normalizeMobileNumber(profileMobileValue, profileCountryCode);
-  const userData = {
-    mobile: mobileValue,
-    name: document.getElementById('profileName').value.trim(),
-    email: currentUser ? currentUser.email : document.getElementById('profileEmail').value,
-    company: document.getElementById('profileCompany').value,
-    inTime: document.getElementById('profileInTime').value,
-    outTime: document.getElementById('profileOutTime').value,
-    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
-    personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
-    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false
-  };
-
-  if (!userData.name || !userData.mobile || !currentUser) {
-    alert('Name and mobile number are required.');
-    return;
-  }
-  const uid = currentUser.userId;
-
-  if (!syncRemote) {
-    userProfile = userData;
-    persistProfileLocally(uid, userData);
-    return;
-  }
-
-  const remoteResult = await syncProfileToRemote(uid, userData);
-  if (remoteResult.success) {
-    userProfile = userData;
-    persistProfileLocally(uid, userData);
-    updateHeaderProfile();
-    alert('Profile updated locally and synced to Excel.');
-  } else {
-    alert('Profile was not updated. The main Google Sheet could not be reached.');
-    return;
-  }
-  closeProfileSheet();
-}
-
-// ===== CALENDAR FUNCTIONS =====
-function getAttendanceStatus(key, date) {
-  const status = attendanceData[key];
-  if (status) return status;
-  const dayOfWeek = date.getDay();
-  return dayOfWeek > 0 && dayOfWeek < 6 ? 'home' : null;
-}
-
-// ===== BATCH SAVE =====
-let _batchPending = {}; // { dateKey: status|null }
-
-function setStatus(status) {
-  if (!selectedKey) return;
-  const val = status === 'reset' ? null : status;
-  attendanceData[selectedKey] = val;
-  // Queue in batch instead of immediate server call
-  _batchPending[selectedKey] = val;
-  render();
-  setupStatsInteractivity();
-  updateBatchSaveBtn();
-  closeAttendanceSheet();
-}
-
-function updateBatchSaveBtn() {
-  const btn   = document.getElementById('batchSaveBtn');
-  const count = document.getElementById('batchCount');
-  if (!btn) return;
-  const n = Object.keys(_batchPending).length;
-  if (n > 0) {
-    btn.style.display = 'inline-flex';
-    btn.style.alignItems = 'center';
-    btn.style.gap = '4px';
-    if (count) count.textContent = n;
-  } else {
-    btn.style.display = 'none';
-  }
-}
-
-async function flushBatchChanges() {
-  const btn = document.getElementById('batchSaveBtn');
-  if (!Object.keys(_batchPending).length) return;
-  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Saving…'; }
-  const entries = { ..._batchPending };
-  let allOk = true;
-  for (const [dateKey, status] of Object.entries(entries)) {
-    try {
-      await saveAttendance(dateKey, status);
-      delete _batchPending[dateKey];
-    } catch (e) {
-      allOk = false;
-    }
-  }
-  if (btn) {
-    btn.disabled = false;
-    if (allOk) {
-      btn.innerHTML = '✅ Saved!';
-      // Tell SW attendance is done today → skip afternoon duplicate notification
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(reg => {
-          if (reg.active) reg.active.postMessage({ type: 'ATTENDANCE_MARKED_TODAY' });
-        });
-      }
-      setTimeout(() => { updateBatchSaveBtn(); }, 2000);
-    } else {
-      btn.innerHTML = '⚠️ Some failed — retry';
-      btn.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
-      setTimeout(() => { updateBatchSaveBtn(); btn.style.background = ''; }, 3000);
-    }
-  }
-}
-
-function render() {
-  const calendar = document.getElementById('calendar');
-  calendar.innerHTML = '';
-  
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  
-  document.getElementById('monthTitle').innerText = currentDate.toLocaleString('default', {
-    month: 'long',
-    year: 'numeric'
-  });
-  
-  const firstDay = new Date(year, month, 1).getDay();
-  const totalDays = new Date(year, month + 1, 0).getDate();
-  
-  // Empty cells
-  for (let i = 0; i < firstDay; i++) {
-    const div = document.createElement('div');
-    div.className = 'day empty';
-    calendar.appendChild(div);
-  }
-  
-  // Days
-  for (let day = 1; day <= totalDays; day++) {
-    const cell = document.createElement('div');
-    cell.className = 'day';
-    
-    const monthPad = String(month + 1).padStart(2, '0');
-    const dayPad = String(day).padStart(2, '0');
-    const key = `${year}-${monthPad}-${dayPad}`;
-    const dateObj = new Date(year, month, day);
-    const dow = dateObj.getDay();
-    const isWeekend = (dow === 0 || dow === 6);
-    const today = new Date();
-    
-    // Today highlight
-    if (today.getDate() === day && today.getMonth() === month && today.getFullYear() === year) {
-      cell.classList.add('today');
-    }
-    
-    cell.innerText = day;
-    let status = getAttendanceStatus(key, dateObj);
-    
-    if (isWeekend) {
-      cell.classList.add('weekend');
-    }
-    
-    if (status) {
-      cell.classList.remove('weekend');
-      cell.classList.add(status);
-    }
-    
-    cell.onclick = () => openAttendanceSheet(key, dateObj.toDateString());
-    calendar.appendChild(cell);
-  }
-  
-  updateStats();
-  setupStatsInteractivity();
-}
-
-function updateStats() {
-  let workingDays = 0, officeDays = 0, wfhDays = 0, leaveDays = 0, holidayDays = 0, noShowDays = 0;
-  
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const totalDays = new Date(year, month + 1, 0).getDate();
-  
-  for (let day = 1; day <= totalDays; day++) {
-    const dateObj = new Date(year, month, day);
-    const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-    const monthPad = String(month + 1).padStart(2, '0');
-    const dayPad = String(day).padStart(2, '0');
-    const key = `${year}-${monthPad}-${dayPad}`;
-    let status = getAttendanceStatus(key, dateObj);
-    
-    if (isWeekend) {
-      holidayDays++;
-    } else if (!status) {
-      workingDays++;
-    }
-    
-    if (status) {
-      switch (status) {
-        case 'office':
-          officeDays++;
-          workingDays++;
-          break;
-        case 'home':
-          wfhDays++;
-          workingDays++;
-          break;
-        case 'holiday':
-          holidayDays++;
-          break;
-        case 'leave':
-          leaveDays++;
-          break;
-        case 'noShowHome':
-          noShowDays++;
-          wfhDays++;
-          workingDays++;
-          break;
-        case 'noShowOffice':
-          noShowDays++;
-          officeDays++;
-          workingDays++;
-          break;
-      }
-    }
-  }
-  
-  const requiredOffice = Math.ceil(workingDays * 0.5);
-  const officePercent = workingDays === 0 ? 0 : ((officeDays / workingDays) * 100).toFixed(1);
-  const remaining = Math.max(requiredOffice - officeDays, 0);
-
-  const periodSummaries = calculateFiscalAttendanceSummaries(currentDate);
-  const quarterDisplay = getManualPeriodDisplay('quarter', periodSummaries.quarter);
-  const yearDisplay = getManualPeriodDisplay('year', periodSummaries.year);
-  
-  // Update office progress indicator
-  document.getElementById('officeProgress').innerHTML = `Office: ${officePercent}% | Need ${remaining} more`;
-  
-  // Update period stats overview
-  document.getElementById('statsOverview').innerHTML = `
-    <div class="period-stat-tag">
-      <span class="period-stat-label">Quarter</span>
-      <span class="period-stat-value">${quarterDisplay.effective.toFixed(1)}%</span>
-      <span class="period-stat-detail">(${quarterDisplay.base.toFixed(1)}+${quarterDisplay.delta.toFixed(1)})</span>
-      <button class="inline-edit-btn" onclick="event.stopPropagation(); editManualPeriod('quarter')" title="Edit extra quarter %" aria-label="Edit extra quarter percentage">✎</button>
-    </div>
-    <div class="period-stat-tag">
-      <span class="period-stat-label">Qtr WFO / days</span>
-      <span class="period-stat-value">${periodSummaries.quarter.officeDays}/${periodSummaries.quarter.workDays}</span>
-    </div>
-    <div class="period-stat-tag">
-      <span class="period-stat-label">Year</span>
-      <span class="period-stat-value">${yearDisplay.effective.toFixed(1)}%</span>
-      <span class="period-stat-detail">(${yearDisplay.base.toFixed(1)}+${yearDisplay.delta.toFixed(1)})</span>
-      <button class="inline-edit-btn" onclick="event.stopPropagation(); editManualPeriod('year')" title="Edit extra year %" aria-label="Edit extra year percentage">✎</button>
-    </div>
-    <div class="period-stat-tag">
-      <span class="period-stat-label">Year WFO / days</span>
-      <span class="period-stat-value">${periodSummaries.year.officeDays}/${periodSummaries.year.workDays}</span>
-    </div>
-  `;
-
-  document.getElementById('stats').innerHTML = `
-    <div class="stat-card">Working Days: <b>${workingDays}</b></div>
-    <div class="stat-card">Required: <b>${requiredOffice}</b></div>
-    <div class="stat-card">Office: <b>${officeDays}</b></div>
-    <div class="stat-card">WFH: <b>${wfhDays}</b></div>
-    <div class="stat-card">Leave: <b>${leaveDays}</b></div>
-    <div class="stat-card">No Show: <b>${noShowDays}</b></div>
-  `;
-}
-
-function calculateFiscalAttendancePercents(date) {
-  const summaries = calculateFiscalAttendanceSummaries(date);
-  return {
-    month: summaries.month.percent.toFixed(1),
-    quarter: summaries.quarter.percent.toFixed(1),
-    year: summaries.year.percent.toFixed(1)
-  };
-}
-
-function calculateFiscalAttendanceSummaries(date) {
-  const monthSummary = getPeriodSummaryForMonths([{ year: date.getFullYear(), month: date.getMonth() }]);
-  const quarterSummary = getPeriodSummaryForMonths(getFiscalQuarterMonths(date));
-  const yearSummary = getPeriodSummaryForMonths(getFiscalYearMonths(date));
-
-  return {
-    month: monthSummary,
-    quarter: quarterSummary,
-    year: yearSummary
-  };
-}
-
-function getPeriodSummaryForMonths(monthSpecs) {
-  let workDays = 0;
-  let officeDays = 0;
-
-  monthSpecs.forEach(({ year, month }) => {
-    workDays += countWorkingDaysInMonth(year, month);
-    officeDays += countOfficeDaysInMonth(year, month);
-  });
-
-  const percent = workDays === 0 ? 0 : (officeDays / workDays) * 100;
-
-  return {
-    officeDays,
-    workDays,
-    percent: Number(percent.toFixed(1))
-  };
-}
-
-function getOfficeMonthPercent(year, month) {
-  const totalWorking = countWorkingDaysInMonth(year, month);
-  if (totalWorking === 0) return 0;
-  const officeDays = countOfficeDaysInMonth(year, month);
-  return (officeDays / totalWorking) * 100;
-}
-
-function countWorkingDaysInMonth(year, month) {
-  const totalDays = new Date(year, month + 1, 0).getDate();
-  let workingDays = 0;
-
-  for (let day = 1; day <= totalDays; day++) {
-    const d = new Date(year, month, day).getDay();
-    const monthPad = String(month + 1).padStart(2, '0');
-    const dayPad = String(day).padStart(2, '0');
-    const key = `${year}-${monthPad}-${dayPad}`;
-    const status = attendanceData[key];
-    const isWeekend = d === 0 || d === 6;
-    const isLeaveOrHoliday = status === 'leave' || status === 'holiday';
-
-    if (!isWeekend && !isLeaveOrHoliday) {
-      workingDays += 1;
-    }
-  }
-
-  return workingDays;
-}
-
-function countOfficeDaysInMonth(year, month) {
-  const totalDays = new Date(year, month + 1, 0).getDate();
-  let officeDays = 0;
-
-  for (let day = 1; day <= totalDays; day++) {
-    const monthPad = String(month + 1).padStart(2, '0');
-    const dayPad = String(day).padStart(2, '0');
-    const key = `${year}-${monthPad}-${dayPad}`;
-    const status = attendanceData[key];
-    const dateObj = new Date(year, month, day);
-    const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-    if (!isWeekend && (status === 'office' || status === 'noShowOffice')) {
-      officeDays += 1;
-    }
-  }
-
-  return officeDays;
-}
-
-function getFiscalQuarterMonths(date) {
-  const month = date.getMonth();
-  const year = date.getFullYear();
-  let months = [];
-
-  if (month >= 9) {
-    months = [9, 10, 11];
-  } else if (month <= 2) {
-    months = [0, 1, 2];
-  } else if (month <= 5) {
-    months = [3, 4, 5];
-  } else {
-    months = [6, 7, 8];
-  }
-
-  return months.map(m => ({ year: year, month: m }));
-}
-
-function getFiscalYearMonths(date) {
-  const month = date.getMonth();
-  const year = date.getFullYear();
-  const startYear = month >= 9 ? year : year - 1;
-  const months = [];
-
-  for (let i = 0; i < 12; i += 1) {
-    const fiscalMonth = (9 + i) % 12;
-    const fiscalYear = fiscalMonth >= 9 ? startYear : startYear + 1;
-    months.push({ year: fiscalYear, month: fiscalMonth });
-  }
-
-  return months;
-}
-
-function loadManualPeriodOverrides() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('attendanceManualPeriodOverrides') || '{}');
-    manualPeriodOverrides = {
-      quarter: saved.quarter !== undefined && saved.quarter !== null ? Number(saved.quarter) : null,
-      year: saved.year !== undefined && saved.year !== null ? Number(saved.year) : null
-    };
-  } catch (error) {
-    manualPeriodOverrides = { quarter: null, year: null };
-  }
-}
-
-function saveManualPeriodOverrides() {
-  localStorage.setItem('attendanceManualPeriodOverrides', JSON.stringify(manualPeriodOverrides));
-}
-
-function editManualPeriod(period) {
-  const currentValue = manualPeriodOverrides[period] === null || manualPeriodOverrides[period] === undefined ? 0 : manualPeriodOverrides[period];
-  const label = period === 'quarter' ? 'quarter' : 'year';
-  const value = prompt(`Enter extra ${label} % to add (current: ${currentValue}%)`, currentValue);
-
-  if (value === null) return;
-
-  const parsedValue = value.trim() === '' ? 0 : Number(value);
-  if (!Number.isFinite(parsedValue) || parsedValue < 0 || parsedValue > 100) {
-    alert('Please enter a valid extra percentage between 0 and 100.');
-    return;
-  }
-
-  manualPeriodOverrides[period] = parsedValue;
-  saveManualPeriodOverrides();
-  updateStats();
-}
-
-function clearManualPeriodOverrides() {
-  manualPeriodOverrides = { quarter: null, year: null };
-  saveManualPeriodOverrides();
-  updateStats();
-}
-
-function getManualPeriodDisplay(period, summary) {
-  const override = manualPeriodOverrides[period];
-  const base = summary.percent;
-  const delta = override === null || override === undefined ? 0 : override;
-  const effective = Math.min(100, base + delta);
-
-  return {
-    base,
-    delta,
-    effective
-  };
-}
-
-// ===== UI FUNCTIONS =====
-function populateHourSelects(prefix) {
-  const inSelect = document.getElementById(`${prefix}InTime`);
-  const outSelect = document.getElementById(`${prefix}OutTime`);
-  if (!inSelect || !outSelect) return;
-
-  inSelect.innerHTML = '';
-  outSelect.innerHTML = '';
-
-  const placeholderOption = document.createElement('option');
-  placeholderOption.value = '';
-  placeholderOption.text = 'Select hour';
-  inSelect.appendChild(placeholderOption.cloneNode(true));
-  outSelect.appendChild(placeholderOption.cloneNode(true));
-  
-  for (let i = 0; i <= 23; i++) {
-    const option1 = document.createElement('option');
-    option1.value = i;
-    option1.text = i + ':00 (' + (i < 12 ? 'AM' : 'PM') + ')';
-    inSelect.appendChild(option1);
-    
-    const option2 = document.createElement('option');
-    option2.value = i;
-    option2.text = i + ':00 (' + (i < 12 ? 'AM' : 'PM') + ')';
-    outSelect.appendChild(option2);
-  }
-}
-
-function openAttendanceSheet(key, label) {
-  selectedKey = key;
-  document.getElementById('attendanceDateTitle').innerText = label;
-  showAttendanceSheet();
-}
-
-function openProfileSheet() {
-  showProfilePage();
-}
-
-function closeProfileSheet() {
-  document.getElementById('profileSheet').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function setProfilePageViewMode(mode) {
-  const viewSection = document.getElementById('profilePageViewSection');
-  const editSection = document.getElementById('profilePageEditSection');
-  const editButton = document.getElementById('profilePageEditBtn');
-  if (!viewSection || !editSection || !editButton) return;
-
-  if (mode === 'edit') {
-    viewSection.style.display = 'none';
-    editSection.style.display = 'grid';
-    editButton.textContent = 'Cancel';
-    populateProfilePageForm();
-    populateHourSelects('profilePage');
-  } else {
-    viewSection.style.display = 'block';
-    editSection.style.display = 'none';
-    editButton.textContent = 'Edit';
-    populateProfilePageView();
-  }
-}
-
-function toggleProfilePageEditMode() {
-  const editSection = document.getElementById('profilePageEditSection');
-  if (!editSection) return;
-  const isEditing = editSection.style.display === 'grid';
-  setProfilePageViewMode(isEditing ? 'view' : 'edit');
-}
-
-function populateProfilePageView() {
-  const profile = userProfile || {};
-  document.getElementById('profilePageViewName').textContent = profile.name || 'Add your name';
-  document.getElementById('profilePageViewMobile').textContent = profile.mobile || 'Not provided';
-  document.getElementById('profilePageViewEmail').textContent = profile.email || 'Not provided';
-  document.getElementById('profilePageViewCompany').textContent = profile.company || 'Not provided';
-  const hours = [profile.inTime, profile.outTime].filter(Boolean);
-  document.getElementById('profilePageViewHours').textContent = hours.length ? `${hours.join(' - ')} hrs` : 'Not set';
-  const storageStatus = document.getElementById('personalSheetStatus');
-  const reconnectButton = document.getElementById('reconnectSheetBtn');
-  if (profile.personalSpreadsheetId) {
-    storageStatus.textContent = googleAccessToken ? 'Connected to your personal Google Sheet' : 'Personal Google Sheet linked; reconnect to load it on this device';
-    reconnectButton.style.display = 'inline-flex';
-    document.getElementById('connectPersonalSheetFromProfileBtn').style.display = 'none';
-  } else {
-    storageStatus.textContent = 'Using the app\'s main attendance sheet';
-    reconnectButton.style.display = 'none';
-    document.getElementById('connectPersonalSheetFromProfileBtn').style.display = 'inline-flex';
-  }
-  const preview = document.getElementById('profilePagePhoto');
-  if (preview && profile.profilePhoto) preview.src = profile.profilePhoto;
-  if (profile.profilePhoto) {
-    const previewEdit = document.getElementById('profilePagePhotoEdit');
-    if (previewEdit) previewEdit.src = profile.profilePhoto;
-  }
-  // Location view
-  renderLocViewCard('office', profile);
-  renderLocViewCard('home', profile);
-}
-
-function populateProfilePageForm() {
-  const profile = userProfile || {};
-  const mobileValue = profile.mobile || '';
-  if (mobileValue && mobileValue.startsWith('+')) {
-    const countryCodeSelect = document.getElementById('profilePageCountryCode');
-    const country = Array.from(countryCodeSelect.options)
-      .sort((first, second) => second.value.length - first.value.length)
-      .find(option => mobileValue.startsWith(option.value));
-    if (country) {
-      countryCodeSelect.value = country.value;
-      document.getElementById('profilePageMobile').value = mobileValue.slice(country.value.length);
-    } else {
-      document.getElementById('profilePageMobile').value = mobileValue;
-    }
-  } else {
-    document.getElementById('profilePageMobile').value = mobileValue;
-  }
-  document.getElementById('profilePageName').value = profile.name || '';
-  document.getElementById('profilePageEmail').value = profile.email || '';
-  document.getElementById('profilePageCompany').value = profile.company || '';
-  document.getElementById('profilePageInTime').value = profile.inTime || '';
-  document.getElementById('profilePageOutTime').value = profile.outTime || '';
-  const previewEdit = document.getElementById('profilePagePhotoEdit');
-  if (previewEdit && profile.profilePhoto) previewEdit.src = profile.profilePhoto;
-  // Location edit state
-  renderLocEditCard('office', profile);
-  renderLocEditCard('home', profile);
-}
-
-function getStoredReminders() {
-  try {
-    return JSON.parse(localStorage.getItem('appReminders') || '[]');
-  } catch (err) {
-    return [];
-  }
-}
-
-function saveRemindersToStorage() {
-  localStorage.setItem('appReminders', JSON.stringify(reminders));
-}
-
-function loadReminders() {
-  reminders = getStoredReminders().map(reminder => ({
-    ...reminder,
-    eventAt: Number(reminder.eventAt),
-    notifyAt: Number(reminder.notifyAt),
-    sent: !!reminder.sent
-  }));
-  populateReminderList();
-  startReminderWatcher();
-}
-
-function startReminderWatcher() {
-  if (reminderWatchInterval) return;
-  checkReminderDue();
-  reminderWatchInterval = setInterval(checkReminderDue, 10000);
-}
-
-function checkReminderDue() {
-  if (!reminders.length) return;
-  const now = Date.now();
-  let updated = false;
-  reminders.forEach(reminder => {
-    if (!reminder.sent && now >= reminder.notifyAt) {
-      showReminderNotification(reminder);
-      reminder.sent = true;
-      updated = true;
-    }
-  });
-  if (updated) {
-    saveRemindersToStorage();
-    populateReminderList();
-  }
-}
-
-function formatTime(date) {
-  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    console.warn('Notifications are not supported in this browser. Will use fallback modal.');
-    return;
-  }
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().then(permission => {
-      if (permission !== 'granted') {
-        console.warn('Notification permission denied. Will use fallback modal for reminders.');
-      }
-    });
-  }
-}
-
-function showFallbackReminder(reminder) {
-  const title = reminder.title || 'Reminder';
-  const eventTime = reminder.eventAt ? formatTime(reminder.eventAt) : 'Now';
-  showNotificationModal(title, eventTime);
-}
-
-function showNotificationModal(title, eventTime) {
-  const modal = document.getElementById('notificationModal');
-  const backdrop = document.getElementById('notificationModalBackdrop');
-  const modalTitle = document.getElementById('notificationModalTitle');
-  const modalTime = document.getElementById('notificationModalTime');
-  
-  if (!modal || !backdrop) return;
-  
-  modalTitle.textContent = title;
-  modalTime.textContent = `Event at ${eventTime}`;
-  
-  modal.classList.add('show');
-  backdrop.classList.add('show');
-}
-
-function closeNotificationModal() {
-  const modal = document.getElementById('notificationModal');
-  const backdrop = document.getElementById('notificationModalBackdrop');
-  
-  if (!modal || !backdrop) return;
-  
-  modal.classList.remove('show');
-  backdrop.classList.remove('show');
-}
-
-function triggerReminderNotification(reminder) {
-  const title = reminder.title || 'Reminder';
-  const body = reminder.eventAt
-    ? `Event at ${formatTime(reminder.eventAt)}.`
-    : 'Reminder alert.';
-  const options = {
-    body,
-    icon: 'icon.svg',
-    badge: 'icon.svg',
-    tag: `reminder-${reminder.id}`,
-    renotify: true,
-    requireInteraction: true,
-    data: { reminderId: reminder.id }
-  };
-
-  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-    navigator.serviceWorker.ready.then(registration => {
-      return registration.showNotification(title, options).catch(err => {
-        console.warn('Service Worker notification failed:', err);
-        tryBrowserNotification(title, options, reminder);
-      });
-    }).catch(err => {
-      console.warn('Service Worker not ready:', err);
-      tryBrowserNotification(title, options, reminder);
-    });
-  } else {
-    tryBrowserNotification(title, options, reminder);
-  }
-}
-
-function tryBrowserNotification(title, options, reminder) {
-  if (Notification.permission === 'granted') {
-    try {
-      new Notification(title, options);
-    } catch (err) {
-      console.warn('Browser notification failed:', err);
-      showFallbackReminder(reminder);
-    }
-  } else {
-    showFallbackReminder(reminder);
-  }
-}
-
-function showReminderNotification(reminder) {
-  if (!('Notification' in window)) {
-    showFallbackReminder(reminder);
-    return;
-  }
-  if (Notification.permission === 'granted') {
-    triggerReminderNotification(reminder);
-    return;
-  }
-  if (Notification.permission === 'default') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        triggerReminderNotification(reminder);
-      } else {
-        showFallbackReminder(reminder);
-      }
-    }).catch(() => {
-      showFallbackReminder(reminder);
-    });
-  } else {
-    showFallbackReminder(reminder);
-  }
-}
-
-function populateReminderList() {
-  const container = document.getElementById('reminderList');
-  if (!container) return;
-  if (!reminders.length) {
-    container.innerHTML = '<div class="reminder-empty">No reminders set. Add one above.</div>';
-    return;
-  }
-
-  reminders.sort((a, b) => a.notifyAt - b.notifyAt);
-  container.innerHTML = reminders.map(reminder => {
-    const eventTime = formatTime(reminder.eventAt);
-    const notifyBefore = reminder.offset > 0 ? `${reminder.offset} min before` : 'At time';
-    const status = reminder.sent ? '✔ Sent' : '⏳ Pending';
-    const statusClass = reminder.sent ? 'reminder-status-sent' : 'reminder-status-pending';
-    const timeUntilReminder = reminder.notifyAt - Date.now();
-    const isUpcoming = timeUntilReminder > 0 && timeUntilReminder < 3600000;
-    
-    return `
-      <div class="reminder-item ${isUpcoming ? 'reminder-upcoming' : ''}">
-        <div>
-          <strong>${reminder.title}</strong>
-          <span>${reminder.date} ${eventTime} · ${notifyBefore}</span>
-          <span class="reminder-status ${statusClass}">${status}</span>
-        </div>
-        <button class="reminder-remove" onclick="removeReminder('${reminder.id}')">✕</button>
-      </div>
-    `;
-  }).join('');
-}
-
-function removeReminder(id) {
-  reminders = reminders.filter(reminder => reminder.id !== id);
-  saveRemindersToStorage();
-  populateReminderList();
-}
-
-function saveReminder() {
-  const title = document.getElementById('reminderTitle').value.trim();
-  const dateValue = document.getElementById('reminderDate').value;
-  const timeValue = document.getElementById('reminderTime').value;
-  const offset = Number(document.getElementById('reminderOffset').value);
-
-  if (!title || !dateValue || !timeValue) {
-    alert('Please enter a reminder title, date, and time.');
-    return;
-  }
-
-  const eventAt = new Date(`${dateValue}T${timeValue}:00`).getTime();
-  if (!eventAt || eventAt <= Date.now()) {
-    alert('Please choose a future date and time for the reminder.');
-    return;
-  }
-
-  const notifyAt = eventAt - offset * 60000;
-  if (notifyAt <= Date.now()) {
-    alert('Reminder alert time must be in the future. Select a later time or smaller offset.');
-    return;
-  }
-
-  const reminder = {
-    id: `reminder-${Date.now()}`,
-    title,
-    date: dateValue,
-    time: timeValue,
-    offset,
-    eventAt,
-    notifyAt,
-    sent: false
-  };
-
-  reminders.push(reminder);
-  saveRemindersToStorage();
-  populateReminderList();
-  startReminderWatcher();
-  requestNotificationPermission();
-
-  document.getElementById('reminderTitle').value = '';
-  document.getElementById('reminderDate').value = '';
-  document.getElementById('reminderTime').value = '';
-  document.getElementById('reminderOffset').value = '15';
-
-  let notificationStatus = '';
-  if (!('Notification' in window)) {
-    notificationStatus = '\n\n📱 Notifications not supported - will show popup alerts';
-  } else if (Notification.permission === 'granted') {
-    notificationStatus = '\n\n✔ Browser notifications enabled';
-  } else {
-    notificationStatus = '\n\n⚠ Browser notifications disabled - will show popup alerts';
-  }
-
-  alert(`✓ Reminder saved successfully!${notificationStatus}`);
-}
-
-async function saveProfilePage() {
-  const countryCode = document.getElementById('profilePageCountryCode').value;
-  const mobileValue = document.getElementById('profilePageMobile').value.trim();
-  const mobile = normalizeMobileNumber(mobileValue, countryCode);
-  const userData = {
-    mobile,
-    name: document.getElementById('profilePageName').value.trim(),
-    email: currentUser ? currentUser.email : document.getElementById('profilePageEmail').value,
-    company: document.getElementById('profilePageCompany').value,
-    inTime: document.getElementById('profilePageInTime').value,
-    outTime: document.getElementById('profilePageOutTime').value,
-    profilePhoto: (userProfile && userProfile.profilePhoto) ? userProfile.profilePhoto : '',
-    personalSpreadsheetId: (userProfile && userProfile.personalSpreadsheetId) || '',
-    personalSheetSkipped: (userProfile && userProfile.personalSheetSkipped) || false,
-    // Location fields — carry over from current profile (edit happens via loc buttons)
-    officeLat:    (userProfile && userProfile.officeLat)    || '',
-    officeLng:    (userProfile && userProfile.officeLng)    || '',
-    officeRadius: (userProfile && userProfile.officeRadius) || 200,
-    officeName:   (userProfile && userProfile.officeName)   || '',
-    homeLat:      (userProfile && userProfile.homeLat)      || '',
-    homeLng:      (userProfile && userProfile.homeLng)      || '',
-    homeRadius:   (userProfile && userProfile.homeRadius)   || 200,
-    homeName:     (userProfile && userProfile.homeName)     || ''
-  };
-
-  if (!userData.name || !userData.mobile || !currentUser) {
-    alert('Name and mobile number are required.');
-    return;
-  }
-
-  const remoteResult = await syncProfileToRemote(currentUser.userId, userData);
-  if (!remoteResult.success) {
-    alert('Profile was not updated. The main Google Sheet could not be reached.');
-    return;
-  }
-
-  userProfile = userData;
-  persistProfileLocally(currentUser.userId, userData);
-  updateHeaderProfile();
-  populateProfilePageView();
-  setProfilePageViewMode('view');
-  alert('Profile updated locally and synced to Excel.');
-}
-
-// Auto-save profile helper (debounced simple implementation)
-let _autoSaveTimer = null;
-function autoSaveProfile() {
-  if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => {
-    saveProfile(true);
-  }, 700);
-}
-
-function showLogoutConfirm() {
-  if (confirm('Are you sure you want to logout?')) {
-    if (auth && typeof auth.signOut === 'function') {
-      auth.signOut();
-    } else {
-      currentUser = null;
-      localStorage.removeItem('lastUserId');
-      closeSheet();
-      showLoginSheet();
-    }
-  }
-}
-
-function showSupportInfo() {
-  alert('Contact: support@app.com');
-}
-
-function closeSheet() {
-  document.getElementById('loginSheet').classList.remove('show');
-  document.getElementById('registrationSheet').classList.remove('show');
-  document.getElementById('connectSheetModal').classList.remove('show');
-  document.getElementById('attendanceSheet').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function closeRegistrationSheet() {
-  document.getElementById('registrationSheet').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function closeAttendanceSheet() {
-  document.getElementById('attendanceSheet').classList.remove('show');
-  document.getElementById('backdrop').classList.remove('show');
-}
-
-function showLoginSheet() {
-  document.getElementById('loginSheet').classList.add('show');
-}
-
-function showRegistrationSheet() {
-  document.getElementById('registrationSheet').classList.add('show');
-  document.getElementById('backdrop').classList.add('show');
-}
-
-function showAttendanceSheet() {
-  document.getElementById('attendanceSheet').classList.add('show');
-  document.getElementById('backdrop').classList.add('show');
-}
-
-function showProfileSheet() {
-  document.getElementById('profileSheet').classList.add('show');
-  document.getElementById('backdrop').classList.add('show');
-}
-
-
-function showDashboardView() {
-  document.getElementById('profilePage').style.display = 'none';
-  document.getElementById('reminderPage').style.display = 'none';
-  document.querySelector('.calendar-area').style.display = 'block';
-  document.querySelector('.summary').style.display = 'block';
-  render();
-  closeDrawer();
-}
-
-function showProfilePage() {
-  document.getElementById('profilePage').style.display = 'block';
-  document.querySelector('.calendar-area').style.display = 'none';
-  document.querySelector('.summary').style.display = 'none';
-  document.getElementById('reminderPage').style.display = 'none';
-  populateProfilePageView();
-  setProfilePageViewMode('view');
-  closeDrawer();
-}
-
-function showReminderPage() {
-  document.getElementById('reminderPage').style.display = 'flex';
-  document.getElementById('profilePage').style.display = 'none';
-  document.querySelector('.calendar-area').style.display = 'none';
-  document.querySelector('.summary').style.display = 'none';
-  loadReminders();
-  closeDrawer();
-}
-
-function showApp() {
-  showDashboardView();
-  // Keep version badge in sync with the JS constant
-  const badge = document.getElementById('drawerVersionBadge');
-  if (badge) badge.textContent = APP_VERSION;
-}
-
-function hideApp() {
-  document.getElementById('profilePage').style.display = 'none';
-  document.getElementById('reminderPage').style.display = 'none';
-  document.querySelector('.calendar-area').style.display = 'none';
-  document.querySelector('.summary').style.display = 'none';
-  attendanceData = {};
-}
-
-function isMonthAfterCurrentMonth(date) {
-  const today = new Date();
-  return date.getFullYear() > today.getFullYear() ||
-    (date.getFullYear() === today.getFullYear() && date.getMonth() > today.getMonth());
-}
-
-function openDrawer() {
-  document.getElementById('drawer').classList.add('show');
-  document.getElementById('drawerOverlay').classList.add('show');
-}
-
-function closeDrawer() {
-  document.getElementById('drawer').classList.remove('show');
-  document.getElementById('drawerOverlay').classList.remove('show');
-}
-
-function downloadCSV() {
-  if (!attendanceData || Object.keys(attendanceData).length === 0) {
-    alert('No attendance data to export');
-    return;
-  }
-  
-  const rows = [['Date', 'Status']];
-  Object.keys(attendanceData).sort().forEach(date => {
-    rows.push([date, attendanceData[date]]);
-  });
-  
-  const csv = rows.map(row => row.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `attendance_${new Date().toISOString().split('T')[0]}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(url);
-}
-
-// ===== INTERACTIVE STATS =====
-function setupStatsInteractivity() {
-  const statsOverview = document.getElementById('statsOverview');
-  const officeProgress = document.getElementById('officeProgress');
-  
-  if (statsOverview) {
-    statsOverview.onclick = () => {
-      const periodPercents = calculateFiscalAttendancePercents(currentDate);
-      const summaries = calculateFiscalAttendanceSummaries(currentDate);
-      const quarterDisplay = getManualPeriodDisplay('quarter', summaries.quarter);
-      const yearDisplay = getManualPeriodDisplay('year', summaries.year);
-      alert(`Fiscal Year Breakdown:\n\nMonth: ${periodPercents.month}% (${summaries.month.officeDays}/${summaries.month.workDays} WFO/Work Days)\nQuarter: ${quarterDisplay.effective.toFixed(1)}% (${quarterDisplay.base.toFixed(1)} + ${quarterDisplay.delta.toFixed(1)}) | ${summaries.quarter.officeDays}/${summaries.quarter.workDays} WFO/Work Days\nYear: ${yearDisplay.effective.toFixed(1)}% (${yearDisplay.base.toFixed(1)} + ${yearDisplay.delta.toFixed(1)}) | ${summaries.year.officeDays}/${summaries.year.workDays} WFO/Work Days`);
-    };
-  }
-  
-  if (officeProgress) {
-    officeProgress.onclick = () => {
-      alert('Office attendance target:\n\n50% of working days must be in office.\n\nClick on any date to update your attendance.');
-    };
-  }
-}
-
-// ===== EVENT LISTENERS =====
-document.getElementById('prev').onclick = () => {
-  currentDate.setMonth(currentDate.getMonth() - 1);
-  render();
-};
-
-document.getElementById('next').onclick = () => {
-  currentDate.setMonth(currentDate.getMonth() + 1);
-  if (isMonthAfterCurrentMonth(currentDate) && !currentUser) {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    showLoginSheet();
-    return;
-  }
-  render();
-};
-
-const profileBtn = document.getElementById('profileBtn');
-if (profileBtn) {
-  profileBtn.onclick = openProfileSheet;
-}
-
-document.getElementById('drawerBtn').onclick = openDrawer;
-
-document.getElementById('drawerOverlay').onclick = closeDrawer;
-
-document.getElementById('backdrop').onclick = () => {
-  closeSheet();
-  closeProfileSheet();
-};
-
-// ===== INIT =====
-window.addEventListener('load', () => {
-  const stored = localStorage.getItem('googleScriptURL');
-  if (stored) googleScriptURL = stored;
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').then(reg => {
-        console.log('Service worker registered:', reg);
-      }).catch(err => console.warn('SW registration failed', err));
-    });
-  }
-  
-  loadManualPeriodOverrides();
-  loadReminders();
-  initializeAuth();
-});
-
-// =====================================================================
-// SETUP WIZARD
-// =====================================================================
-
-const WIZARD_DONE_KEY = 'smart_setup_done';
-let _wizardStep = 0;
-let _wizardLocTimers = {};
-
-function shouldShowWizard() {
-  if (localStorage.getItem(WIZARD_DONE_KEY)) return false;
-  const p = userProfile || {};
-  return !p.inTime || !p.officeLat;
-}
-
-function showSetupWizard() {
-  _wizardStep = 0;
-  populateWizardTimeDropdowns();
-  prefillWizardFromProfile();
-  updateWizardDots(0);
-  document.querySelectorAll('.wizard-slide').forEach((s,i) => s.classList.toggle('active', i === 0));
-  updateWizardNotifStatus();
-  document.getElementById('setupWizard').classList.add('show');
-}
-
-function closeSetupWizard() {
-  document.getElementById('setupWizard').classList.remove('show');
-}
-
-function populateWizardTimeDropdowns() {
-  const times = [];
-  for (let h = 6; h <= 22; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const hh = String(h).padStart(2,'0');
-      const mm = String(m).padStart(2,'0');
-      const label = `${h > 12 ? h-12 : h}:${mm} ${h >= 12 ? 'PM' : 'AM'}`;
-      times.push(`<option value="${hh}:${mm}">${label}</option>`);
-    }
-  }
-  ['wizardInTime','wizardOutTime'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '<option value="">Select time\u2026</option>' + times.join('');
-  });
-  const p = userProfile || {};
-  const inEl  = document.getElementById('wizardInTime');
-  const outEl = document.getElementById('wizardOutTime');
-  const conBtn = document.getElementById('wizardTimeContinueBtn');
-  if (p.inTime  && inEl)  inEl.value  = p.inTime;
-  if (p.outTime && outEl) outEl.value = p.outTime;
-  if (inEl) inEl.addEventListener('change', () => { if (conBtn) conBtn.disabled = !inEl.value; });
-  if (conBtn && p.inTime) conBtn.disabled = false;
-}
-
-function prefillWizardFromProfile() {
-  const p = userProfile || {};
-  if (p.officeLat && p.officeLng) {
-    const el = document.getElementById('wizardOfficeSearch');
-    if (el) el.value = p.officeName || '';
-    setWizardLocStatus('office', `\u2705 ${p.officeName||'Set'} (${parseFloat(p.officeLat).toFixed(4)}, ${parseFloat(p.officeLng).toFixed(4)})`, 'set');
-  }
-  if (p.homeLat && p.homeLng) {
-    const el = document.getElementById('wizardHomeSearch');
-    if (el) el.value = p.homeName || '';
-    setWizardLocStatus('home', `\u2705 ${p.homeName||'Set'} (${parseFloat(p.homeLat).toFixed(4)}, ${parseFloat(p.homeLng).toFixed(4)})`, 'set');
-  }
-}
-
-function updateWizardDots(step) {
-  for (let i = 0; i < 4; i++) {
-    const d = document.getElementById('wdot'+i);
-    if (!d) continue;
-    d.classList.remove('active','done');
-    if (i < step)  d.classList.add('done');
-    if (i === step) d.classList.add('active');
-  }
-}
-
-function wizardNextStep() {
-  _wizardStep = Math.min(_wizardStep + 1, 3);
-  document.querySelectorAll('.wizard-slide').forEach((s,i) => s.classList.toggle('active', i === _wizardStep));
-  updateWizardDots(_wizardStep);
-}
-
-function updateWizardNotifStatus() {
-  const status = document.getElementById('wizardNotifStatus');
-  const btn    = document.getElementById('wizardNotifBtn');
-  if (!status || !btn) return;
-  if (!('Notification' in window)) {
-    status.innerHTML = '<span>\u274c</span> Not supported in this browser';
-    status.className = 'wizard-notif-status denied'; btn.disabled = true; return;
-  }
-  if (Notification.permission === 'granted') {
-    status.innerHTML = '<span>\u2705</span> Notifications allowed!';
-    status.className = 'wizard-notif-status granted';
-    btn.textContent = '\u2705 Granted'; btn.disabled = true;
-  } else if (Notification.permission === 'denied') {
-    status.innerHTML = '<span>\ud83d\udeab</span> Denied \u2014 enable in device settings';
-    status.className = 'wizard-notif-status denied'; btn.disabled = true;
-  } else {
-    status.innerHTML = '<span>\u23f3</span> Not yet requested';
-    status.className = 'wizard-notif-status'; btn.disabled = false;
-  }
-}
-
-async function wizardRequestNotifPermission() {
-  const perm = await Notification.requestPermission();
-  updateWizardNotifStatus();
-  if (perm === 'granted') setTimeout(wizardNextStep, 800);
-}
-
-function wizardSaveTime() {
-  const inTime  = document.getElementById('wizardInTime').value;
-  const outTime = document.getElementById('wizardOutTime').value;
-  if (!inTime) return;
-  if (!userProfile) userProfile = {};
-  userProfile.inTime  = inTime;
-  userProfile.outTime = outTime;
-  if (currentUser) {
-    persistProfileLocally(currentUser.userId, userProfile);
-    syncProfileToRemote(currentUser.userId, userProfile).catch(() => {});
-  }
-  wizardNextStep();
-}
-
-function wizardLocSearch(event, type) {
-  const query  = event.target.value.trim();
-  const dropId = 'wizard' + (type === 'office' ? 'Office' : 'Home') + 'Drop';
-  const drop   = document.getElementById(dropId);
-  if (_wizardLocTimers[type]) clearTimeout(_wizardLocTimers[type]);
-  if (query.length < 3) { if (drop) drop.style.display = 'none'; return; }
-  _wizardLocTimers[type] = setTimeout(() => wizardSearchNominatim(query, type), 500);
-}
-
-async function wizardSearchNominatim(query, type) {
-  const dropId = 'wizard' + (type === 'office' ? 'Office' : 'Home') + 'Drop';
-  const drop   = document.getElementById(dropId);
-  if (!drop) return;
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`,
-      { headers: { 'Accept-Language': 'en' } });
-    const results = await res.json();
-    if (!results.length) {
-      drop.innerHTML = `<div class="wizard-autocomplete-item"><span>\ud83d\udd0d</span> No results</div>`;
-      drop.style.display = 'block'; return;
-    }
-    drop.innerHTML = results.map(r => {
-      const parts = r.display_name.split(', ');
-      const label = parts.slice(0,2).join(', ');
-      const sub   = parts.slice(2,4).join(', ');
-      return `<div class="wizard-autocomplete-item" onclick='wizardPickLoc(${r.lat},${r.lon},"${label.replace(/"/g,'&quot;')}","${type}")'>
-        <span>\ud83d\udccd</span><div><div style="font-weight:600">${label}</div><div style="font-size:11px;opacity:.6">${sub}</div></div></div>`;
-    }).join('');
-    drop.style.display = 'block';
-  } catch(e) { drop.style.display = 'none'; }
-}
-
-function wizardPickLoc(lat, lng, name, type) {
-  const drop = document.getElementById('wizard' + (type==='office'?'Office':'Home') + 'Drop');
-  if (drop) drop.style.display = 'none';
-  wizardSetLocation(type, parseFloat(lat), parseFloat(lng), name);
-}
-
-function wizardUseGPS(type) {
-  if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
-  setWizardLocStatus(type, '\ud83d\udce1 Getting your location\u2026', 'loading');
-  navigator.geolocation.getCurrentPosition(
-    pos => wizardSetLocation(type, pos.coords.latitude, pos.coords.longitude, type==='office'?'My Office':'My Home'),
-    ()  => setWizardLocStatus(type, '\u274c Could not get location', ''),
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
-
-function wizardSetLocation(type, lat, lng, name) {
-  if (!userProfile) userProfile = {};
-  userProfile[type+'Lat']  = lat;
-  userProfile[type+'Lng']  = lng;
-  userProfile[type+'Name'] = name;
-  if (!userProfile[type+'Radius']) userProfile[type+'Radius'] = 200;
-  setWizardLocStatus(type, `\u2705 ${name} (${lat.toFixed(4)}, ${lng.toFixed(4)})`, 'set');
-  const el = document.getElementById('wizard'+(type==='office'?'Office':'Home')+'Search');
-  if (el) el.value = name;
-  if (currentUser) {
-    persistProfileLocally(currentUser.userId, userProfile);
-    syncProfileToRemote(currentUser.userId, userProfile).catch(()=>{});
-  }
-  if (typeof renderLocViewCard === 'function') renderLocViewCard(type, userProfile);
-  if (typeof renderLocEditCard === 'function') renderLocEditCard(type, userProfile);
-}
-
-function setWizardLocStatus(type, msg, cls) {
-  const el = document.getElementById('wizard'+(type==='office'?'Office':'Home')+'Status');
-  if (!el) return;
-  el.textContent = msg;
-  el.className   = 'wizard-loc-status ' + (cls||'');
-}
-
-function wizardFinish() {
-  localStorage.setItem(WIZARD_DONE_KEY, '1');
-  closeSetupWizard();
-  scheduleAttendanceReminder();
-  setTimeout(runGeofenceCheck, 1000);
-}
-
-// =====================================================================
-// SERVICE WORKER: push notification scheduling
-// =====================================================================
-
-function scheduleAttendanceReminder() {
-  if (!('serviceWorker' in navigator)) return;
-  const inTime = userProfile && userProfile.inTime;
-  if (!inTime || Notification.permission !== 'granted') return;
-  navigator.serviceWorker.ready.then(reg => {
-    if (reg.active) reg.active.postMessage({
-      type: 'SCHEDULE_ATTENDANCE_REMINDER',
-      inTime,
-      userId: currentUser && currentUser.userId
-    });
-  });
-}
-
-function cancelAttendanceReminder() {
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.ready.then(reg => {
-    if (reg.active) reg.active.postMessage({ type: 'CANCEL_ATTENDANCE_REMINDER' });
-  });
-}
-
-// ── Test notification ────────────────────────────────────────────────
-async function sendTestNotification() {
-  const btn = document.getElementById('testNotifBtn');
-  if (!('Notification' in window)) {
-    alert('Notifications are not supported in this browser.');
-    return;
-  }
-  if (Notification.permission !== 'granted') {
-    const perm = await Notification.requestPermission();
-    updateHeaderProfile(); // refresh status display
-    if (perm !== 'granted') {
-      alert('Permission denied. Please enable notifications in your device/browser settings.');
-      return;
-    }
-  }
-  try {
-    // Use SW registration for best visual (large icon, action buttons)
-    const reg = await navigator.serviceWorker.ready;
-    await reg.showNotification('📋 Test Notification', {
-      body: `Hi ${(userProfile && userProfile.name) || 'there'}! Notifications are working correctly on this device. ✅`,
-      icon: './icon.svg',
-      badge: './icon.svg',
-      tag: 'test-notification',
-      vibrate: [200, 100, 200],
-      data: { url: window.location.href },
-      actions: [
-        { action: 'open', title: '✅ Looks good!' }
-      ]
-    });
-    if (btn) {
-      const orig = btn.innerHTML;
-      btn.innerHTML = '✅ Notification sent!';
-      btn.style.background = '#16a34a';
-      setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 3000);
-    }
-  } catch (e) {
-    // Fallback: plain Notification API
-    new Notification('📋 Test Notification', {
-      body: `Hi ${(userProfile && userProfile.name) || 'there'}! Notifications are working. ✅`,
-      icon: './icon.svg'
-    });
-  }
-}
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data && event.data.type === 'RUN_GEOFENCE_CHECK') {
-      if (typeof runGeofenceCheck === 'function') runGeofenceCheck();
-    }
-  });
-}
-
-// =====================================================================
-// SMART LOCATION — geofence & location settings
-// =====================================================================
-
-const LOC_DEBOUNCE_MS = 600;
-let _locSearchTimers = {};
-let _geofencePending = null; // { type:'office'|'home' }
-
-// ── Render helpers ────────────────────────────────────────────────────
-function renderLocViewCard(type, profile) {
-  const lat  = profile[type + 'Lat'];
-  const lng  = profile[type + 'Lng'];
-  const name = profile[type + 'Name'] || '';
-  const rad  = profile[type + 'Radius'] || 200;
-  const displayEl = document.getElementById(type + 'LocSetDisplay');
-  const subEl     = document.getElementById(type + 'LocViewSub');
-  const nameEl    = document.getElementById(type + 'LocViewName');
-  const coordEl   = document.getElementById(type + 'LocViewCoords');
-  if (!displayEl) return;
-  if (lat && lng) {
-    displayEl.style.display = 'flex';
-    if (nameEl) nameEl.textContent = name || `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
-    if (coordEl) coordEl.textContent = `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)} · ${rad} m radius`;
-    if (subEl) subEl.textContent = `Within ${rad} m · auto-detect on`;
-  } else {
-    displayEl.style.display = 'none';
-    if (subEl) subEl.textContent = 'Not set — tap Edit to configure';
-  }
-}
-
-function renderLocEditCard(type, profile) {
-  const lat  = profile[type + 'Lat'];
-  const lng  = profile[type + 'Lng'];
-  const name = profile[type + 'Name'] || '';
-  const rad  = Number(profile[type + 'Radius']) || 200;
-  const displayEl = document.getElementById(type + 'LocEditDisplay');
-  const notSetEl  = document.getElementById(type + 'LocNotSet');
-  const nameEl    = document.getElementById(type + 'LocEditName');
-  const coordEl   = document.getElementById(type + 'LocEditCoords');
-  const clearBtn  = document.getElementById(type + 'LocClearBtn');
-  const radSlider = document.getElementById(type + 'RadiusSlider');
-  const radLabel  = document.getElementById(type + 'RadiusLabel');
-  const searchEl  = document.getElementById(type + 'LocSearch');
-  if (!displayEl) return;
-  if (lat && lng) {
-    displayEl.style.display = 'flex';
-    notSetEl.style.display  = 'none';
-    if (nameEl) nameEl.textContent  = name || `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
-    if (coordEl) coordEl.textContent = `${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
-    if (clearBtn) clearBtn.style.display = 'inline-flex';
-    if (searchEl) searchEl.value = name || '';
-  } else {
-    displayEl.style.display = 'none';
-    notSetEl.style.display  = 'block';
-    if (clearBtn) clearBtn.style.display = 'none';
-    if (searchEl) searchEl.value = '';
-  }
-  if (radSlider) { radSlider.value = rad; updateSliderTrack(radSlider, type); }
-  if (radLabel)  radLabel.textContent = rad >= 1000 ? `${(rad/1000).toFixed(1)} km` : `${rad} m`;
-}
-
-// ── Radius slider ─────────────────────────────────────────────────────
-function onRadiusChange(slider, type) {
-  const val = Number(slider.value);
-  const label = document.getElementById(type + 'RadiusLabel');
-  if (label) label.textContent = val >= 1000 ? `${(val/1000).toFixed(1)} km` : `${val} m`;
-  updateSliderTrack(slider, type);
-  if (userProfile) {
-    userProfile[type + 'Radius'] = val;
-    saveLocationToProfile(type);
-  }
-}
-
-function updateSliderTrack(slider, type) {
-  const min = Number(slider.min), max = Number(slider.max), val = Number(slider.value);
-  const pct = Math.round((val - min) / (max - min) * 100);
-  slider.style.setProperty('--pct', pct + '%');
-}
-
-// ── Nominatim autocomplete ────────────────────────────────────────────
-function onLocSearch(event, type) {
-  const query = event.target.value.trim();
-  const drop = document.getElementById(type + 'LocDrop');
-  if (_locSearchTimers[type]) clearTimeout(_locSearchTimers[type]);
-  if (query.length < 3) { drop.style.display = 'none'; return; }
-  _locSearchTimers[type] = setTimeout(() => searchNominatim(query, type), LOC_DEBOUNCE_MS);
-}
-
-async function searchNominatim(query, type) {
-  const spinner = document.getElementById(type + 'LocSpinner');
-  const drop    = document.getElementById(type + 'LocDrop');
-  if (spinner) spinner.style.display = 'block';
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`;
-    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-    const results = await res.json();
-    if (!results.length) {
-      drop.innerHTML = `<div class="location-autocomplete-item"><div class="loc-icon">🔍</div><div><div class="loc-label">No results found</div></div></div>`;
-      drop.style.display = 'block'; return;
-    }
-    drop.innerHTML = results.map(r => {
-      const parts = r.display_name.split(', ');
-      const label = parts.slice(0, 2).join(', ');
-      const sub   = parts.slice(2, 5).join(', ');
-      return `<div class="location-autocomplete-item" onclick='pickLocResult(${r.lat},${r.lon},"${label.replace(/"/g,'&quot;')}","${type}")'>
-        <div class="loc-icon">📍</div>
-        <div><div class="loc-label">${label}</div><div class="loc-sublabel">${sub}</div></div>
-      </div>`;
-    }).join('');
-    drop.style.display = 'block';
-  } catch (e) {
-    drop.style.display = 'none';
-  } finally {
-    if (spinner) spinner.style.display = 'none';
-  }
-}
-
-function pickLocResult(lat, lng, name, type) {
-  const drop = document.getElementById(type + 'LocDrop');
-  if (drop) drop.style.display = 'none';
-  setLocationForType(type, parseFloat(lat), parseFloat(lng), name);
-}
-
-// ── Current location button ───────────────────────────────────────────
-function useCurrentLocation(type) {
-  if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser.');
-    return;
-  }
-  const btn = document.querySelector(`#${type}LocEditCard .loc-btn-current`);
-  if (btn) { btn.textContent = '📡 Getting location…'; btn.disabled = true; }
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      if (btn) { btn.textContent = '📡 Use Current Location'; btn.disabled = false; }
-      setLocationForType(type, pos.coords.latitude, pos.coords.longitude, `My ${type === 'office' ? 'Office' : 'Home'}`);
-    },
-    err => {
-      if (btn) { btn.textContent = '📡 Use Current Location'; btn.disabled = false; }
-      alert('Could not get your location. Please allow location access and try again.');
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
-
-function setLocationForType(type, lat, lng, name) {
-  if (!userProfile) userProfile = {};
-  userProfile[type + 'Lat']  = lat;
-  userProfile[type + 'Lng']  = lng;
-  userProfile[type + 'Name'] = name;
-  const radSlider = document.getElementById(type + 'RadiusSlider');
-  if (radSlider && !userProfile[type + 'Radius']) userProfile[type + 'Radius'] = 200;
-  renderLocEditCard(type, userProfile);
-  saveLocationToProfile(type);
-}
-
-function clearLocation(type) {
-  if (!userProfile) return;
-  userProfile[type + 'Lat']  = '';
-  userProfile[type + 'Lng']  = '';
-  userProfile[type + 'Name'] = '';
-  renderLocEditCard(type, userProfile);
-  saveLocationToProfile(type);
-}
-
-// ── Persist location (localStorage + remote) ─────────────────────────
-async function saveLocationToProfile(type) {
-  if (!currentUser || !userProfile) return;
-  persistProfileLocally(currentUser.userId, userProfile);
-  // Fire-and-forget sync to sheet
-  syncProfileToRemote(currentUser.userId, userProfile).catch(() => {});
-  // Refresh view card
-  renderLocViewCard(type, userProfile);
-}
-
-// ── Geofence check on app open ────────────────────────────────────────
-const GF_COOLDOWN_KEY = 'geofence_last_shown';
-
-function runGeofenceCheck() {
-  if (!userProfile) return;
-  const officeLat = parseFloat(userProfile.officeLat);
-  const officeLng = parseFloat(userProfile.officeLng);
-  const homeLat   = parseFloat(userProfile.homeLat);
-  const homeLng   = parseFloat(userProfile.homeLng);
-  const hasOffice = !isNaN(officeLat) && !isNaN(officeLng);
-  const hasHome   = !isNaN(homeLat)   && !isNaN(homeLng);
-  if (!hasOffice && !hasHome) return;
-  if (!navigator.geolocation) return;
-
-  // Only once per day
-  const lastShown = localStorage.getItem(GF_COOLDOWN_KEY);
-  const today = new Date().toISOString().slice(0, 10);
-  if (lastShown === today) return;
-
-  navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
-    if (hasOffice) {
-      const dist = haversineM(latitude, longitude, officeLat, officeLng);
-      const radius = Number(userProfile.officeRadius) || 200;
-      if (dist <= radius) {
-        showGeofenceBanner('office');
-        return;
-      }
-    }
-    if (hasHome) {
-      const dist = haversineM(latitude, longitude, homeLat, homeLng);
-      const radius = Number(userProfile.homeRadius) || 200;
-      if (dist <= radius) {
-        showGeofenceBanner('home');
-        return;
-      }
-    }
-  }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
-}
-
-function haversineM(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function showGeofenceBanner(type) {
-  _geofencePending = { type };
-  const isOffice = type === 'office';
-  document.getElementById('geofenceBannerIcon').textContent  = isOffice ? '🏢' : '🏠';
-  document.getElementById('geofenceBannerTitle').textContent = isOffice ? "You're at the office!" : "You're near home!";
-  document.getElementById('geofenceBannerSub').textContent   = `Mark attendance as ${isOffice ? 'Office' : 'Home'} for today?`;
-  const confirmBtn = document.getElementById('geofenceConfirmBtn');
-  confirmBtn.textContent = isOffice ? '✅ Mark Office' : '🏠 Mark Home';
-  confirmBtn.className   = 'geofence-confirm-btn' + (isOffice ? '' : ' home-confirm');
-  document.getElementById('geofenceBanner').classList.add('show');
-}
-
-function dismissGeofenceBanner(permanent) {
-  document.getElementById('geofenceBanner').classList.remove('show');
-  if (permanent) {
-    const today = new Date().toISOString().slice(0, 10);
-    localStorage.setItem(GF_COOLDOWN_KEY, today);
-  }
-  _geofencePending = null;
-}
-
-async function geofenceMarkAttendance() {
-  if (!_geofencePending) return;
-  const status = _geofencePending.type === 'office' ? 'office' : 'home';
-  dismissGeofenceBanner(true);
-  // Reuse the existing mark-attendance flow
-  if (typeof markAttendance === 'function') {
-    await markAttendance(status);
-  } else {
-    // fallback
-    const today = new Date().toISOString().slice(0, 10);
-    if (currentUser) await saveAttendanceRecord(currentUser.userId, today, status);
-  }
-}
-
 </script>
 
 </body>

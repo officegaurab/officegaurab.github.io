@@ -1,5 +1,15 @@
-const CACHE_NAME = 'office-attendance-v4';
-const ASSETS = ['.', 'index.html', 'manifest.json', 'icon.svg'];
+const CACHE_NAME = 'office-attendance-v5';
+const ASSETS = [
+  '.',
+  'index.html',
+  'calander.html',
+  'calendar.html',
+  'about.html',
+  'privacy.html',
+  'index.css',
+  'manifest.json',
+  'icon.svg'
+];
 
 // ── Install & cache ──────────────────────────────────────────────────
 self.addEventListener('install', event => {
@@ -29,7 +39,7 @@ self.addEventListener('fetch', event => {
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return response;
-      }).catch(() => caches.match('index.html'));
+      }).catch(() => caches.match(event.request) || caches.match('calander.html') || caches.match('index.html'));
     })
   );
 });

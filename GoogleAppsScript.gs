@@ -251,8 +251,14 @@ function getAttendance(userId) {
     
     for (let i = 1; i < values.length; i++) {
       const row = values[i];
-      if (row[1] === userId && row[0]) {
-        data[row[0]] = row[2];
+      if (String(row[1]) === String(userId) && row[0]) {
+        let dateStr = row[0];
+        if (dateStr instanceof Date) {
+          dateStr = Utilities.formatDate(dateStr, Session.getScriptTimeZone() || 'GMT', 'yyyy-MM-dd');
+        } else {
+          dateStr = String(dateStr);
+        }
+        data[dateStr] = row[2];
       }
     }
     
